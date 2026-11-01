@@ -1,0 +1,35 @@
+ARABIC SCRABBLE - TABLET UPLOAD GUIDE
+=====================================
+This zip has NO folders on purpose. Android browsers cannot upload folders,
+so every file sits side by side and the picker can select them all at once.
+
+A) PUT IT ON GITHUB (browser)
+ 1. Files app: tap the zip -> Extract. Open the extracted folder.
+ 2. github.com -> "+" -> New repository. Name: arabic-scrabble. Create.
+ 3. On the empty repo page tap "uploading an existing file".
+ 4. Tap "choose your files". In the picker open the extracted folder,
+    menu (three dots) -> Select all -> Open.
+ 5. Wait until all files are listed (about 29), tap "Commit changes".
+ CHECK: the repo must show files like rooms.js, index.html, vercel.json
+ directly in the list, with NO folders. That is correct.
+
+B) SET UP SUPABASE (once)  - details in MULTIPLAYER.md
+ 1. supabase.com -> New project.
+ 2. Authentication -> Sign In / Providers -> turn on "Allow anonymous sign-ins".
+ 3. SQL Editor -> New query -> paste everything from supabase-setup.sql -> Run.
+ 4. Project Settings -> API: copy Project URL, anon key, service_role key.
+
+C) DEPLOY ON VERCEL (browser)
+ 1. vercel.com/new -> sign in with GitHub -> Import arabic-scrabble.
+ 2. Framework Preset: Other. Leave build and output EMPTY.
+    (A note that build settings are ignored because of vercel.json is normal.)
+ 3. Environment Variables - add these 4:
+      SUPABASE_URL               = Project URL
+      SUPABASE_ANON_KEY          = anon key
+      SUPABASE_SERVICE_ROLE_KEY  = service_role key
+      CRON_SECRET                = any long random text
+ 4. Tap Deploy.
+ 5. Open  https://YOUR-SITE.vercel.app/api/config  -> it must show text like
+    {"supabaseUrl": ...}. Then open the site and try Create room.
+
+If a step fails, send me the exact error text.
