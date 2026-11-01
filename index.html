@@ -1350,6 +1350,9 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
             <button id="fullscreen-app-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Toggle full screen" title="Toggle full screen">
                 ملء الشاشة
             </button>
+            <button id="support-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Support the developer" title="Support the developer">
+                دعم المطور
+            </button>
         </div>
 
         <div id="status-message" class="text-center h-8 mb-1 font-semibold transition-all duration-500"></div>
@@ -3447,7 +3450,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
                 'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button'
+                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button'
             ]);
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
@@ -4116,7 +4119,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         'theme-toggle': 'Toggle dark mode',
         'install-app-button': 'Install Arabic Scrabble',
         'fullscreen-app-button': 'Toggle full screen',
-        'mp-online-button': 'Online multiplayer'
+        'mp-online-button': 'Online multiplayer',
+        'support-button': 'Support the developer'
       };
       const setTheme = (dark) => {
         document.body.classList.toggle('dark-mode', dark);

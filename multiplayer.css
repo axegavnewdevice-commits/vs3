@@ -103,3 +103,23 @@ body:not(.dark-mode) #mp-card .mp-code-display { background: rgba(0, 0, 0, .08);
 #mp-undo-modal { position: fixed; inset: 0; z-index: 9550; display: none; align-items: center; justify-content: center; padding: 14px; background: rgba(8, 12, 6, .6); }
 #mp-undo-modal.mp-open { display: flex; }
 #mp-card .mp-diag { margin-top: 4px; font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; opacity: .7; word-break: break-all; user-select: all; }
+
+/* ---- support (donate) button: same icon-only family, heart icon ---- */
+#game-controls button#support-button {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  padding: 0 !important; min-width: calc(38px * var(--ui-scale, 1)) !important; min-height: calc(38px * var(--ui-scale, 1)) !important;
+  font-size: 0 !important; line-height: 1 !important; border-radius: 12px !important;
+  background: linear-gradient(145deg, #e0a23c, #a8661a) !important; color: #fff7e0 !important;
+  box-shadow: 0 3px 9px rgba(80, 45, 8, .3), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+  touch-action: none !important;
+}
+#game-controls button#support-button::before {
+  content: "" !important; display: block !important; width: 56% !important; height: 56% !important;
+  min-width: 16px !important; min-height: 16px !important; max-width: 27px !important; max-height: 27px !important;
+  background-color: currentColor !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none !important;
+}
+body.dark-mode #game-controls button#support-button { background: linear-gradient(145deg, #c98f35, #7e4d14) !important; color: #fff2d0 !important; }
+#game-controls button#support-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }

@@ -627,6 +627,8 @@
     buildUI();
     const btn = $('mp-online-button');
     if (btn) btn.addEventListener('click', openModal);
+    const support = $('support-button');
+    if (support) support.addEventListener('click', () => { window.open('https://saweria.co/axegav', '_blank', 'noopener'); });
 
     // names: online they come from the room, and cannot be edited by double-tap
     const origName = window.playerName;
