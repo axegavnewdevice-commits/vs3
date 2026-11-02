@@ -1246,6 +1246,86 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 body.dark-mode #game-controls button#support-button{background:linear-gradient(145deg,#c23d31,#841812)!important;color:#fff!important}
 #game-controls button#support-button:focus-visible{outline:2px solid #fef3c7!important;outline-offset:3px!important}
 </style>
+<style id="girly-theme">
+/* ===== GIRLY THEME (pink and rose, hearts): third theme next to light and dark. Class: body.girly-mode ===== */
+html body.girly-mode {
+    --primary-color: #c94b7b; --board-color: #f4c2d3; --tile-bg: #fff6f2; --text-color: #8c1d4b; --accent-color: #f7b2c9;
+    background: radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.38) 25%, rgba(190,60,110,.30) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff8fb5' fill-opacity='0.4' transform='translate(18 16) rotate(-14 15.0 15.0) scale(1.25)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.55' transform='translate(98 6) rotate(10 9.0 9.0) scale(0.75)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff9fc0' fill-opacity='0.36' transform='translate(64 60) rotate(12 18.0 18.0) scale(1.5)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f0629a' fill-opacity='0.28' transform='translate(128 84) rotate(-10 12.0 12.0) scale(1.0)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.5' transform='translate(14 106) rotate(8 11.0 11.0) scale(0.9166666666666666)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f0629a' fill-opacity='0.3' transform='translate(88 122) rotate(-18 9.0 9.0) scale(0.75)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff8fb5' fill-opacity='0.45' transform='translate(132 20) rotate(16 7.0 7.0) scale(0.5833333333333334)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.45' transform='translate(46 138) rotate(-6 7.0 7.0) scale(0.5833333333333334)'/%3E%3C/svg%3E"), linear-gradient(160deg, #ffe6ef, #ffbdd3) !important;
+    background-size: auto, 160px 160px, auto !important;
+    color: #5b1a3a !important; color-scheme: light;
+}
+html body.girly-mode .sq-normal { background-color: #fde9f0 !important; box-shadow: inset 0 0 0 1px rgba(190,70,110,.24), inset 0 1px 0 rgba(255,255,255,.75) !important; }
+html body.girly-mode .sq-normal:nth-child(even) { background-color: #f9d8e4 !important; }
+html body.girly-mode .sq-tl { background-color: #7b3f7e !important; }
+html body.girly-mode .sq-dl { background-color: #a566b0 !important; }
+html body.girly-mode .sq-tw { background-color: #b0245b !important; }
+html body.girly-mode .sq-dw { background-color: #e0578a !important; }
+html body.girly-mode .sq-star { background-color: #f2b84b !important; }
+html body.girly-mode .board { background-color: #e7a5bb !important; border-color: #c97b96 !important;
+    box-shadow: 0 0 0 2px rgba(120,30,70,.35), 0 0 0 3.5px #e8b4a0, 0 0 0 5px rgba(120,30,70,.25), 0 14px 34px rgba(150,40,90,.38) !important; }
+html body.girly-mode .player-area { background: linear-gradient(145deg, #cf5583, #9d2d5c) !important; border: 1px solid rgba(255,214,228,.55) !important;
+    box-shadow: 0 8px 22px rgba(120,20,60,.38), inset 0 1px 0 rgba(255,255,255,.28) !important; }
+html body.girly-mode .rack { background-color: #7f2150 !important; border: 1px solid rgba(255,214,228,.28) !important; box-shadow: inset 0 3px 10px rgba(60,5,30,.55) !important; }
+html body.girly-mode .rack-slot { background-color: #983862 !important; }
+html body.girly-mode .player-area .text-gray-300 { color: #ffdce8 !important; }
+html body.girly-mode .player-area .text-yellow-400 { color: #ffe9a8 !important; }
+html body.girly-mode .float-resize-handle::before { border-color: #ffe3ee !important; background-color: #f2a3be !important; }
+/* tile back (face-down rack): rose with a rose-gold heart */
+html body.girly-mode .rack .tile.tile-hidden .tile-content {
+    background-color: #b8456f !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f6c9b6' stroke='%23fff1ea' stroke-width='.8'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important;
+    background-position: center !important; background-size: 58% !important; border: 1px solid #f6c9b6 !important;
+    box-shadow: inset 0 0 0 3px rgba(60,5,30,.25), inset 0 0 0 4px rgba(246,201,182,.45), 0 2px 3px rgba(60,5,30,.4) !important; }
+/* toolbar buttons */
+html body.girly-mode #game-controls button#reset-move, html body.girly-mode #game-controls button#swap-tiles, html body.girly-mode #game-controls button#pass-turn,
+html body.girly-mode #game-controls button#undo-last-move, html body.girly-mode #game-controls button#pause-game, html body.girly-mode #game-controls button#theme-toggle {
+    background: linear-gradient(145deg, #ffd9e6, #f2a2bf) !important; color: #7a1f4a !important;
+    border: 1px solid rgba(150,40,90,.4) !important; box-shadow: 0 3px 9px rgba(150,40,90,.3), inset 0 1px 0 rgba(255,255,255,.6) !important; }
+html body.girly-mode #game-controls button#submit-move { background: linear-gradient(145deg, #f06b9c, #c2336c) !important; color: #fff !important;
+    border: 1px solid rgba(110,15,55,.5) !important; box-shadow: 0 3px 9px rgba(150,40,90,.35), inset 0 1px 0 rgba(255,255,255,.35) !important; }
+html body.girly-mode #game-controls button#new-game { background: linear-gradient(145deg, #c2336c, #8c1646) !important; color: #fff0f6 !important;
+    border: 1px solid rgba(70,5,30,.55) !important; box-shadow: 0 3px 9px rgba(120,20,60,.38), inset 0 1px 0 rgba(255,255,255,.28) !important; }
+html body.girly-mode #game-controls button#surrender-game { background: linear-gradient(145deg, #b57aa5, #7e4676) !important; color: #fff0f8 !important;
+    border: 1px solid rgba(60,20,55,.5) !important; box-shadow: 0 3px 9px rgba(100,40,90,.35), inset 0 1px 0 rgba(255,255,255,.28) !important; }
+html body.girly-mode #game-controls button#fullscreen-app-button { background: linear-gradient(145deg, #f7a8c4, #d1557f) !important; color: #fff !important;
+    box-shadow: 0 3px 9px rgba(150,40,90,.3), inset 0 1px 0 rgba(255,255,255,.4) !important; }
+html body.girly-mode #game-controls button#install-app-button { background: linear-gradient(145deg, #f3c1ad, #d98d78) !important; color: #6e2339 !important;
+    box-shadow: 0 3px 9px rgba(150,70,60,.3), inset 0 1px 0 rgba(255,255,255,.45) !important; }
+html body.girly-mode #game-controls button#mp-online-button { background: linear-gradient(145deg, #b46aa8, #7f3c78) !important; color: #fff !important; }
+html body.girly-mode.mp-online #game-controls button#mp-online-button { background: linear-gradient(145deg, #7fd0a2, #3f9c6a) !important; color: #0f3a24 !important; }
+html body.girly-mode #game-controls button#support-button { background: linear-gradient(145deg, #ef4b5c, #a8182b) !important; color: #fff !important; }
+/* theme button icon shows what the next tap gives: light shows moon, dark shows heart, girly shows sun */
+html body.dark-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%27M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%27%2F%3E%3C%2Fsvg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%27M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%27%2F%3E%3C%2Fsvg%3E") !important; }
+html body.girly-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%2712%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%27%2F%3E%3C%2Fsvg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%2712%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%27%2F%3E%3C%2Fsvg%3E") !important; }
+/* dialogs: deep rose cards with light text */
+html body.girly-mode .modal-overlay { background-color: rgba(80,15,50,.62) !important; }
+html body.girly-mode .modal-overlay > div { background: linear-gradient(145deg, #a8386a, #6e1f45) !important; color: #ffeaf2 !important; border: 1px solid rgba(255,205,224,.55) !important; }
+html body.girly-mode .modal-overlay .text-red-400 { color: #ffc2d8 !important; }
+html body.girly-mode .modal-overlay .text-yellow-300, html body.girly-mode .modal-overlay .text-yellow-400 { color: #ffe3a3 !important; }
+html body.girly-mode .modal-overlay .text-gray-200, html body.girly-mode .modal-overlay .text-gray-400 { color: #ffe6ef !important; }
+html body.girly-mode .modal-overlay .bg-green-600 { background-color: #e0578a !important; } html body.girly-mode .modal-overlay .bg-green-600:hover { background-color: #c9437a !important; }
+html body.girly-mode .modal-overlay .bg-gray-500, html body.girly-mode .modal-overlay .bg-gray-600, html body.girly-mode .modal-overlay .bg-gray-700 { background-color: #b58aa5 !important; }
+html body.girly-mode .modal-overlay .bg-red-600 { background-color: #8c1646 !important; } html body.girly-mode .modal-overlay .bg-red-600:hover { background-color: #741038 !important; }
+html body.girly-mode .modal-overlay .bg-yellow-600 { background-color: #e0a03c !important; }
+html body.girly-mode .modal-overlay input, html body.girly-mode .modal-overlay select, html body.girly-mode .modal-overlay textarea { background: #fff2f7 !important; color: #5b1a3a !important; border-color: #e58aae !important; }
+html body.girly-mode #result-new-btn { background: #e0578a !important; } html body.girly-mode #result-new-btn:hover { background: #c9437a !important; }
+html body.girly-mode #result-close-btn { background: #b58aa5 !important; } html body.girly-mode #result-close-btn:hover { background: #9d7290 !important; }
+html body.girly-mode #install-help-card { background: linear-gradient(145deg, #fff0f5, #ffd3e2) !important; color: #5b1a3a !important; border-color: rgba(190,70,110,.5) !important; }
+html body.girly-mode #install-help-close { background: #c2336c !important; color: #fff !important; }
+/* online room window */
+html body.girly-mode #mp-chip { background: rgba(110,25,70,.9) !important; color: #ffeaf2 !important; border-color: rgba(255,205,224,.6) !important; }
+html body.girly-mode #mp-modal, html body.girly-mode #mp-undo-modal { background: rgba(80,15,50,.66) !important; }
+html body.girly-mode #mp-card { background: linear-gradient(145deg, #fff0f5, #ffd3e2) !important; color: #5b1a3a !important; border-color: rgba(190,70,110,.55) !important; }
+html body.girly-mode #mp-card button.mp-btn { background: #d6477b !important; }
+html body.girly-mode #mp-card button.mp-btn.mp-alt { background: #a566b0 !important; }
+html body.girly-mode #mp-card button.mp-btn.mp-danger { background: #8c1646 !important; }
+html body.girly-mode #mp-card .mp-error { color: #a1181f !important; }
+html body.girly-mode #mp-card .mp-code-display { background: rgba(190,70,110,.12) !important; }
+html body.girly-mode #mp-toast { background: rgba(110,25,70,.95) !important; color: #ffeaf2 !important; border-color: rgba(255,205,224,.6) !important; }
+/* welcome animation: deep rose with soft hearts, gold lettering stays readable */
+html body.girly-mode #welcome-splash {
+    background: radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.08) 25%, rgba(60,5,35,.7) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff8fb5' fill-opacity='0.4' transform='translate(18 16) rotate(-14 15.0 15.0) scale(1.25)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.55' transform='translate(98 6) rotate(10 9.0 9.0) scale(0.75)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff9fc0' fill-opacity='0.36' transform='translate(64 60) rotate(12 18.0 18.0) scale(1.5)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f0629a' fill-opacity='0.28' transform='translate(128 84) rotate(-10 12.0 12.0) scale(1.0)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.5' transform='translate(14 106) rotate(8 11.0 11.0) scale(0.9166666666666666)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f0629a' fill-opacity='0.3' transform='translate(88 122) rotate(-18 9.0 9.0) scale(0.75)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ff8fb5' fill-opacity='0.45' transform='translate(132 20) rotate(16 7.0 7.0) scale(0.5833333333333334)'/%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23ffffff' fill-opacity='0.45' transform='translate(46 138) rotate(-6 7.0 7.0) scale(0.5833333333333334)'/%3E%3C/svg%3E"), linear-gradient(160deg, #b8325f, #7a1c49) !important;
+    background-size: auto, 160px 160px, auto !important; }
+</style>
 </head>
 <body>
 <div id="welcome-splash" role="img" aria-label="arabic scrabble by axegav">
@@ -1345,7 +1425,7 @@ body.dark-mode #game-controls button#support-button{background:linear-gradient(1
             <button id="surrender-game" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-bold rounded-lg shadow-md transition duration-300">
                 استسلام
             </button>
-            <button id="theme-toggle" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Toggle dark mode" title="Toggle dark mode" aria-pressed="false">
+            <button id="theme-toggle" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Change theme" title="Change theme" aria-pressed="false">
                 الوضع الداكن
             </button>
             <button id="install-app-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Install Arabic Scrabble" title="Install Arabic Scrabble">
@@ -4123,22 +4203,26 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         'new-game': 'New game',
         'pause-game': 'Pause game',
         'surrender-game': 'Surrender game',
-        'theme-toggle': 'Toggle dark mode',
+        'theme-toggle': 'Change theme',
         'install-app-button': 'Install Arabic Scrabble',
         'fullscreen-app-button': 'Toggle full screen',
         'mp-online-button': 'Online multiplayer',
         'support-button': 'Support the developer'
       };
-      const setTheme = (dark) => {
-        document.body.classList.toggle('dark-mode', dark);
+      const THEMES = ['light', 'dark', 'girly'];
+      const THEME_COLORS = { light: '#4d5233', dark: '#1b2013', girly: '#e0578a' };
+      const setTheme = (name) => {
+        if (!THEMES.includes(name)) name = 'light';
+        document.body.classList.toggle('dark-mode', name === 'dark');
+        document.body.classList.toggle('girly-mode', name === 'girly');
         const toggle = document.getElementById('theme-toggle');
-        if (toggle) toggle.setAttribute('aria-pressed', String(dark));
+        if (toggle) { toggle.setAttribute('aria-pressed', String(name !== 'light')); toggle.dataset.theme = name; }
         const meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.content = dark ? '#1b2013' : '#4d5233';
+        if (meta) meta.content = THEME_COLORS[name];
       };
-      let prefersDark = false;
-      try { prefersDark = localStorage.getItem(themeKey) === 'dark'; } catch (_) {}
-      setTheme(prefersDark);
+      let savedTheme = 'light';
+      try { savedTheme = localStorage.getItem(themeKey) || 'light'; } catch (_) {}
+      setTheme(savedTheme);
       const configureButtons = () => {
         Object.entries(labels).forEach(([id, fallback]) => {
           const button = document.getElementById(id);
@@ -4162,9 +4246,10 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
       document.addEventListener('click', (event) => {
         const toggle = event.target instanceof Element ? event.target.closest('#theme-toggle') : null;
         if (!toggle) return;
-        const dark = !document.body.classList.contains('dark-mode');
-        setTheme(dark);
-        try { localStorage.setItem(themeKey, dark ? 'dark' : 'light'); } catch (_) {}
+        const cur = document.body.classList.contains('girly-mode') ? 'girly' : document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+        setTheme(next);
+        try { localStorage.setItem(themeKey, next); } catch (_) {}
       });
     })();
     </script>
