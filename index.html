@@ -535,8 +535,8 @@
         /* ===== Welcome animation ===== */
         #welcome-splash {
             position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center;
-            background: radial-gradient(ellipse at 50% 42%, rgba(0, 0, 0, .05) 25%, rgba(0, 0, 0, .72) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.294 0.227 0.373 0.173 0.318'/%3E%3CfeFuncG type='discrete' tableValues='0.322 0.184 0.396 0.208 0.345'/%3E%3CfeFuncB type='discrete' tableValues='0.2 0.122 0.239 0.125 0.22'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #2a3220;
-            background-size: auto, 560px 560px, auto;
+            background: radial-gradient(ellipse 60% 44% at 50% 46%, rgba(233, 200, 115, .12) 0%, rgba(233, 200, 115, 0) 70%), radial-gradient(ellipse at 50% 45%, #101a2a 0%, #090e17 55%, #04060a 100%);
+            background-size: auto, auto;
             overflow: hidden; opacity: 1; cursor: pointer; touch-action: none;
             -webkit-user-select: none; user-select: none;
             transition: opacity 0.7s ease, visibility 0.7s;
@@ -545,7 +545,7 @@
         .ws-inner { position: relative; isolation: isolate; text-align: center; padding: 0 5vw; max-width: 100%; }
         /* soft dark halo behind the title keeps the brass lettering readable over the camouflage */
         .ws-inner::before { content: ""; position: absolute; inset: -34% -14%; z-index: -1; pointer-events: none;
-            background: radial-gradient(ellipse at center, rgba(12, 16, 7, .66) 0%, rgba(12, 16, 7, .38) 46%, rgba(12, 16, 7, 0) 72%); }
+            background: none; }
         .ws-l1, .ws-l2 {
             display: block; width: max-content; margin-left: auto; margin-right: auto;
             direction: ltr; white-space: nowrap; line-height: 1.1; text-transform: lowercase;
@@ -570,6 +570,23 @@
         }
         @keyframes wsIn    { to { opacity: 1; transform: none; filter: blur(0); } }
         @keyframes wsShine { 0%, 100% { filter: blur(0) brightness(1); } 50% { filter: blur(0) brightness(1.6) drop-shadow(0 0 10px rgba(255, 238, 180, .95)); } }
+
+        /* Midnight Gold backdrop: faint eight-pointed-star lattice, double gold frame with corner ornaments, star emblem */
+        #welcome-splash::before { content: ""; position: absolute; inset: 0; opacity: .09; pointer-events: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72' fill='none' stroke='%23e9c873' stroke-width='1'%3E%3Cpath d='M36 6l6.5 14.5L57 14l-6.500 14.500L66 36l-15 7.500L57 58l-14.500-6.500L36 66l-6.500-14.500L15 58l6.500-14.500L6 36l15-7.500L15 14l14.500 6.500z'/%3E%3C/svg%3E");
+            -webkit-mask-image: radial-gradient(ellipse at 50% 46%, #000 8%, transparent 70%); mask-image: radial-gradient(ellipse at 50% 46%, #000 8%, transparent 70%); }
+        .ws-frame { position: absolute; inset: clamp(10px, 2.4vmin, 26px); border: 1px solid rgba(233, 200, 115, .55); pointer-events: none; opacity: 0; }
+        .ws-frame::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(233, 200, 115, .22); }
+        .ws-corner { position: absolute; width: clamp(22px, 4vmin, 40px); height: clamp(22px, 4vmin, 40px); pointer-events: none; opacity: 0; }
+        .ws-corner svg { display: block; width: 100%; height: 100%; }
+        .ws-c1 { left: clamp(10px, 2.4vmin, 26px); top: clamp(10px, 2.4vmin, 26px); }
+        .ws-c2 { right: clamp(10px, 2.4vmin, 26px); top: clamp(10px, 2.4vmin, 26px); transform: scaleX(-1); }
+        .ws-c3 { left: clamp(10px, 2.4vmin, 26px); bottom: clamp(10px, 2.4vmin, 26px); transform: scaleY(-1); }
+        .ws-c4 { right: clamp(10px, 2.4vmin, 26px); bottom: clamp(10px, 2.4vmin, 26px); transform: scale(-1); }
+        .ws-emblem { display: block; width: clamp(46px, 9vmin, 78px); height: auto; margin: 0 auto clamp(14px, 3vmin, 28px); opacity: 0; transform: scale(.6); filter: drop-shadow(0 0 14px rgba(233, 200, 115, .45)); }
+        @keyframes wsFadeIn { to { opacity: 1; } }
+        #welcome-splash.ws-go .ws-frame, #welcome-splash.ws-go .ws-corner { animation: wsFadeIn 1.1s ease-out .1s forwards; }
+        #welcome-splash.ws-go .ws-emblem { animation: wsPop .7s cubic-bezier(.2, 1.3, .4, 1) .05s forwards; }
         .ws-flourish { display: block; width: min(70vw, 26rem); height: auto; margin: .9rem auto 0; overflow: visible; }
         .ws-fl { stroke-dasharray: 1; stroke-dashoffset: 1; }
         .ws-dia { opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(0); }
@@ -586,8 +603,8 @@
         @media (prefers-reduced-motion: reduce) {
             .ws-ch { transform: none; filter: none; }
             #welcome-splash.ws-go .ws-ch { animation: wsFade .8s ease forwards !important; animation-delay: .1s !important; }
-            #welcome-splash.ws-go .ws-fl, #welcome-splash.ws-go .ws-dia, #welcome-splash.ws-go .ws-sp { animation: none !important; }
-            .ws-fl { stroke-dashoffset: 0; } .ws-dia { opacity: 1; transform: none; } .ws-sp { display: none; }
+            #welcome-splash.ws-go .ws-fl, #welcome-splash.ws-go .ws-dia, #welcome-splash.ws-go .ws-sp, #welcome-splash.ws-go .ws-frame, #welcome-splash.ws-go .ws-corner, #welcome-splash.ws-go .ws-emblem { animation: none !important; }
+            .ws-fl { stroke-dashoffset: 0; } .ws-dia, .ws-frame, .ws-corner, .ws-emblem { opacity: 1; transform: none; } .ws-c2 { transform: scaleX(-1); } .ws-c3 { transform: scaleY(-1); } .ws-c4 { transform: scale(-1); } .ws-sp { display: none; }
             @keyframes wsFade { to { opacity: 1; } }
         }
 
@@ -1443,8 +1460,10 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
 </head>
 <body>
 <div id="welcome-splash" role="img" aria-label="arabic scrabble by axegav">
+    <div class="ws-frame" aria-hidden="true"></div><span class="ws-corner ws-c1" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#e9c873" stroke-width="1.4"><path d="M3 37V3h34"/><path d="M9 31V9h22" opacity=".55"/><path d="M3 3l9 9"/><circle cx="14" cy="14" r="1.8" fill="#e9c873" stroke="none"/></svg></span><span class="ws-corner ws-c2" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#e9c873" stroke-width="1.4"><path d="M3 37V3h34"/><path d="M9 31V9h22" opacity=".55"/><path d="M3 3l9 9"/><circle cx="14" cy="14" r="1.8" fill="#e9c873" stroke="none"/></svg></span><span class="ws-corner ws-c3" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#e9c873" stroke-width="1.4"><path d="M3 37V3h34"/><path d="M9 31V9h22" opacity=".55"/><path d="M3 3l9 9"/><circle cx="14" cy="14" r="1.8" fill="#e9c873" stroke="none"/></svg></span><span class="ws-corner ws-c4" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none" stroke="#e9c873" stroke-width="1.4"><path d="M3 37V3h34"/><path d="M9 31V9h22" opacity=".55"/><path d="M3 3l9 9"/><circle cx="14" cy="14" r="1.8" fill="#e9c873" stroke="none"/></svg></span>
     <i class="ws-sp" style="--x:12%;--y:22%;--d:0.2s"></i><i class="ws-sp" style="--x:84%;--y:18%;--d:0.9s"></i><i class="ws-sp" style="--x:22%;--y:74%;--d:1.4s"></i><i class="ws-sp" style="--x:78%;--y:70%;--d:0.5s"></i><i class="ws-sp" style="--x:50%;--y:12%;--d:1.7s"></i><i class="ws-sp" style="--x:8%;--y:52%;--d:1.1s"></i><i class="ws-sp" style="--x:92%;--y:48%;--d:0.3s"></i><i class="ws-sp" style="--x:36%;--y:88%;--d:0.8s"></i><i class="ws-sp" style="--x:66%;--y:86%;--d:1.9s"></i><i class="ws-sp" style="--x:58%;--y:30%;--d:2.1s"></i>
     <div class="ws-inner">
+        <svg class="ws-emblem" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="wsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3cc"/><stop offset=".5" stop-color="#e9c873"/><stop offset="1" stop-color="#a87b27"/></linearGradient></defs><g fill="none" stroke="url(#wsg)" stroke-width="3" stroke-linejoin="round"><rect x="21" y="21" width="58" height="58"/><rect x="21" y="21" width="58" height="58" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="13"/></g><circle cx="50" cy="50" r="4" fill="url(#wsg)"/></svg>
         <span class="ws-l1">arabic scrabble</span>
         <span class="ws-l2">by axegav</span>
         <svg class="ws-flourish" viewBox="0 0 400 24" aria-hidden="true">
