@@ -1244,6 +1244,13 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 body.dark-mode #game-controls button#support-button{background:linear-gradient(145deg,#c23d31,#841812)!important;color:#fff!important}
 #game-controls button#support-button:focus-visible{outline:2px solid #fef3c7!important;outline-offset:3px!important}
 </style>
+<style id="flat-tiles">
+/* flat tiles: no drop shadow, no lift on hover/tap, no pop when a word is submitted (the glow colour still marks a selected tile) */
+.tile, .tile:hover, .tile:active { box-shadow: none !important; transform: none !important; }
+.tile.tile-selected-border .tile-content { transform: none !important; }
+.tile.tile-selected-swap .tile-content { transform: none !important; }
+@keyframes wordBlink { 0%, 100% { opacity: 0; transform: none; } 14%, 46% { opacity: 1; transform: none; } 30% { opacity: .1; transform: none; } }
+</style>
 <style id="flat-board">
 /* flat board: one hairline grid, no doubled borders, no alternating shades */
 #game-board > .square { border-color: transparent !important; }
