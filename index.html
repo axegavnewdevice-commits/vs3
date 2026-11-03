@@ -3975,7 +3975,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                         element.style.setProperty('--float-button-width', px(width));
                         element.style.setProperty('--float-button-height', 'auto');
                         const naturalHeight = Math.max(34, rectHeight(element), element.scrollHeight || 0);
-                        if (Number.isFinite(size.h)) {
+                        // online + donate buttons always use the standard toolbar height (older saved layouts stored a taller size)
+                        if (Number.isFinite(size.h) && element.id !== 'mp-online-button' && element.id !== 'support-button') {
                             element.style.setProperty('--float-button-height', px(clamp(size.h, naturalHeight, 1000)));
                         }
                     }
@@ -4010,7 +4011,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     if (resizable.includes(element)) {
                         record.w = Math.round(rectWidth(element));
                         if (element === board) record.h = record.w; // Keep the board exactly square.
-                        else if (controlIds.has(element.id)) record.h = Math.round(rectHeight(element));
+                        else if (controlIds.has(element.id) && element.id !== 'mp-online-button' && element.id !== 'support-button') record.h = Math.round(rectHeight(element));
                     }
                     data[element.id] = record;
                 });
