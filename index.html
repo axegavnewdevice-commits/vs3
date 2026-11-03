@@ -4454,6 +4454,64 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
     22% { transform: translate(-50%,-50%) rotate(-11deg) scale(1.05); } 28% { transform: translate(-50%,-50%) rotate(-11deg) scale(1); } 78% { opacity: .95; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #ac-stamp { animation: acFade 2s linear forwards; } @keyframes acFade { 0%,80% { opacity: .9; } 100% { opacity: 0; } } }
 </style>
+<style id="board-harmony">
+/* ===== BOARD HARMONY: every theme follows the light (army khaki) board.
+   Mid-tone calm squares, muted bonus colours, and tiles that are the lightest thing on the board.
+   A placed tile fully covers its square: no bonus colour, label or symbol shows around it. ===== */
+
+/* DARK: same family as light, a little deeper and softer so the bonuses do not glare at night */
+html body.dark-mode { --board-color: #232a18; }
+html body.dark-mode .board { background-color: #232a18 !important; }
+html body.dark-mode .sq-normal { background-color: #565f3c !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28) !important; }
+html body.dark-mode .sq-tl { background-color: #38647f !important; }
+html body.dark-mode .sq-dl { background-color: #5f869b !important; }
+html body.dark-mode .sq-tw { background-color: #9d3629 !important; }
+html body.dark-mode .sq-dw { background-color: #bb7049 !important; }
+
+/* GIRLY: dusty rose instead of near-white pink, so the cream tiles pop; muted raspberry / coral / plum / lavender bonuses */
+html body.girly-mode { --board-color: #b97c93; }
+html body.girly-mode .board { background-color: #b97c93 !important; border-color: #8f4f68 !important; }
+html body.girly-mode .sq-normal { background-color: #c58ca1 !important; box-shadow: inset 0 0 0 1px rgba(110,30,65,.26) !important; }
+html body.girly-mode .sq-tl { background-color: #704080 !important; }
+html body.girly-mode .sq-dl { background-color: #8f88c4 !important; }
+html body.girly-mode .sq-tw { background-color: #a82255 !important; }
+html body.girly-mode .sq-dw { background-color: #de7b6c !important; }
+html body.girly-mode .sq-star {
+    background-color: #f0c070 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 84C22 63 10 46 10 31 10 19 19 12 30 12c8 0 16 5 20 13 4-8 12-13 20-13 11 0 20 7 20 19 0 15-12 32-40 53z' fill='%23d61b5f' stroke='%23801044' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M26 27c2-6 8-9 13-7' fill='none' stroke='%23ffd3e3' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important; background-position: center !important; background-size: 86% !important;
+}
+
+/* HORROR: lifted charcoal-brown squares (not pitch black), bonuses dimmed to bruised tones */
+html body.horror-mode { --board-color: #150d0c; }
+html body.horror-mode .board { background-color: #150d0c !important; }
+html body.horror-mode .sq-normal { background-color: #3b2d29 !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35) !important; }
+html body.horror-mode .sq-tl { background-color: #2f6240 !important; }
+html body.horror-mode .sq-dl { background-color: #557c52 !important; }
+html body.horror-mode .sq-tw { background-color: #8c1b25 !important; }
+html body.horror-mode .sq-dw { background-color: #ad5a2e !important; }
+
+/* ACADEMIC: slate-blue squares instead of parchment (the tiles are parchment, so they now stand out) */
+html body.academic-mode { --board-color: #75829a; }
+html body.academic-mode .board { background-color: #75829a !important; }
+html body.academic-mode .sq-normal { background-color: #8794ab !important; box-shadow: inset 0 0 0 1px rgba(14,30,58,.3) !important; }
+html body.academic-mode .sq-tl { background-color: #1f4a86 !important; }
+html body.academic-mode .sq-dl { background-color: #4c88b8 !important; }
+html body.academic-mode .sq-tw { background-color: #7d2230 !important; }
+html body.academic-mode .sq-dw { background-color: #bb7440 !important; }
+
+/* A tile fully covers its square in every theme (beats the per-theme bonus colours and centre symbols) */
+html body .board .square.has-tile, html body.dark-mode .board .square.has-tile, html body.girly-mode .board .square.has-tile,
+html body.horror-mode .board .square.has-tile, html body.academic-mode .board .square.has-tile {
+    background-image: none !important; background-color: transparent !important; box-shadow: none !important; border: none !important;
+}
+#game-board > .square.has-tile::before, #game-board > .square.has-tile::after { content: none !important; display: none !important; }
+#game-board > .square.has-tile > .square-text { display: none !important; }
+#game-board > .square.has-tile > .tile > .tile-content { box-shadow: none !important; }
+/* HORROR: no flying bats, no corner webs, no flickering light (steady vignette only) */
+#horror-fx .hz-bat, #horror-fx .hz-web, #horror-fx .hz-flash { display: none !important; }
+#horror-fx .hz-vig { animation: none !important; opacity: 1 !important; }
+</style>
 <script id="academic-fx-script">
 (function () {
   var B = document.body;
@@ -4549,12 +4607,10 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
   function start(announce) {
     if (layer) return;
     layer = document.createElement('div'); layer.id = 'horror-fx';
-    layer.innerHTML = "<div class='hz-fog a'></div><div class='hz-fog b'></div><div class='hz-vig'></div><div class='hz-web l'></div><div class='hz-web r'></div><div class='hz-flash'></div>";
+    layer.innerHTML = "<div class='hz-fog a'></div><div class='hz-fog b'></div><div class='hz-vig'></div>";
     BODY.appendChild(layer);
     if (!reduce()) {
-      schedule(bat, 40, 85);
       schedule(eyes, 28, 60);
-      schedule(flash, 35, 75);
     }
     beat = setInterval(heartbeat, 1000);
   }
@@ -4571,7 +4627,7 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
   }
   new MutationObserver(sync).observe(BODY, { attributes: true, attributeFilter: ['class'] });
   sync();
-  window.__hz = { bat, eyes, flash, msg };   // handy for testing
+  window.__hz = { eyes, msg };   // handy for testing
 })();
 </script>
 
