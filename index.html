@@ -916,8 +916,7 @@ body.dark-mode {
     color: #e9e6cf !important;
     color-scheme: dark;
 }
-body.dark-mode .sq-normal { background-color: #4a5233 !important; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .06) !important; }
-body.dark-mode .sq-normal:nth-child(even) { background-color: #424a2d !important; }
+body.dark-mode .sq-normal { background-color: #474f31 !important; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3) !important; }
 body.dark-mode .board { background-color: #151a0e !important; border-color: #0c0f08 !important; }
 body.dark-mode .rack-slot { background-color: #353d22 !important; }
 body.dark-mode .player-area .text-gray-300 { color: #cfc9a0 !important; }
@@ -1198,8 +1197,7 @@ body:not(.dark-mode) {
     background: radial-gradient(ellipse at 50% 38%, rgba(255, 255, 255, .06) 30%, rgba(0, 0, 0, .42) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.42 0.302 0.557 0.247 0.459'/%3E%3CfeFuncG type='discrete' tableValues='0.435 0.259 0.541 0.29 0.478'/%3E%3CfeFuncB type='discrete' tableValues='0.263 0.169 0.357 0.165 0.29'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #6b6f43 !important;
     background-size: auto, 560px 560px, auto !important;
 }
-body:not(.dark-mode) .sq-normal { background-color: rgba(255, 255, 255, .13); box-shadow: inset 0 0 0 1px rgba(43, 49, 24, .3), inset 0 1px 0 rgba(255, 255, 255, .22); }
-body:not(.dark-mode) .sq-normal:nth-child(even) { background-color: rgba(0, 0, 0, .05); }
+body:not(.dark-mode) .sq-normal { background-color: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(43, 49, 24, .26); }
 body:not(.dark-mode) .board { border-color: #2b3118; }
 body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 
@@ -1246,16 +1244,19 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 body.dark-mode #game-controls button#support-button{background:linear-gradient(145deg,#c23d31,#841812)!important;color:#fff!important}
 #game-controls button#support-button:focus-visible{outline:2px solid #fef3c7!important;outline-offset:3px!important}
 </style>
+<style id="flat-board">
+/* flat board: one hairline grid, no doubled borders, no alternating shades */
+#game-board > .square { border-color: transparent !important; }
+</style>
 <style id="girly-theme">
 /* ===== GIRLY THEME (pink and rose, hearts): third theme next to light and dark. Class: body.girly-mode ===== */
 html body.girly-mode {
-    --primary-color: #c94b7b; --board-color: #f4c2d3; --tile-bg: #fff6f2; --text-color: #8c1d4b; --accent-color: #f7b2c9;
+    --primary-color: #c94b7b; --board-color: #f4c2d3; --tile-bg: #efe6bb; --text-color: #2b3d12; --accent-color: #f7b2c9;
     background: radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.10) 30%, rgba(110,20,60,.38) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.953 0.800 0.918 0.690 0.867'/%3E%3CfeFuncG type='discrete' tableValues='0.659 0.349 0.769 0.227 0.478'/%3E%3CfeFuncB type='discrete' tableValues='0.753 0.502 0.831 0.400 0.624'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #d98aa8 !important;
     background-size: auto, 560px 560px, auto !important;
     color: #5b1a3a !important; color-scheme: light;
 }
-html body.girly-mode .sq-normal { background-color: #fde9f0 !important; box-shadow: inset 0 0 0 1px rgba(190,70,110,.24), inset 0 1px 0 rgba(255,255,255,.75) !important; }
-html body.girly-mode .sq-normal:nth-child(even) { background-color: #f9d8e4 !important; }
+html body.girly-mode .sq-normal { background-color: #fbe0ea !important; box-shadow: inset 0 0 0 1px rgba(190,70,110,.2) !important; }
 html body.girly-mode .sq-tl { background-color: #7b3f7e !important; }
 html body.girly-mode .sq-dl { background-color: #a566b0 !important; }
 html body.girly-mode .sq-tw { background-color: #b0245b !important; }
@@ -1325,13 +1326,12 @@ html body.girly-mode #mp-toast { background: rgba(110,25,70,.95) !important; col
 <style id="horror-theme">
 /* ===== HORROR THEME: blood and bone on black. Class: body.horror-mode. Effects live in script#horror-fx ===== */
 html body.horror-mode {
-    --primary-color: #3a0d10; --board-color: #1c1210; --tile-bg: #e9dfc8; --text-color: #6e0a12; --accent-color: #b3121e;
+    --primary-color: #3a0d10; --board-color: #1c1210; --tile-bg: #efe6bb; --text-color: #2b3d12; --accent-color: #b3121e;
     background: radial-gradient(ellipse at 50% 40%, rgba(150,25,30,.16) 0%, rgba(0,0,0,.58) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.071 0.290 0.110 0.176 0.169'/%3E%3CfeFuncG type='discrete' tableValues='0.027 0.063 0.137 0.051 0.165'/%3E%3CfeFuncB type='discrete' tableValues='0.031 0.078 0.078 0.063 0.090'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #140708 !important;
     background-size: auto, 560px 560px, auto !important;
     color: #e6d9c2 !important; color-scheme: dark;
 }
-html body.horror-mode .sq-normal { background-color: #231918 !important; box-shadow: inset 0 0 0 1px rgba(150,25,25,.28), inset 0 1px 0 rgba(255,255,255,.04) !important; }
-html body.horror-mode .sq-normal:nth-child(even) { background-color: #1a1211 !important; }
+html body.horror-mode .sq-normal { background-color: #211716 !important; box-shadow: inset 0 0 0 1px rgba(150,25,25,.26) !important; }
 html body.horror-mode .sq-tl { background-color: #2d6a3a !important; }
 html body.horror-mode .sq-dl { background-color: #5c8a4a !important; }
 html body.horror-mode .sq-tw { background-color: #9b111e !important; }
@@ -4368,13 +4368,12 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 <style id="academic-theme">
 /* ===== ACADEMIC ARMY THEME: war-college navy camouflage, parchment tiles, brass trim. Class: body.academic-mode ===== */
 html body.academic-mode {
-    --primary-color: #1d3253; --board-color: #12203a; --tile-bg: #f4ead0; --text-color: #13284a; --accent-color: #c9a24a;
+    --primary-color: #1d3253; --board-color: #12203a; --tile-bg: #efe6bb; --text-color: #2b3d12; --accent-color: #c9a24a;
     background: radial-gradient(ellipse at 50% 40%, rgba(230,201,120,.07) 25%, rgba(3,8,20,.55) 100%), url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27400%27%20height%3D%27400%27%3E%3Cg%20fill%3D%27%23e6c978%27%20fill-opacity%3D%270.085%27%20font-family%3D%22Amiri%2C%27Noto%20Naskh%20Arabic%27%2C%27Traditional%20Arabic%27%2Cserif%22%3E%3Ctext%20x%3D%2730%27%20y%3D%2770%27%20font-size%3D%2746%27%20transform%3D%27rotate%28-12%2030%2070%29%27%3E%D8%A7%3C%2Ftext%3E%3Ctext%20x%3D%27150%27%20y%3D%2740%27%20font-size%3D%2740%27%20transform%3D%27rotate%288%20150%2040%29%27%3E%D8%A8%3C%2Ftext%3E%3Ctext%20x%3D%27290%27%20y%3D%2790%27%20font-size%3D%2752%27%20transform%3D%27rotate%28-6%20290%2090%29%27%3E%D8%AA%3C%2Ftext%3E%3Ctext%20x%3D%2760%27%20y%3D%27190%27%20font-size%3D%2744%27%20transform%3D%27rotate%2814%2060%20190%29%27%3E%D8%AD%3C%2Ftext%3E%3Ctext%20x%3D%27200%27%20y%3D%27170%27%20font-size%3D%2738%27%20transform%3D%27rotate%28-10%20200%20170%29%27%3E%D8%AF%3C%2Ftext%3E%3Ctext%20x%3D%27330%27%20y%3D%27230%27%20font-size%3D%2748%27%20transform%3D%27rotate%2810%20330%20230%29%27%3E%D8%B1%3C%2Ftext%3E%3Ctext%20x%3D%27110%27%20y%3D%27310%27%20font-size%3D%2750%27%20transform%3D%27rotate%28-8%20110%20310%29%27%3E%D8%B3%3C%2Ftext%3E%3Ctext%20x%3D%27250%27%20y%3D%27330%27%20font-size%3D%2742%27%20transform%3D%27rotate%2812%20250%20330%29%27%3E%D8%B9%3C%2Ftext%3E%3Ctext%20x%3D%27350%27%20y%3D%27360%27%20font-size%3D%2740%27%20transform%3D%27rotate%28-14%20350%20360%29%27%3E%D9%82%3C%2Ftext%3E%3Ctext%20x%3D%2720%27%20y%3D%27370%27%20font-size%3D%2744%27%20transform%3D%27rotate%286%2020%20370%29%27%3E%D9%85%3C%2Ftext%3E%3C%2Fg%3E%3Cpath%20d%3D%27M0%20100H400M0%20200H400M0%20300H400%27%20stroke%3D%27%23e6c978%27%20stroke-opacity%3D%270.035%27%2F%3E%3C%2Fsvg%3E"), url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27560%27%20height%3D%27560%27%3E%3Cfilter%20id%3D%27c%27%20color-interpolation-filters%3D%27sRGB%27%20x%3D%270%27%20y%3D%270%27%20width%3D%27100%25%27%20height%3D%27100%25%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%27.0075%20.0105%27%20numOctaves%3D%273%27%20seed%3D%2711%27%20stitchTiles%3D%27stitch%27%2F%3E%3CfeColorMatrix%20type%3D%27matrix%27%20values%3D%271%200%200%200%200%201%200%200%200%200%201%200%200%200%200%200%200%200%200%201%27%2F%3E%3CfeComponentTransfer%3E%3CfeFuncR%20type%3D%27discrete%27%20tableValues%3D%270.059%200.122%200.208%200.169%200.290%27%2F%3E%3CfeFuncG%20type%3D%27discrete%27%20tableValues%3D%270.102%200.200%200.314%200.227%200.392%27%2F%3E%3CfeFuncB%20type%3D%27discrete%27%20tableValues%3D%270.180%200.314%200.435%200.184%200.510%27%2F%3E%3C%2FfeComponentTransfer%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23c%29%27%2F%3E%3C%2Fsvg%3E"), #14233d !important;
     background-size: auto, 400px 400px, 560px 560px, auto !important;
     color: #f3e9cf !important; color-scheme: dark;
 }
-html body.academic-mode .sq-normal { background-color: #efe3c2 !important; box-shadow: inset 0 0 0 1px rgba(19,40,74,.26), inset 0 1px 0 rgba(255,255,255,.55) !important; }
-html body.academic-mode .sq-normal:nth-child(even) { background-color: #e6d7ae !important; }
+html body.academic-mode .sq-normal { background-color: #ece0bd !important; box-shadow: inset 0 0 0 1px rgba(19,40,74,.2) !important; }
 html body.academic-mode .sq-tl { background-color: #1f4a86 !important; }
 html body.academic-mode .sq-dl { background-color: #5d8fc0 !important; }
 html body.academic-mode .sq-tw { background-color: #7a1f2b !important; }
@@ -4461,7 +4460,6 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
   var was = B.classList.contains('academic-mode');
   new MutationObserver(function () {
     var on = B.classList.contains('academic-mode');
-    if (on && !was && Date.now() - (window.__hzSwitchedAt || 0) < 1500) stamp();
     was = on;
   }).observe(B, { attributes: true, attributeFilter: ['class'] });
 })();
@@ -4550,7 +4548,6 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
       schedule(bat, 40, 85);
       schedule(eyes, 28, 60);
       schedule(flash, 35, 75);
-      if (announce) setTimeout(() => msg(WHISPERS[Math.floor(Math.random() * WHISPERS.length)]), 350);
     }
     beat = setInterval(heartbeat, 1000);
   }
