@@ -1326,8 +1326,8 @@ html body.girly-mode #mp-toast { background: rgba(110,25,70,.95) !important; col
 /* ===== HORROR THEME: blood and bone on black. Class: body.horror-mode. Effects live in script#horror-fx ===== */
 html body.horror-mode {
     --primary-color: #3a0d10; --board-color: #1c1210; --tile-bg: #e9dfc8; --text-color: #6e0a12; --accent-color: #b3121e;
-    background: radial-gradient(ellipse at 50% 42%, rgba(120,12,18,.30) 0%, rgba(0,0,0,0) 58%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55  0 0 0 0 .08  0 0 0 0 .08  0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), linear-gradient(180deg, #170909, #050203) !important;
-    background-size: auto, 300px 300px, auto !important;
+    background: radial-gradient(ellipse at 50% 40%, rgba(150,25,30,.16) 0%, rgba(0,0,0,.58) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.071 0.290 0.110 0.176 0.169'/%3E%3CfeFuncG type='discrete' tableValues='0.027 0.063 0.137 0.051 0.165'/%3E%3CfeFuncB type='discrete' tableValues='0.031 0.078 0.078 0.063 0.090'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #140708 !important;
+    background-size: auto, 560px 560px, auto !important;
     color: #e6d9c2 !important; color-scheme: dark;
 }
 html body.horror-mode .sq-normal { background-color: #231918 !important; box-shadow: inset 0 0 0 1px rgba(150,25,25,.28), inset 0 1px 0 rgba(255,255,255,.04) !important; }
@@ -1398,7 +1398,6 @@ html body.horror-mode #mp-card button.mp-btn.mp-danger { background: #5e0c10 !im
 html body.horror-mode #mp-card .mp-error { color: #ff7a6a !important; }
 html body.horror-mode #mp-card .mp-code-display { background: rgba(255,255,255,.06) !important; }
 html body.horror-mode #mp-toast { background: rgba(20,6,7,.96) !important; color: #e9dfc8 !important; border-color: rgba(170,25,30,.7) !important; }
-html body.horror-mode #welcome-splash { background: radial-gradient(ellipse at 50% 42%, rgba(130,12,20,.35) 0%, rgba(0,0,0,.92) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55  0 0 0 0 .08  0 0 0 0 .08  0 0 0 .13 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), #050203 !important; background-size: auto, 300px 300px, auto !important; }
 
 /* ---- effects layer (created by script#horror-fx-script, only while the horror theme is on) ---- */
 #horror-fx { position: fixed; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
