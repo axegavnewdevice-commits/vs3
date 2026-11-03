@@ -3,11 +3,12 @@
 /* ---- toolbar button (same icon-only family as the other toolbar buttons) ---- */
 #game-controls button#mp-online-button {
   display: inline-flex !important; align-items: center !important; justify-content: center !important;
-  padding: 0 !important; min-width: calc(38px * var(--ui-scale, 1)) !important; min-height: calc(38px * var(--ui-scale, 1)) !important;
+  padding: 0 !important; min-width: calc(34px * var(--ui-scale, 1)) !important; min-height: calc(34px * var(--ui-scale, 1)) !important;
   font-size: 0 !important; line-height: 1 !important; border-radius: 12px !important;
   background: linear-gradient(145deg, #5f9a8f, #2f6a5f) !important; color: #f3f6e4 !important;
   box-shadow: 0 3px 9px rgba(8, 50, 40, .28), inset 0 1px 0 rgba(255, 255, 255, .22) !important;
-  touch-action: none !important;
+  touch-action: none !important; overflow: hidden !important; white-space: nowrap !important;
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease !important;
 }
 #game-controls button#mp-online-button::before {
   content: "" !important; display: block !important; width: 56% !important; height: 56% !important;
