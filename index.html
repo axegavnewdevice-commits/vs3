@@ -5331,11 +5331,15 @@ html body.girly-mode .sq-star {
     touch-action: none !important; overflow: hidden !important; white-space: nowrap !important;
     container-type: inline-size;
 }
+/* The number is taken out of the layout flow, so it can never make this button taller than the others. */
 #game-controls button#bag-count-button .bag-count-num {
+    position: absolute; left: 50%; top: 50%; margin: 0; padding: 0; display: block;
     font-family: 'Traditional Arabic', 'Amiri', serif; font-weight: 700; font-variant-numeric: tabular-nums;
-    direction: ltr; unicode-bidi: isolate; line-height: 1; pointer-events: none;
-    font-size: calc(22px * var(--ui-scale, 1));
-    font-size: clamp(14px, 40cqw, 140px);   /* grows and shrinks with the button */
+    direction: ltr; unicode-bidi: isolate; line-height: 1; white-space: nowrap; pointer-events: none;
+    font-size: calc(16px * var(--ui-scale, 1));
+    font-size: clamp(10px, 30cqw, 100px);   /* follows the button width */
+    /* --lx / --ly (em) are measured offsets that put the visible digits in the exact centre */
+    transform: translate(-50%, -50%) translate(calc(var(--lx, 0) * 1em), calc(var(--ly, 0) * 1em));
 }
 #game-controls button#bag-count-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
 #game-controls button#bag-count-button[data-empty="true"] { opacity: .55 !important; }
@@ -5370,9 +5374,41 @@ html body.academic-mode #game-controls button#bag-count-button {
       const span = b.querySelector('.bag-count-num'); if (span) span.textContent = String(n);   // plain 0-9 digits
       b.dataset.empty = String(n === 0);
       b.setAttribute('aria-label', 'Tiles left in bag: ' + n);
+      center();
     } catch (_) {}
   };
-  const start = () => { window.updateBagCount(); setInterval(window.updateBagCount, 1500); };   // the interval is only a safety net
+  /* Puts the VISIBLE digits in the exact middle of the button: the digits' real ink box (canvas, same font)
+     is compared with the line box the browser rendered, and the difference is stored in em. */
+  const ctx = document.createElement('canvas').getContext('2d');
+  const center = () => {
+    try {
+      const b = document.getElementById('bag-count-button'), span = b && b.querySelector('.bag-count-num');
+      if (!span || !span.isConnected) return;
+      const text = (span.textContent || '').trim(), cs = getComputedStyle(span), px = parseFloat(cs.fontSize);
+      if (!text || !px) return;
+      const SIZE = 200;
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${SIZE}px ${cs.fontFamily}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.direction = 'ltr';
+      const m = ctx.measureText(text);
+      if (!(m.actualBoundingBoxAscent || m.actualBoundingBoxDescent)) return;
+      const dx = (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) / SIZE;
+      const mid = (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / SIZE;
+      const probe = document.createElement('i');
+      probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;';
+      span.appendChild(probe);
+      const box = span.getBoundingClientRect(), base = probe.getBoundingClientRect().bottom - box.top;
+      span.removeChild(probe);
+      if (!box.height) return;
+      span.style.setProperty('--lx', dx.toFixed(4));
+      span.style.setProperty('--ly', ((box.height / 2 - (base - mid * px)) / px).toFixed(4));
+    } catch (_) {}
+  };
+  const start = () => {
+    window.updateBagCount(); setInterval(window.updateBagCount, 1500);   // the interval is only a safety net
+    const b = document.getElementById('bag-count-button');
+    if (b && window.ResizeObserver) new ResizeObserver(center).observe(b);   // re-centre when the button is resized
+    window.addEventListener('resize', center);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(center);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
 })();
 </script>
