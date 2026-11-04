@@ -1573,6 +1573,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="support-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Support the developer" title="Support the developer">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </button>
+            <button id="bag-count-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Tiles left in bag: 88" title="Tiles left in bag"><span class="bag-count-num" aria-hidden="true">88</span></button>
         </div>
 
         <div id="status-message" class="text-center h-8 mb-1 font-semibold transition-all duration-500"></div>
@@ -2766,6 +2767,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 renderBoard(); 
             }
             window.syncRackVisibility && window.syncRackVisibility();   // face-down racks for the player who is not on turn
+            window.updateBagCount && window.updateBagCount();           // tiles left in the bag
         };
 
         // --- Event Handlers (Drag & Drop) ---
@@ -3670,7 +3672,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
                 'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button'
+                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button'
             ]);
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
@@ -5319,6 +5321,61 @@ html body.girly-mode .sq-star {
 })();
 </script>
 
+
+<style id="bag-count-style">
+/* Bag counter: a display-only toolbar button that shows just the number of tiles left in the bag. */
+#game-controls button#bag-count-button {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    padding: 0 !important; min-width: calc(34px * var(--ui-scale, 1)) !important; min-height: calc(34px * var(--ui-scale, 1)) !important;
+    font-size: 0 !important; line-height: 1 !important; border-radius: 12px !important;
+    touch-action: none !important; overflow: hidden !important; white-space: nowrap !important;
+    container-type: inline-size;
+}
+#game-controls button#bag-count-button .bag-count-num {
+    font-family: 'Traditional Arabic', 'Amiri', serif; font-weight: 700; font-variant-numeric: tabular-nums;
+    direction: ltr; unicode-bidi: isolate; line-height: 1; pointer-events: none;
+    font-size: calc(22px * var(--ui-scale, 1));
+    font-size: clamp(14px, 40cqw, 140px);   /* grows and shrinks with the button */
+}
+#game-controls button#bag-count-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
+#game-controls button#bag-count-button[data-empty="true"] { opacity: .55 !important; }
+body #game-controls button#bag-count-button {
+    background: linear-gradient(145deg, #c0ba8c, #928d5e) !important; color: #2a3016 !important;
+    border: 1px solid rgba(30, 35, 14, .55) !important; box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .3) !important;
+}
+html body.girly-mode #game-controls button#bag-count-button {
+    background: linear-gradient(145deg, #ffd9e6, #f2a2bf) !important; color: #7a1f4a !important;
+    border: 1px solid rgba(150, 40, 90, .4) !important; box-shadow: 0 3px 9px rgba(150, 40, 90, .3), inset 0 1px 0 rgba(255, 255, 255, .6) !important;
+}
+html body.horror-mode #game-controls button#bag-count-button {
+    background: linear-gradient(145deg, #54433d, #261c19) !important; color: #e9dfc8 !important;
+    border: 1px solid rgba(0, 0, 0, .6) !important; box-shadow: 0 3px 9px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
+}
+html body.academic-mode #game-controls button#bag-count-button {
+    background: linear-gradient(145deg, #f2e8cb, #cdb98a) !important; color: #1d3253 !important;
+    border: 1px solid rgba(19, 40, 74, .5) !important; box-shadow: 0 3px 9px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .6) !important;
+}
+</style>
+<script id="bag-count">
+/* Keeps the bag counter in step with the game. Local games count the real bag; online games count the
+   placeholder list that multiplayer.js builds from the server's own number, so both players see the same value. */
+(() => {
+  let last = -1;
+  window.updateBagCount = () => {
+    try {
+      const b = document.getElementById('bag-count-button'); if (!b) return;
+      const n = (typeof tileBag !== 'undefined' && Array.isArray(tileBag)) ? tileBag.length : 0;
+      if (n === last) return;
+      last = n;
+      const span = b.querySelector('.bag-count-num'); if (span) span.textContent = String(n);   // plain 0-9 digits
+      b.dataset.empty = String(n === 0);
+      b.setAttribute('aria-label', 'Tiles left in bag: ' + n);
+    } catch (_) {}
+  };
+  const start = () => { window.updateBagCount(); setInterval(window.updateBagCount, 1500); };   // the interval is only a safety net
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+})();
+</script>
 
 </body>
 </html>
