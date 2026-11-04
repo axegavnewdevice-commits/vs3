@@ -5189,5 +5189,191 @@ html body.girly-mode .sq-star {
         }
     </script>
 
+<style id="rack-shuffle-style">
+/* small round shuffle button in each player's header, beside the name */
+.shuffle-btn { flex: none; width: 24px; height: 24px; padding: 0; margin-left: .15rem; border-radius: 50%; display: inline-grid; place-items: center; cursor: pointer;
+    color: #f6f3e8; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .38); box-shadow: 0 1px 4px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .22);
+    transition: background .15s ease, transform .15s ease, opacity .15s ease; -webkit-tap-highlight-color: transparent; }
+.shuffle-btn svg { width: 13px; height: 13px; display: block; pointer-events: none; }
+.shuffle-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .3); }
+.shuffle-btn:active:not(:disabled) { transform: scale(.9); }
+.shuffle-btn:disabled { opacity: .35; cursor: default; }
+.shuffle-btn:focus-visible { outline: 2px solid #f5e6b9; outline-offset: 2px; }
+.shuffle-btn.spin svg { animation: rsSpin .45s ease; }
+@keyframes rsSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+/* rearranging */
+.rack .tile { touch-action: none; }
+.rack-slot.rs-over { outline: 2px dashed rgba(245, 230, 185, .95); outline-offset: -2px; }
+.rs-ghost { position: fixed; z-index: 99995; pointer-events: none; opacity: .92; transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); }
+.rs-lifted { opacity: .35; }
+@media (prefers-reduced-motion: reduce) { .shuffle-btn.spin svg { animation: none; } }
+</style>
+<script id="rack-shuffle">
+/* Rack shuffle + rearrange. Only changes the ORDER of the current player's own rack; scoring, the board and
+   the rest of the game are never touched. Empty slots (tiles currently on the board) always stay where they are,
+   so "cancel move" still returns every tile to its own slot. */
+(() => {
+  const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>';
+  const rackOf = (p) => (p === 1 ? player1Rack : player2Rack);
+  const blocked = () => {
+    try {
+      if (gameEnded || gamePaused || isSwappingMode) return true;
+      if (window.MP && MP.active && !MP.canAct()) return true;
+    } catch (_) { return true; }
+    return false;
+  };
+
+  /* ---- online games: the server sends the rack in its own order, so remember mine and re-apply it ---- */
+  let savedOrder = [];
+  const remember = (rack) => { savedOrder = rack.filter(Boolean).map((t) => t.id); };
+  window.applyRackOrder = (rack) => {
+    try {
+      if (!savedOrder.length || !Array.isArray(rack)) return rack;
+      const pos = []; rack.forEach((t, i) => { if (t) pos.push(i); });
+      const tiles = pos.map((i) => rack[i]);
+      const rank = (t) => { const k = savedOrder.indexOf(t.id); return k < 0 ? 1e6 : k; };
+      const sorted = tiles.map((t, i) => ({ t, i })).sort((a, b) => (rank(a.t) - rank(b.t)) || (a.i - b.i)).map((x) => x.t);
+      pos.forEach((i, k) => { rack[i] = sorted[k]; });
+    } catch (_) {}
+    return rack;
+  };
+
+  const redraw = () => { try { updateUI(true); } catch (_) {} };
+
+  /* ---- shuffle ---- */
+  const shuffle = () => {
+    if (blocked()) return;
+    const rack = rackOf(currentPlayer);
+    const pos = []; rack.forEach((t, i) => { if (t) pos.push(i); });
+    if (pos.length < 2) return;
+    const before = pos.map((i) => rack[i].id).join('|');
+    let tiles = pos.map((i) => rack[i]);
+    for (let attempt = 0; attempt < 6; attempt++) {
+      for (let i = tiles.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [tiles[i], tiles[j]] = [tiles[j], tiles[i]]; }
+      if (tiles.map((t) => t.id).join('|') !== before) break;
+    }
+    pos.forEach((i, k) => { rack[i] = tiles[k]; });
+    remember(rack);
+    window.gameHaptic && window.gameHaptic();
+    redraw();
+  };
+
+  /* ---- rearrange: move the tile in slot `from` to slot `to`; the tiles in between slide over ---- */
+  const move = (from, to) => {
+    if (blocked() || from === to) return false;
+    const rack = rackOf(currentPlayer);
+    if (!rack[from]) return false;
+    if (rack[to]) {
+      const pos = []; rack.forEach((t, i) => { if (t) pos.push(i); });
+      const tiles = pos.map((i) => rack[i]);
+      const a = pos.indexOf(from), b = pos.indexOf(to);
+      tiles.splice(b, 0, tiles.splice(a, 1)[0]);
+      pos.forEach((i, k) => { rack[i] = tiles[k]; });
+    } else {
+      if (placedTilesInTurn.length) return false;          // empty slots belong to tiles on the board while a move is in play
+      rack[to] = rack[from]; rack[from] = null;
+    }
+    remember(rack);
+    window.gameHaptic && window.gameHaptic();
+    redraw();
+    return true;
+  };
+
+  const slotOf = (el) => (el && el.closest ? el.closest('.rack-slot') : null);
+  const ownSlot = (slot) => !!slot && parseInt(slot.dataset.playerId, 10) === currentPlayer;
+  const clearOver = () => document.querySelectorAll('.rack-slot.rs-over').forEach((s) => s.classList.remove('rs-over'));
+
+  /* mouse: the game's tiles are native drag-and-drop tiles; handle rack -> rack drops in the capture phase */
+  document.addEventListener('dragover', (e) => {
+    try {
+      if (!draggedTileOrigin || draggedTileOrigin.type !== 'rack') return;
+      const slot = slotOf(e.target); if (!ownSlot(slot) || blocked()) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      e.dataTransfer.dropEffect = 'move';
+      if (!slot.classList.contains('rs-over')) { clearOver(); slot.classList.add('rs-over'); }
+    } catch (_) {}
+  }, true);
+  document.addEventListener('drop', (e) => {
+    try {
+      if (!draggedTileOrigin || draggedTileOrigin.type !== 'rack') return;
+      const slot = slotOf(e.target); clearOver(); if (!ownSlot(slot) || blocked()) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      const from = draggedTileOrigin.index, to = parseInt(slot.dataset.slotIndex, 10);
+      draggedTileId = null; draggedTileOrigin = null;
+      if (!move(from, to)) redraw();
+    } catch (_) {}
+  }, true);
+  document.addEventListener('dragend', clearOver, true);
+
+  /* touch / pen: native drag-and-drop does not exist there, so drag the tile with pointer events */
+  let g = null, swallowClick = 0;
+  document.addEventListener('pointerdown', (e) => {
+    try {
+      if (e.pointerType === 'mouse' || e.button > 0) return;
+      const tile = e.target.closest && e.target.closest('.rack .tile'); if (!tile) return;
+      const slot = slotOf(tile); if (!ownSlot(slot) || blocked()) return;
+      g = { id: e.pointerId, tile, slot, from: parseInt(slot.dataset.slotIndex, 10), x: e.clientX, y: e.clientY, on: false, ghost: null };
+    } catch (_) { g = null; }
+  }, true);
+  document.addEventListener('pointermove', (e) => {
+    if (!g || e.pointerId !== g.id) return;
+    if (!g.on) {
+      if (Math.hypot(e.clientX - g.x, e.clientY - g.y) < 10) return;
+      g.on = true;
+      const r = g.tile.getBoundingClientRect();
+      const ghost = g.tile.cloneNode(true); ghost.classList.add('rs-ghost'); ghost.removeAttribute('draggable'); ghost.style.width = r.width + 'px'; ghost.style.height = r.height + 'px';
+      document.body.appendChild(ghost); g.ghost = ghost; g.tile.classList.add('rs-lifted');
+    }
+    e.preventDefault();
+    g.ghost.style.left = e.clientX + 'px'; g.ghost.style.top = e.clientY + 'px';
+    const over = slotOf(document.elementFromPoint(e.clientX, e.clientY));
+    clearOver(); if (ownSlot(over)) over.classList.add('rs-over');
+  }, { passive: false, capture: true });
+  const endTouch = (e, commit) => {
+    if (!g || e.pointerId !== g.id) return;
+    const s = g; g = null;
+    if (!s.on) return;
+    s.ghost && s.ghost.remove(); s.tile.classList.remove('rs-lifted'); clearOver();
+    swallowClick = Date.now() + 400;
+    if (commit) {
+      const over = slotOf(document.elementFromPoint(e.clientX, e.clientY));
+      if (ownSlot(over)) move(s.from, parseInt(over.dataset.slotIndex, 10));
+    }
+  };
+  document.addEventListener('pointerup', (e) => endTouch(e, true), true);
+  document.addEventListener('pointercancel', (e) => endTouch(e, false), true);
+  document.addEventListener('click', (e) => { if (Date.now() < swallowClick) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+
+  /* ---- the buttons ---- */
+  const addButtons = () => {
+    [1, 2].forEach((p) => {
+      const host = document.querySelector('#player-' + p + '-turn');
+      if (!host || host.querySelector('.shuffle-btn')) return;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'shuffle-btn'; b.dataset.player = p; b.innerHTML = ICON;
+      b.setAttribute('aria-label', 'Shuffle tiles'); b.title = 'Shuffle tiles';
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (parseInt(b.dataset.player, 10) !== currentPlayer) return;
+        b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin');
+        shuffle();
+      });
+      ['dblclick', 'pointerdown'].forEach((t) => b.addEventListener(t, (e) => e.stopPropagation()));
+      host.appendChild(b);
+    });
+  };
+  const refresh = () => {
+    document.querySelectorAll('.shuffle-btn').forEach((b) => {
+      let off = true;
+      try { off = parseInt(b.dataset.player, 10) !== currentPlayer || blocked() || rackOf(currentPlayer).filter(Boolean).length < 2; } catch (_) {}
+      if (b.disabled !== off) b.disabled = off;
+    });
+  };
+  const boot = () => { addButtons(); refresh(); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
+  setInterval(() => { addButtons(); refresh(); }, 350);
+})();
+</script>
+
 </body>
 </html>

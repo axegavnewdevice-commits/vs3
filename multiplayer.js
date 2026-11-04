@@ -219,6 +219,7 @@
       tileBag = Array.from({ length: v.bagCount }, (_, i) => ({ id: 'bag-' + i }));    // only the COUNT of the bag is known here
       const opp = MP.seat === 1 ? 2 : 1;
       const mine = (resp.rack || []).map((t) => (t ? { id: t.id, letter: t.letter, value: t.value, isBlank: t.isBlank } : null));
+      if (window.applyRackOrder) window.applyRackOrder(mine);                         // keep the order I arranged my tiles in
       const theirs = dummyRack(opp, v.rackCounts[opp]);                                  // face-down placeholders, no letters
       player1Rack = MP.seat === 1 ? mine : theirs; player2Rack = MP.seat === 1 ? theirs : mine;
       placedTilesInTurn = []; selectedRackTileId = null; draggedTileId = null; draggedTileOrigin = null;
