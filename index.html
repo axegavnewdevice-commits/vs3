@@ -2407,7 +2407,6 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             draggedTileOrigin = null; 
             selectedRackTileId = null;
             lastMoveData = null; // Clear undo data
-            window.clearLastMove && window.clearLastMove();
             consecutiveScorelessTurns = 0;
             
             // Reset end/paused state
@@ -2661,7 +2660,6 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             attachBoardEventListeners();
             window.MP && MP.paintDraft && MP.paintDraft();   // online: the opponent's tentative tiles
-            window.paintLastMove && window.paintLastMove();   // highlight the most recent move
         };
 
         /** * Updates the entire game UI. 
@@ -3227,7 +3225,6 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             const score = calculateScore();
             window.animateFormedWords && window.animateFormedWords(validationResult.words);  // blink the new word and its cross words
-            window.markLastMove && window.markLastMove(placedTilesInTurn.map(p => ({ r: p.r, c: p.c })), score);   // keep the new tiles highlighted
             const tilesUsedCount = placedTilesInTurn.length;
             const formerPlayer = currentPlayer;
             const rack = formerPlayer === 1 ? player1Rack : player2Rack;
@@ -3399,7 +3396,6 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             currentPlayer = playerId;
 
             // 5. Clear Undo state
-            window.clearLastMove && window.clearLastMove();
             lastMoveData = null;
             consecutiveScorelessTurns = 0;
 
@@ -5323,72 +5319,6 @@ html body.girly-mode .sq-star {
 })();
 </script>
 
-<style id="last-move-style">
-/* Last-move highlight: glow ring on the newest tiles + a small score tag (plain 0-9 digits). Colour follows the theme. */
-body { --lm-color: #e8a317; --lm-ink: #412402; }
-body.girly-mode { --lm-color: #d6246e; --lm-ink: #ffffff; }
-body.horror-mode { --lm-color: #ff4a1c; --lm-ink: #ffffff; }
-body.academic-mode { --lm-color: #f2c14e; --lm-ink: #2a1c04; }
-html body #game-board > .square.has-tile > .tile.last-move > .tile-content {
-    box-shadow: inset 0 0 0 3px var(--lm-color), inset 0 0 8px 2px var(--lm-color) !important;
-}
-.tile.lm-pulse { animation: lmPulse 1.2s ease-in-out 1; }
-@keyframes lmPulse { 0%, 100% { filter: none; } 50% { filter: brightness(1.22); } }
-.lm-tag {
-    position: absolute; z-index: 6; pointer-events: none; transform: translateX(-50%);
-    padding: 1px .55em; border-radius: 999px; background: var(--lm-color); color: var(--lm-ink);
-    font-weight: 700; line-height: 1.35; direction: ltr; unicode-bidi: isolate; white-space: nowrap;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, .4); transition: opacity .4s ease;
-}
-@media (prefers-reduced-motion: reduce) { .tile.lm-pulse { animation: none; } .lm-tag { transition: none; } }
-</style>
-<script id="last-move-highlight">
-/* Marks the tiles of the most recent move (glow ring, one pulse) and shows its score for a few seconds.
-   Local game: every move. Online game: the opponent's move. Cleared by undo, a new game, or the next move. */
-(() => {
-  let st = null;
-  const TAG_MS = 4500, PULSE_MS = 1300;
-  const sq = (r, c) => document.querySelector('#game-board .square[data-r="' + r + '"][data-c="' + c + '"]');
-  const dropTag = () => document.querySelectorAll('#game-board .lm-tag').forEach((e) => e.remove());
-  window.clearLastMove = () => {
-    if (st && st.timer) clearTimeout(st.timer);
-    st = null; dropTag();
-    document.querySelectorAll('#game-board .tile.last-move').forEach((t) => { t.classList.remove('last-move', 'lm-pulse'); t.style.animationDelay = ''; });
-  };
-  window.markLastMove = (cells, score) => {
-    window.clearLastMove();
-    if (!Array.isArray(cells) || !cells.length) return;
-    const now = Date.now();
-    st = { cells, score: Math.max(0, Math.round(Number(score) || 0)), t0: now, tagUntil: now + TAG_MS, timer: null };
-    st.timer = setTimeout(() => {
-      if (st) st.tagUntil = 0;
-      document.querySelectorAll('#game-board .lm-tag').forEach((tag) => { tag.style.opacity = '0'; setTimeout(() => tag.remove(), 450); });
-    }, TAG_MS);
-    window.paintLastMove();
-  };
-  window.paintLastMove = () => {
-    if (!st) return;
-    const board = document.getElementById('game-board'); if (!board) return;
-    dropTag();
-    const elapsed = Date.now() - st.t0;
-    let top = null;
-    st.cells.forEach(({ r, c }) => {
-      const s = sq(r, c), tile = s && s.querySelector('.tile'); if (!tile) return;
-      tile.classList.add('last-move');
-      if (elapsed < PULSE_MS) { tile.classList.add('lm-pulse'); tile.style.animationDelay = '-' + (elapsed / 1000).toFixed(2) + 's'; }
-      if (!top || r < top.r || (r === top.r && c > top.c)) top = { r, c, sq: s };
-    });
-    if (!top || st.score <= 0 || Date.now() >= st.tagUntil) return;
-    const tag = document.createElement('div');
-    tag.className = 'lm-tag'; tag.setAttribute('aria-hidden', 'true');
-    tag.textContent = '+' + st.score;                                   // plain 0-9 digits on purpose
-    tag.style.fontSize = Math.max(10, Math.min(18, top.sq.offsetWidth * 0.42)) + 'px';
-    board.appendChild(tag);
-    tag.style.left = (top.sq.offsetLeft + top.sq.offsetWidth / 2) + 'px';
-    tag.style.top = Math.max(-2, top.sq.offsetTop - tag.offsetHeight * 0.8) + 'px';
-  };
-})();
-</script>
 
 </body>
 </html>
