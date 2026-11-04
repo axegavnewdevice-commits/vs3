@@ -197,6 +197,7 @@
     if (!resp.view || resp.version < MP.version) return;
     const v = resp.view, prev = MP.view;
     const sameTurn = !!prev && prev.game === v.game && prev.turnNo === v.turnNo;
+    let newTiles = [];
     MP.applying = true;
     try {
       // keep the tiles I am arranging if only something unrelated (pause, presence ...) changed
@@ -211,8 +212,11 @@
       MP.seat = resp.seat || MP.seat; MP.view = v; MP.version = resp.version; MP.status = resp.status; MP.names = resp.names || MP.names;
       MP.seated = resp.seated; MP.skew = resp.serverNow - Date.now();
 
+      const prevIds = new Set();
+      boardState.forEach((row) => row.forEach((t) => { if (t) prevIds.add(t.id); }));
       const board = Array.from({ length: 15 }, () => Array(15).fill(null));
       v.board.forEach((c) => { board[c.r][c.c] = { id: c.id, letter: c.letter, value: c.value, isBlank: c.isBlank }; });
+      if (prev) v.board.forEach((c) => { if (!prevIds.has(c.id)) newTiles.push({ r: c.r, c: c.c }); });   // tiles that just appeared
       boardState = board;
       scores = { 1: v.scores[1], 2: v.scores[2] };
       currentPlayer = v.current; gameStarted = v.started; gamePaused = v.paused; gameEnded = v.ended; consecutiveScorelessTurns = v.scoreless;
@@ -243,6 +247,12 @@
         if (ev.type === 'resume' && ev.seat !== MP.seat) toast(T.resumed);
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
         if (ev.type === 'new_game') closeResult();
+        if (ev.type === 'move') {
+          const mover = ev.seat || (v.lastMove && v.lastMove.seat);
+          if (mover !== MP.seat && window.markLastMove) window.markLastMove(newTiles, v.lastMove ? v.lastMove.score : 0);   // opponent's move: highlight it
+          else if (window.clearLastMove) window.clearLastMove();
+        }
+        if ((ev.type === 'undo' || ev.type === 'new_game') && window.clearLastMove) window.clearLastMove();
       }
     }
     if (prev && prev.status !== 'playing' && resp.status === 'playing' && MP.seat === 1) toast(T.joined);
