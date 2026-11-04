@@ -5206,6 +5206,8 @@ html body.girly-mode .sq-star {
 .rack-slot.rs-over { outline: 2px dashed rgba(245, 230, 185, .95); outline-offset: -2px; }
 .rs-ghost { position: fixed; z-index: 99995; pointer-events: none; opacity: .92; transform: translate(-50%, -50%) scale(1.08); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45)); }
 .rs-lifted { opacity: .35; }
+.rack.rs-animating .rack-slot { overflow: visible !important; }
+.rack.rs-animating .tile { will-change: translate, scale, rotate; }
 @media (prefers-reduced-motion: reduce) { .shuffle-btn.spin svg { animation: none; } }
 </style>
 <script id="rack-shuffle">
@@ -5240,22 +5242,55 @@ html body.girly-mode .sq-star {
 
   const redraw = () => { try { updateUI(true); } catch (_) {} };
 
-  /* ---- shuffle ---- */
+  /* ---- shuffle (with a calm glide: each tile lifts, arcs to its new slot and settles, one after another) ---- */
+  const reducedMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; } };
+  let gliding = false;
+  const DURATION = 520, STAGGER = 28;                       // ms per tile, ms between tiles (whole shuffle ~0.7 s)
+  const glide = (rackEl, before) => {
+    if (!rackEl || !rackEl.animate) return;
+    const tiles = [...rackEl.querySelectorAll('.tile')];
+    let n = 0;
+    rackEl.classList.add('rs-animating');
+    tiles.forEach((t, i) => {
+      const o = before[t.dataset.tileId]; if (!o) return;
+      const r = t.getBoundingClientRect();
+      const dx = o.left - r.left, dy = o.top - r.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      t.style.zIndex = '6'; n++;
+      t.animate([
+        { translate: dx + 'px ' + dy + 'px', scale: 1, rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(0,0,0,0))', offset: 0 },
+        { translate: (dx * .5) + 'px ' + (dy * .5 - 14) + 'px', scale: 1.14, rotate: (dx > 0 ? -5 : 5) + 'deg', filter: 'drop-shadow(0 8px 8px rgba(0,0,0,.38))', offset: .5 },
+        { translate: '0px 0px', scale: 1, rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(0,0,0,0))', offset: 1 }
+      ], { duration: DURATION, delay: i * STAGGER, easing: 'cubic-bezier(.3,.7,.25,1)', fill: 'backwards' });
+    });
+    if (!n) { rackEl.classList.remove('rs-animating'); return; }
+    gliding = true;
+    setTimeout(() => {
+      rackEl.classList.remove('rs-animating');
+      rackEl.querySelectorAll('.tile').forEach((t) => { t.style.zIndex = ''; });
+      gliding = false;
+    }, DURATION + tiles.length * STAGGER + 80);
+  };
+
   const shuffle = () => {
-    if (blocked()) return;
+    if (blocked() || gliding) return;
     const rack = rackOf(currentPlayer);
     const pos = []; rack.forEach((t, i) => { if (t) pos.push(i); });
     if (pos.length < 2) return;
-    const before = pos.map((i) => rack[i].id).join('|');
+    const was = pos.map((i) => rack[i].id).join('|');
     let tiles = pos.map((i) => rack[i]);
     for (let attempt = 0; attempt < 6; attempt++) {
       for (let i = tiles.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [tiles[i], tiles[j]] = [tiles[j], tiles[i]]; }
-      if (tiles.map((t) => t.id).join('|') !== before) break;
+      if (tiles.map((t) => t.id).join('|') !== was) break;
     }
+    const rackEl = document.getElementById('rack-' + currentPlayer);
+    const before = {};
+    if (rackEl && !reducedMotion()) rackEl.querySelectorAll('.tile').forEach((t) => { before[t.dataset.tileId] = t.getBoundingClientRect(); });
     pos.forEach((i, k) => { rack[i] = tiles[k]; });
     remember(rack);
     window.gameHaptic && window.gameHaptic();
     redraw();
+    if (!reducedMotion()) glide(document.getElementById('rack-' + currentPlayer), before);
   };
 
   /* ---- rearrange: move the tile in slot `from` to slot `to`; the tiles in between slide over ---- */
