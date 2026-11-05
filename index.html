@@ -5115,7 +5115,7 @@ html body.girly-mode .sq-star {
         el.style.setProperty('--ly', ((box.height / 2 - inkCentre) / fontPx).toFixed(4));
         if (mo) mo.takeRecords();                                   // ignore our own probe mutations
       };
-      const sweep = (root) => { (root || document).querySelectorAll('.tile-letter').forEach(apply); if (retry) { retry = false; setTimeout(later, 450); } };
+      const sweep = (root) => { (root || document).querySelectorAll('.tile-letter').forEach(apply); if (mo) mo.takeRecords(); if (retry) { retry = false; setTimeout(later, 450); } };
       let queued = false;
       const later = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; sweep(document); }); };
       window.recenterTileLetters = later;
@@ -5123,14 +5123,27 @@ html body.girly-mode .sq-star {
         sweep(document);
         mo = new MutationObserver((muts) => {
           let need = false;
+          const fresh = new Set();                                  // letters that were just created or changed
+          const note = (el) => { const l = el && el.closest ? el.closest('.tile-letter') : null; if (l) fresh.add(l); };
           for (const m of muts) {
-            if (m.type === 'characterData') { need = true; continue; }
+            if (m.type === 'characterData') { need = true; note(m.target.parentElement); continue; }
             m.addedNodes.forEach(n => {
-              if (n.nodeType === 3) { need = true; return; }
-              if (n.nodeType === 1 && (n.matches('.tile-letter') || n.querySelector('.tile-letter') || n.closest('.tile-letter'))) need = true;
+              if (n.nodeType === 3) { need = true; note(n.parentElement); return; }
+              if (n.nodeType === 1 && (n.matches('.tile-letter') || n.querySelector('.tile-letter') || n.closest('.tile-letter'))) {
+                need = true;
+                if (n.matches('.tile-letter')) fresh.add(n);
+                n.querySelectorAll('.tile-letter').forEach(l => fresh.add(l));
+                note(n);
+              }
             });
           }
-          if (need) later();
+          if (!need) return;
+          // This callback runs before the next paint, so measuring here means a new letter is never drawn un-centred
+          // (before, it waited for the next frame: one visible frame with the letter off-centre, e.g. after a shuffle).
+          fresh.forEach(apply);
+          mo.takeRecords();                                         // drop the records our own measuring probes created
+          if (retry) { retry = false; setTimeout(later, 450); }
+          later();                                                  // the usual next-frame pass stays as a safety net
         });
         mo.observe(document.body, { childList: true, subtree: true, characterData: true });
         if (window.ResizeObserver) {
