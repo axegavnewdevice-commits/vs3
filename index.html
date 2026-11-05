@@ -5193,10 +5193,11 @@ html body.girly-mode .sq-star {
 
 <style id="rack-shuffle-style">
 /* small round shuffle button in each player's header, beside the name */
-.shuffle-btn { flex: none; width: 24px; height: 24px; padding: 0; margin-left: .15rem; border-radius: 50%; display: inline-grid; place-items: center; cursor: pointer;
+.shuffle-btn { position: relative; flex: none; width: 21.6px; height: 21.6px; padding: 0; margin-left: .15rem; border-radius: 50%; display: inline-grid; place-items: center; cursor: pointer;
     color: #f6f3e8; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .38); box-shadow: 0 1px 4px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .22);
     transition: background .15s ease, transform .15s ease, opacity .15s ease; -webkit-tap-highlight-color: transparent; }
-.shuffle-btn svg { width: 13px; height: 13px; display: block; pointer-events: none; }
+.shuffle-btn svg { width: 11.7px; height: 11.7px; display: block; pointer-events: none; }
+.shuffle-btn::after { content: ''; position: absolute; inset: -1.2px; }   /* keeps the tap area at the old 24px */
 .shuffle-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .3); }
 .shuffle-btn:active:not(:disabled) { transform: scale(.9); }
 .shuffle-btn:disabled { opacity: .35; cursor: default; }
