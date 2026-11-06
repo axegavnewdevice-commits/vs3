@@ -1,5 +1,5 @@
 /* Arabic Scrabble service worker — bump CACHE_VERSION on every deploy. */
-const CACHE_VERSION = 'v56';
+const CACHE_VERSION = 'v57';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const SCOPE = self.registration.scope; // works at the domain root or in a sub-folder
@@ -66,7 +66,8 @@ self.addEventListener('fetch', (event) => {
   // Same-origin files + CDN assets: cache first, refresh in the background.
   event.respondWith((async () => {
     const cache = await caches.open(RUNTIME_CACHE);
-    const cached = await cache.match(request);
+    // Also look in the shell cache: files saved at install (words.bin, wordcheck.js, multiplayer.js, icons ...) live there, so they work offline even if never fetched before.
+    const cached = (await cache.match(request)) || (await (await caches.open(SHELL_CACHE)).match(request));
     const network = fetch(request)
       .then((response) => {
         if (response && (response.ok || response.type === 'opaque')) cache.put(request, response.clone());
