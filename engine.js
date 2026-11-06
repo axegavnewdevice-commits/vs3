@@ -2,7 +2,7 @@
  * Arabic Scrabble rules engine (server side, pure: no I/O).
  *
  * Everything here is a 1:1 port of the rules in index.html (tile table, board layout,
- * validatePlacement, scoreWord, submit/swap/pass/undo/surrender/end-game logic).
+ * validatePlacement, scoreWord, submit/swap/pass/surrender/end-game logic), plus the dictionary check on every move.
  * tests/parity.test.mjs runs the ORIGINAL functions from index.html side by side with this
  * file on thousands of random positions to prove the scoring and validation are identical.
  */
@@ -248,7 +248,7 @@ export function createGame(game = 1) {
     scores: { 1: 0, 2: 0 }, current: 1, turnNo: 0,
     started: false, paused: false, ended: false,
     clocks: { 1: INITIAL_TIME_MS, 2: INITIAL_TIME_MS }, turnStartedAt: null,
-    scoreless: 0, lastMove: null, undoRequest: null, result: null,
+    scoreless: 0, lastMove: null, result: null,
     history: [], rackRev: { 1: 0, 2: 0 }, event: null, eventNo: 0, seen: [],
   };
 }
@@ -285,7 +285,6 @@ function endGame(G, reason, now, extra = {}) {
   G.turnStartedAt = null;
   G.started = false;
   G.ended = true;
-  G.undoRequest = null;
   const deduction = { 1: 0, 2: 0 }, bonus = { 1: 0, 2: 0 };
   [1, 2].forEach((p) => {
     const value = G.racks[p].reduce((sum, t) => (t ? sum + (t.isBlank ? 0 : t.value) : sum), 0);
@@ -331,7 +330,7 @@ export function settle(G, now) {
 const err = (code) => ({ error: code });
 const isInt = (n, lo, hi) => Number.isInteger(n) && n >= lo && n <= hi;
 
-function actMove(G, seat, a, now) {
+function actMove(G, seat, a, now, isValidWord) {
   const list = a.placements;
   if (!Array.isArray(list) || list.length < 1 || list.length > RACK_SIZE) return err('bad_move');
   const rack = G.racks[seat];
@@ -359,15 +358,19 @@ function actMove(G, seat, a, now) {
   const validation = validatePlacement(work, placed);
   if (typeof validation === 'string') return { error: 'invalid_placement', message: validation };
 
-  const score = scoreMove(work, placed);
+  // Dictionary check: a move that forms a word (main or crossing) that is not in the word list is refused and nothing changes.
   const wordText = validation.words.map((w) => w.map(({ tile }) => tile.letter).join(''));
+  if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
+  const unknown = wordText.filter((w) => !isValidWord(w));
+  if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };
+
+  const score = scoreMove(work, placed);
   const wordCells = validation.words.map((w) => w.map(({ r, c }) => [r, c]));
 
   // --- from here the move is legal: mutate ---
   checkpoint(G, now);
   if (!G.started) G.started = true;
   G.scoreless = 0;
-  G.undoRequest = null;
   const placements = staged.map((s) => ({ r: s.r, c: s.c, tile: work[s.r][s.c] }));
   staged.forEach((s) => { G.board[s.r][s.c] = work[s.r][s.c]; rack[s.idx] = null; });
 
@@ -422,7 +425,6 @@ function actSwap(G, seat, a, now) {
   rack.forEach((t, i) => { if (t === null && newTiles.length) rack[i] = newTiles.shift(); });
   G.rackRev[seat] += 1;
   G.lastMove = null;
-  G.undoRequest = null;
   G.scoreless += 1;
   if (!G.started) G.started = true;
   record(G, { type: 'swap', seat, count: indices.length }, now);
@@ -435,65 +437,9 @@ function actPass(G, seat, a, now) {
   checkpoint(G, now);
   G.scoreless += 1;
   G.lastMove = null;
-  G.undoRequest = null;
   record(G, { type: 'pass', seat }, now);
   switchTurn(G, now);
   checkEnd(G, now);
-  return { G, rackChanged: [] };
-}
-
-function performUndo(G, now) {
-  const { seat, score, placements, drawn } = G.lastMove;
-  const rack = G.racks[seat];
-  checkpoint(G, now);
-  G.scores[seat] = Math.max(0, G.scores[seat] - score);
-  placements.forEach(({ r, c, tile }) => {
-    if (G.board[r][c] && G.board[r][c].id === tile.id) G.board[r][c] = null;
-  });
-  // Take the freshly drawn tiles back out of the rack and return them to the front of the bag.
-  drawn.forEach((d) => {
-    const i = rack.findIndex((t) => t && t.id === d.id);
-    if (i !== -1) rack[i] = null;
-  });
-  G.bag.unshift(...drawn);
-  placements.forEach(({ tile }) => {
-    const restored = { ...tile };
-    if (restored.isBlank) restored.letter = ' '; // the player chooses the blank's letter again
-    const i = rack.findIndex((t) => t === null);
-    if (i !== -1) rack[i] = restored; else rack.push(restored);
-  });
-  G.rackRev[seat] += 1;
-  G.current = seat;
-  G.lastMove = null;
-  G.undoRequest = null;
-  G.scoreless = 0;
-  G.turnStartedAt = G.started && !G.paused && !G.ended ? now : null;
-  record(G, { type: 'undo', seat, score }, now);
-}
-
-function actUndo(G, seat, a, now) {
-  if (!G.lastMove) return err('nothing_to_undo');
-  if (G.lastMove.seat !== seat) return err('not_your_move');
-  performUndo(G, now);
-  return { G, rackChanged: [seat] };
-}
-
-function actUndoRequest(G, seat, a, now) {
-  if (!G.lastMove) return err('nothing_to_undo');
-  if (G.lastMove.seat === seat) return err('own_move');
-  G.undoRequest = { by: seat, turnNo: G.turnNo };
-  G.eventNo += 1;
-  G.event = { no: G.eventNo, type: 'undo_request', seat };
-  return { G, rackChanged: [] };
-}
-
-function actUndoRespond(G, seat, a, now) {
-  if (!G.lastMove || !G.undoRequest) return err('no_request');
-  if (G.lastMove.seat !== seat) return err('not_your_move');
-  if (a.accept === true) { performUndo(G, now); return { G, rackChanged: [seat] }; }
-  G.undoRequest = null;
-  G.eventNo += 1;
-  G.event = { no: G.eventNo, type: 'undo_declined', seat };
   return { G, rackChanged: [] };
 }
 
@@ -517,7 +463,6 @@ function actSurrender(G, seat, a, now, extra = {}) {
   G.started = false;
   G.ended = true;
   G.paused = false;
-  G.undoRequest = null;
   G.result = { reason: 'surrender', loser, winner, ...extra };
   record(G, { type: 'end', seat: loser, reason: 'surrender' }, now);
   return { G, rackChanged: [] };
@@ -542,14 +487,15 @@ function actNewGame(G, seat, a, now) {
   return { G: next, rackChanged: [1, 2] };
 }
 
-const NEEDS_TURNNO = new Set(['move', 'swap', 'pass', 'undo', 'undo_request', 'undo_respond']);
+const NEEDS_TURNNO = new Set(['move', 'swap', 'pass']);
 
 /**
  * Applies one action by `seat`. Returns { G, rackChanged } or { error, message? }.
  * `a.game` / `a.turnNo` guard against replayed or stale requests; `a.actionId` makes retries idempotent.
+ * `opts.isValidWord(word) -> boolean` is the dictionary every `move` is checked against (injected so this file stays pure).
  * On `error`, G may only have been touched by the clock-expiry settle (see `settled`).
  */
-export function act(G, seat, a, now = Date.now()) {
+export function act(G, seat, a, now = Date.now(), opts = {}) {
   if (seat !== 1 && seat !== 2) return err('bad_seat');
   if (!a || typeof a.type !== 'string') return err('bad_action');
   if (typeof a.actionId !== 'string' || a.actionId.length < 8 || a.actionId.length > 64) return err('bad_action_id');
@@ -569,15 +515,10 @@ export function act(G, seat, a, now = Date.now()) {
       if (G.ended) return err('game_over');
       if (G.paused) return err('paused');
       if (G.current !== seat) return err('not_your_turn');
-      out = a.type === 'move' ? actMove(G, seat, a, now) : a.type === 'swap' ? actSwap(G, seat, a, now) : actPass(G, seat, a, now);
+      out = a.type === 'move' ? actMove(G, seat, a, now, opts.isValidWord) : a.type === 'swap' ? actSwap(G, seat, a, now) : actPass(G, seat, a, now);
       break;
     }
-    case 'undo': case 'undo_request': case 'undo_respond': {
-      if (G.ended) return err('game_over');
-      if (G.paused) return err('paused');
-      out = a.type === 'undo' ? actUndo(G, seat, a, now) : a.type === 'undo_request' ? actUndoRequest(G, seat, a, now) : actUndoRespond(G, seat, a, now);
-      break;
-    }
+
     case 'pause': case 'resume':
       if (G.ended) return err('game_over');
       out = actPause(G, seat, a, now, a.type === 'pause');
@@ -619,7 +560,7 @@ export function publicView(G) {
     rackCounts: { 1: G.racks[1].filter(Boolean).length, 2: G.racks[2].filter(Boolean).length },
     scoreless: G.scoreless,
     lastMove: G.lastMove ? { seat: G.lastMove.seat, score: G.lastMove.score } : null,
-    undoRequest: G.undoRequest, history: G.history, rackRev: G.rackRev, event: ev,
+    history: G.history, rackRev: G.rackRev, event: ev,
   };
 }
 

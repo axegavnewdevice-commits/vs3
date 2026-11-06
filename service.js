@@ -14,6 +14,7 @@
  */
 import { randomInt, randomUUID } from 'node:crypto';
 import { createGame, act as engineAct, publicView, rackView } from './engine.js';
+import { isValidWord as defaultIsValidWord } from './wordlist.js';
 
 export class HttpError extends Error {
   constructor(status, code, extra = {}) {
@@ -31,8 +32,8 @@ export const generateCode = () => Array.from({ length: 6 }, () => CODE_ALPHABET[
 export const normalizeCode = (s) => String(s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const STATE_ERRORS = new Set([
-  'stale', 'not_your_turn', 'paused', 'game_over', 'game_not_over', 'nothing_to_undo', 'no_request',
-  'not_your_move', 'own_move', 'no_timeout', 'not_expired', 'bag_too_small', 'waiting_for_opponent',
+  'stale', 'not_your_turn', 'paused', 'game_over', 'game_not_over',
+  'no_timeout', 'not_expired', 'bag_too_small', 'waiting_for_opponent',
 ]);
 
 export function cleanName(name, seat) {
@@ -42,7 +43,7 @@ export function cleanName(name, seat) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function createService(backend, { now = () => Date.now() } = {}) {
+export function createService(backend, { now = () => Date.now(), isValidWord = defaultIsValidWord } = {}) {
   const seatOf = (loaded, userId) => {
     const p = loaded.players.find((x) => x.user_id === userId);
     return p ? p.seat : 0;
@@ -143,13 +144,13 @@ export function createService(backend, { now = () => Date.now() } = {}) {
       }
 
       const at = now();
-      const out = engineAct(G, seat, action, at);
+      const out = engineAct(G, seat, action, at, { isValidWord });
 
       if (out.duplicate) return respond(loaded, G, seat, { duplicate: true });
 
       if (out.error && !out.settled) {
         const status = STATE_ERRORS.has(out.error) ? 409 : 422;
-        throw new HttpError(status, out.error, { message: out.message, ...respond(loaded, G, seat) });
+        throw new HttpError(status, out.error, { message: out.message, words: out.words, ...respond(loaded, G, seat) });
       }
 
       const next = out.G;

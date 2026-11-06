@@ -14,7 +14,7 @@ Browser B ──HTTPS──┼─► Vercel /api functions ─┤        (only t
 ```
 
 * **The server is the referee.** `lib/engine.js` is a 1:1 port of the original tile table, board layout,
-  `validatePlacement`, `scoreWord`, bingo bonus, swap / pass / undo / surrender / end-of-game maths and clocks.
+  `validatePlacement`, `scoreWord`, bingo bonus, swap / pass / surrender / end-of-game maths and clocks.
   Clients only *request* actions; the server checks turn, tile ownership, square emptiness, blank letters and the
   original placement rules, scores the move itself, draws tiles from the hidden bag and saves everything in one
   transaction (optimistic version lock). A client can never send a score.
@@ -35,7 +35,7 @@ Browser B ──HTTPS──┼─► Vercel /api functions ─┤        (only t
 
 | Topic | Behaviour |
 | --- | --- |
-| Challenge / undo | There is no dictionary (same as the original). The player who just moved can take their move back; the opponent can *ask*, and the mover gets an Accept / Decline dialog. |
+| Word check | Every move is checked **before** it is accepted. All words it forms (main word and every crossing word) must be in the word list (`words.bin`, via `wordlist.js` on the server and `wordcheck.js` in the local game). A word is valid if it is listed or is ال + a listed word; the prefixes و ف ب ك ل س and attached pronouns are not accepted. If any word is unknown the move is refused with the rejected words named, nothing is scored, nothing changes, and the tiles stay on the board so the player can change them. Moves are final once accepted (there is no undo and no challenge). |
 | Surrender / Leave | Surrender uses the original scoring. **Leaving a running game = surrender**, and closes the room. |
 | New game | Only after a game ended (either player can start it): fresh bag and racks, Player 1 starts, as in the original. |
 | Clocks | 25:00 each, first move is free, pause stops both — as in the original, but timed by the server. A clock that hits 0 ends the game (any client reports it, the server verifies). |
@@ -113,13 +113,13 @@ npm run dev             # http://localhost:8787 — full game with in-memory roo
   executed side by side on **60 088 random positions** (10 274 legal, 49 814 illegal, 5 736 multi-word, 241 bingos):
   identical validity, error text, word lists and scores. Tile table (102 tiles) and board layout identical.
 * `tests/engine.test.mjs` — turn enforcement, replay/stale/duplicate rejection, malformed payloads, privacy of the
-  public view, clocks/pause/timeouts, swap, undo (+ approval flow), surrender, end-of-game maths, and 150 random
+  public view, clocks/pause/timeouts, swap, word check, surrender, end-of-game maths, and 150 random
   complete games checking tile conservation after every step. Mutation checks confirmed the tests fail when the
   turn check, replay check, rack-ownership check or privacy filter is removed.
 * `tests/service.test.mjs` — create/join/room-full/expired/closed, 8 simultaneous joiners (exactly one wins),
   concurrent actions with version conflicts, leave, cleanup, name sanitising, per-player response privacy.
 * `tests/e2e.mjs` — two isolated Chromium sessions through the real UI: create/join, third player refused, only
-  own rack in the DOM and JS state, wrong-turn blocked, live tentative tiles, synced move/score/bag, undo request,
+  own rack in the DOM and JS state, wrong-turn blocked, live tentative tiles, synced move/score/bag, word check,
   pass, pause, **refresh keeps the game**, offline→reconnect catch-up, surrender → result on both → new game,
   leave. Includes a regression test for a lost-update race that was found and fixed during testing.
 * `tests/e2e-local.mjs` — the original hot-seat game, scoring and save/resume prompt still behave as before.
@@ -138,11 +138,7 @@ npm run dev             # http://localhost:8787 — full game with in-memory roo
 
 ## Findings in the original game (left untouched in single-player)
 
-1. **Undo loses tiles.** `lastMoveData.tilesDrawn` is the same array that the refill loop then empties, so the
-   original undo cannot return drawn tiles to the bag, and the restored tiles are pushed past the 7th rack slot
-   where they are invisible (demonstrated by `tests/parity.test.mjs`). The **online** undo is implemented
-   correctly (exact tiles back, bag restored). To fix single-player too, change `tilesDrawn: newTiles` to
-   `tilesDrawn: [...newTiles]` in `submitMove`.
+1. **Undo lost tiles (not an issue any more).** The undo button no longer exists, so moves are never taken back.
 2. **Blank tile value.** The tile table gives the blank `value: 2` although the tile shows 0 and the end-game
    deduction counts 0; scoring uses the table value, so a freshly drawn blank scores 2. The server reproduces this
    exactly (scoring is unchanged, as requested). If you intended 0, set the blank's `value` to `0` in both

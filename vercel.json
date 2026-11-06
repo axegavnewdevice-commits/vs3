@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     { "src": "rooms.js", "use": "@vercel/node" },
-    { "src": "action.js", "use": "@vercel/node" },
+    { "src": "action.js", "use": "@vercel/node", "config": { "includeFiles": ["words.bin", "wordcheck.js"] } },
     { "src": "cleanup.js", "use": "@vercel/node" },
     { "src": "config.js", "use": "@vercel/node" },
     { "src": "index.html", "use": "@vercel/static" },
@@ -10,6 +10,8 @@
     { "src": "icon-maker.html", "use": "@vercel/static" },
     { "src": "multiplayer.js", "use": "@vercel/static" },
     { "src": "multiplayer.css", "use": "@vercel/static" },
+    { "src": "wordcheck.js", "use": "@vercel/static" },
+    { "src": "words.bin", "use": "@vercel/static" },
     { "src": "sw.js", "use": "@vercel/static" },
     { "src": "manifest.webmanifest", "use": "@vercel/static" },
     { "src": "favicon.ico", "use": "@vercel/static" },

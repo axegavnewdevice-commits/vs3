@@ -96,7 +96,7 @@ body:not(.dark-mode) #mp-card .mp-code-display { background: rgba(0, 0, 0, .08);
 #mp-card details summary { cursor: pointer; font-size: .9rem; font-weight: 700; margin-top: 12px; }
 .mp-hidden { display: none !important; }
 
-/* ---- toast + undo request ---- */
+/* ---- toast ---- */
 #mp-toast {
   position: fixed; z-index: 9600; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
   max-width: 90vw; padding: 8px 14px; border-radius: 12px; background: rgba(20, 24, 14, .94); color: #f6f0cf;
@@ -104,7 +104,5 @@ body:not(.dark-mode) #mp-card .mp-code-display { background: rgba(0, 0, 0, .08);
   opacity: 0; pointer-events: none; transition: opacity .25s ease;
 }
 #mp-toast.mp-on { opacity: 1; }
-#mp-undo-modal { position: fixed; inset: 0; z-index: 9550; display: none; align-items: center; justify-content: center; padding: 14px; background: rgba(8, 12, 6, .6); }
-#mp-undo-modal.mp-open { display: flex; }
 #mp-card .mp-diag { margin-top: 4px; font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; opacity: .7; word-break: break-all; user-select: all; }
 

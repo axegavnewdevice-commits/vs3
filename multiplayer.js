@@ -21,15 +21,14 @@
     waiting: 'بانتظار انضمام الخصم…', oppOn: 'الخصم متصل', oppOff: 'الخصم غير متصل', oppBack: 'عاد الخصم', oppGone: 'انقطع اتصال الخصم',
     oppRecon: 'الخصم غير متصل – بانتظار عودته', oppLong: 'الخصم غير متصل منذ فترة', reconnecting: 'جارٍ إعادة الاتصال…', offline: 'لا يوجد اتصال بالإنترنت',
     connecting: 'جارٍ الاتصال بالغرفة…', closed: 'تم إغلاق الغرفة', oppLeft: 'غادر الخصم الغرفة', joined: 'انضم الخصم – ابدؤوا اللعب!',
-    undoAsk: 'يطلب الخصم إلغاء حركتك الأخيرة. هل توافق؟', yes: 'موافقة', no: 'رفض', undoSent: 'تم إرسال طلب إلغاء الحركة', undoDeclined: 'رفض الخصم إلغاء الحركة',
     paused: 'تم إيقاف اللعبة مؤقتاً', resumed: 'تم استئناف اللعبة', synced: 'تم تحديث اللعبة',
-    pass: 'مرّر', swap: 'بدّل', undone: 'ألغى حركته', ended: 'انتهت اللعبة', surrender: 'استسلم', timeout: 'انتهى الوقت',
+    pass: 'مرّر', swap: 'بدّل', ended: 'انتهت اللعبة', surrender: 'استسلم', timeout: 'انتهى الوقت',
   };
   const ERR = {
     room_not_found: 'رمز الغرفة غير صحيح', room_expired: 'انتهت صلاحية الغرفة', room_closed: 'تم إغلاق الغرفة', room_full: 'الغرفة ممتلئة (لاعبان فقط)',
     invalid_code: 'أدخل رمزاً من 6 خانات', network: 'تعذر الاتصال بالخادم، حاول مجدداً', unauthorized: 'تعذر تسجيل الدخول', server_not_configured: 'الخادم غير مُهيّأ بعد',
     not_your_turn: 'ليس دورك', stale: 'تغيّرت اللعبة، تم تحديثها', paused: 'اللعبة متوقفة مؤقتاً', game_over: 'انتهت اللعبة', game_not_over: 'لا يمكن بدء لعبة جديدة قبل نهاية الحالية',
-    bag_too_small: 'لا توجد قطع كافية في الكيس للتبديل', waiting_for_opponent: 'بانتظار انضمام الخصم', nothing_to_undo: 'لا توجد حركة لإلغائها', not_a_member: 'لا تملك مقعداً في هذه الغرفة',
+    bag_too_small: 'لا توجد قطع كافية في الكيس للتبديل', waiting_for_opponent: 'بانتظار انضمام الخصم', invalid_word: 'الكلمة غير موجودة في قائمة الكلمات', wordlist_unavailable: 'تعذر تحميل قائمة الكلمات على الخادم', not_a_member: 'لا تملك مقعداً في هذه الغرفة',
     api_missing: 'ملفات الخادم (مجلد api) غير منشورة أو غير مفعّلة على Vercel', server_error: 'حدث خطأ في الخادم',
     supabase_lib: 'تعذر تحميل مكتبة Supabase من الإنترنت', anonymous_disabled: 'فعّل Anonymous sign-ins في إعدادات Supabase (Authentication)',
     supabase_unreachable: 'تعذر الوصول إلى Supabase: تحقق من SUPABASE_URL وأن المشروع غير متوقف', auth_failed: 'رفض Supabase تسجيل الدخول: تحقق من SUPABASE_ANON_KEY',
@@ -238,18 +237,14 @@
       else if (ev.no > MP.lastEventNo) {
         MP.lastEventNo = ev.no;
         if (ev.type === 'move' && Array.isArray(ev.cells) && window.animateFormedWords) window.animateFormedWords(ev.cells.map((w) => w.map(([r, c]) => ({ r, c }))));
-        if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'pause' && ev.seat !== MP.seat) toast(T.paused);
         if (ev.type === 'resume' && ev.seat !== MP.seat) toast(T.resumed);
-        if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
         if (ev.type === 'new_game') closeResult();
       }
     }
     if (prev && prev.status !== 'playing' && resp.status === 'playing' && MP.seat === 1) toast(T.joined);
     if (resp.status === 'closed' && prev && !v.result?.left) toast(T.closed);
     if (resp.status === 'closed' && v.result && v.result.left && v.result.loser !== MP.seat) toast(T.oppLeft);
-    const asked = v.undoRequest && v.lastMove && v.lastMove.seat === MP.seat && !v.ended;
-    $('mp-undo-modal').classList.toggle('mp-open', !!asked);
     if (v.ended) {
       if (MP.resultGame !== v.game) { MP.resultGame = v.game; if (window.showGameResult) window.showGameResult({ reason: v.result && v.result.reason, loser: v.result && v.result.loser }); }
     } else if (MP.resultGame !== null) { MP.resultGame = null; closeResult(); }
@@ -286,17 +281,19 @@
     } catch (e) {
       if (e.data && e.data.view) apply(e.data);                    // the server sends its current state with each refusal
       if (e.status === 410) { sessionLost(e); return false; }
-      if (!silent) toast(errText(e));
+      // a refused word / illegal placement is silent (the tiles just stay on the board); real problems still show a message
+      if (!silent && !(e.data && (e.data.error === 'invalid_word' || e.data.error === 'invalid_placement'))) toast(errText(e));
       return false;
     } finally { MP.busy = false; updateUI(false); }
   }
 
   MP.canAct = canAct;
+  MP.toast = toast;   // also used by the local game to show why a word was refused
   MP.startClock = () => {};   // clocks tick from server timestamps (see clockTick)
   MP.submitMove = async () => {
     if (!canAct()) return;
     const check = validatePlacement();                              // instant local feedback; the server re-validates everything
-    if (typeof check === 'string') { showStatus(check, true); toast(check); return; }
+    if (typeof check === 'string') { showStatus(check, true); return; }   // refused silently (no pop-up), same as the local game
     if (placedTilesInTurn.some((p) => p.originalTile.isBlank && p.originalTile.letter === ' ')) return;
     await send({ type: 'move', placements: placedTilesInTurn.map((p) => ({ r: p.r, c: p.c, id: p.tileId, letter: p.originalTile.letter })) });
   };
@@ -309,11 +306,6 @@
     await send({ type: 'swap', tileIds });
   };
   MP.pass = async () => { if (canAct() && !placedTilesInTurn.length) await send({ type: 'pass' }); };
-  MP.undo = async () => {
-    if (!MP.view || !MP.view.lastMove || MP.busy || placedTilesInTurn.length) return;
-    if (MP.view.lastMove.seat === MP.seat) await send({ type: 'undo' });
-    else if (await send({ type: 'undo_request' })) toast(T.undoSent);
-  };
   MP.togglePause = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: gamePaused ? 'resume' : 'pause' }); };
   MP.surrender = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: 'surrender' }); };
   MP.newGame = async () => {
@@ -328,7 +320,6 @@
     const live = MP.status === 'playing' && !!MP.view;
     if (!canAct()) ['submit-move', 'reset-move', 'swap-tiles', 'pass-turn'].forEach((id) => dis(id, true));
     if (!gameEnded && !(isSwappingMode && canAct())) { /* original rules already enabled/disabled the rest for a live turn */ }
-    dis('undo-last-move', !(live && lastMoveData && !placedTilesInTurn.length && !gameEnded && !gamePaused && !MP.busy));
     dis('pause-game', !live || gameEnded || MP.busy);
     dis('surrender-game', !live || gameEnded || MP.busy);
     dis('new-game', !gameEnded || MP.busy);
@@ -493,10 +484,10 @@
   /* UI                                                                  */
   /* ------------------------------------------------------------------ */
   let toastTimer = null;
-  function toast(msg) {
+  function toast(msg, ms) {
     const el = $('mp-toast'); if (!el || !msg) return;
     el.textContent = msg; el.classList.add('mp-on');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('mp-on'), 3200);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('mp-on'), ms || 3200);
   }
   const nameValue = () => { const v = ($('mp-name').value || '').trim().slice(0, 14); try { localStorage.setItem(NAME_KEY, v); } catch (_) {} return v; };
   const setModalError = (m) => { const e = $('mp-error'); if (e) e.textContent = m || ''; if (!m) setDiag(''); };
@@ -510,7 +501,6 @@
     wrap.innerHTML = `
       <button id="mp-chip" type="button" aria-live="polite"><span class="mp-dot"></span><span class="mp-chip-text"></span></button>
       <div id="mp-toast" role="status" aria-live="polite"></div>
-      <div id="mp-undo-modal" role="dialog" aria-modal="true"><div id="mp-undo-card" class="mp-undo-card"></div></div>
       <div id="mp-modal" role="dialog" aria-modal="true" aria-labelledby="mp-title"><div id="mp-card">
         <h2><span id="mp-title">${T.title}</span><button id="mp-close" class="mp-x" type="button" aria-label="close">✕</button></h2>
         <div id="mp-lobby">
@@ -534,11 +524,6 @@
         <div id="mp-diag" class="mp-diag" dir="ltr"></div>
       </div></div>`;
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
-    const card = $('mp-undo-card');
-    card.style.cssText = 'width:min(100%,360px);padding:18px;border-radius:16px;background:#2b3220;color:#f1eed8;border:1px solid rgba(232,197,108,.5);direction:rtl;text-align:center;font-family:system-ui,sans-serif';
-    card.innerHTML = `<p style="margin:0 0 12px;font-weight:700">${T.undoAsk}</p><div class="mp-row" id="mp-undo-row" style="display:flex;gap:8px"></div>`;
-    const mk = (txt, accept, color) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = `flex:1;min-height:44px;border:0;border-radius:11px;font-weight:800;color:#fff;background:${color};cursor:pointer`; b.onclick = () => { $('mp-undo-modal').classList.remove('mp-open'); send({ type: 'undo_respond', accept }); }; return b; };
-    $('mp-undo-row').append(mk(T.yes, true, '#5b7a2c'), mk(T.no, false, '#a33a2f'));
 
     try { $('mp-name').value = localStorage.getItem(NAME_KEY) || ''; } catch (_) {}
     $('mp-close').onclick = closeModal;
@@ -616,7 +601,7 @@
     ((MP.view && MP.view.history) || []).slice(-25).reverse().forEach((h) => {
       const li = document.createElement('li');
       const who = MP.names[h.seat] || '';
-      li.textContent = h.type === 'move' ? `${who}: ${(h.words || []).join('، ')} (+${h.score})` : h.type === 'pass' ? `${who}: ${T.pass}` : h.type === 'swap' ? `${who}: ${T.swap} ${h.count}` : h.type === 'undo' ? `${who}: ${T.undone}` : T.ended;
+      li.textContent = h.type === 'move' ? `${who}: ${(h.words || []).join('، ')} (+${h.score})` : h.type === 'pass' ? `${who}: ${T.pass}` : h.type === 'swap' ? `${who}: ${T.swap} ${h.count}` : T.ended;
       hist.appendChild(li);
     });
   }
