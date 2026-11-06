@@ -37,9 +37,14 @@
     // Other prefixes (و ف ب ك ل س) and attached pronouns are NOT accepted. The word after ال must be 3+ letters (or one of a few real 2-letter nouns).
     // Real two-letter nouns that may follow ال (الأب، اليد، الدم، الفم ...). Hand-picked: the list also holds many 2-letter fragments.
     var NOUN2 = ' اب ام اخ يد دم فم فن حب بن اس رب حج حد حر حس حص خط ذم رد سم سن شر ضد طب عم عد غد فخ جد جن حل حي دب دن ذر زن سد سر شك صد عز غم مد نص هم ';
+    // Standalone two-letter words: the dictionary holds hundreds of 2-letter fragments that are not words (e.g. بؤ، تذ، شص), so a 2-letter move is accepted
+    // only if it is on this hand-checked list of real Arabic words AND the dictionary knows it (this list can only remove words, never add one).
+    // اب ام ان اخ are deliberately NOT on the list: the game has no أ tile and plain ا is not أ (owner's rule).
+    var WORD2 = ' ات اذ ار اس اف ال اه او اي بت بث بح بخ بر بط بع بق بك بل بن به بي تب تل تم ته تو ثب ثج ثر ثق ثم جئ جب جد جذ جر جز جس جص جف جل جم جن جو حب حت حث حج حد حر حز حس حش حص حض حط حظ حق حك حل حم حن حي خب خد خذ خر خز خس خص خض خط خف خل خن دب در دس دع دف دق دك دل دم دن ذا ذب ذر ذق ذل ذم ذو ذي رب رث رج رخ رد رز رس رش رص رض رف رق رم رن ري زج زد زر زف زق زل زم زن زي سب ست سح سد سر سك سل سم سن شب شج شح شد شذ شر شط شف شق شك شل شم صب صح صد صر صغ صف صك صل صم صن صه ضب ضج ضخ ضد ضر ضع ضل ضم ضن طب طر طف طل طم طن طي ظل ظن عج عد عز عس عش عض عظ عف عق عم عن عي غب غث غد غر غش غص غض غط غل غم غن غي فئ فت فج فخ فذ فر فش فص فض فظ فك فل فم فن في قئ قح قد قر قس قش قص قط قف قل قم كب كد كر كف كل كم كن كي لا لب لذ لص لط لف لك لم لن له لو لي ما مت مج مخ مد مذ مر مس مص مط مع مل من مه نث ند نر نص نط نق نل نم ها هب هد هر هز هش هل هم هن هو هي ود ول يا يد يم ';
     function isValid(raw) {
       var w = normalize(raw);
       if (w.length < 2) return false;
+      if (w.length === 2) return WORD2.indexOf(' ' + w + ' ') >= 0 && has(w);
       if (has(w)) return true;
       if (w.indexOf('ال') === 0) {
         if (w.length >= 5 && has(w.slice(2))) return true;
