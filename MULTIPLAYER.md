@@ -138,7 +138,7 @@ npm run dev             # http://localhost:8787 — full game with in-memory roo
 
 ## Findings in the original game (left untouched in single-player)
 
-1. **Undo lost tiles (not an issue any more).** The undo button no longer exists, so moves are never taken back.
+1. **Undo lost tiles (fixed).** The "cancel last move" button is back, offline and online. The online undo is done by the server (`performUndo` in `engine.js`): the player who just moved can take their move back; the opponent can *ask*, and the mover gets an Accept / Decline dialog. Tiles drawn after the move go back to the bag and the restored tiles return to the rack.
 2. **Blank tile value.** The tile table gives the blank `value: 2` although the tile shows 0 and the end-game
    deduction counts 0; scoring uses the table value, so a freshly drawn blank scores 2. The server reproduces this
    exactly (scoring is unchanged, as requested). If you intended 0, set the blank's `value` to `0` in both

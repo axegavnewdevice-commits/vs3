@@ -32,8 +32,8 @@ export const generateCode = () => Array.from({ length: 6 }, () => CODE_ALPHABET[
 export const normalizeCode = (s) => String(s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 const STATE_ERRORS = new Set([
-  'stale', 'not_your_turn', 'paused', 'game_over', 'game_not_over',
-  'no_timeout', 'not_expired', 'bag_too_small', 'waiting_for_opponent',
+  'stale', 'not_your_turn', 'paused', 'game_over', 'game_not_over', 'nothing_to_undo', 'no_request',
+  'not_your_move', 'own_move', 'no_timeout', 'not_expired', 'bag_too_small', 'waiting_for_opponent',
 ]);
 
 export function cleanName(name, seat) {

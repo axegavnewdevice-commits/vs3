@@ -859,6 +859,7 @@ body.float-layout-dragging {
 #game-controls button#reset-move,
 #game-controls button#swap-tiles,
 #game-controls button#pass-turn,
+#game-controls button#undo-last-move,
 #game-controls button#new-game,
 #game-controls button#pause-game,
 #game-controls button#surrender-game,
@@ -881,6 +882,7 @@ body.float-layout-dragging {
 #game-controls button#reset-move::before,
 #game-controls button#swap-tiles::before,
 #game-controls button#pass-turn::before,
+#game-controls button#undo-last-move::before,
 #game-controls button#new-game::before,
 #game-controls button#pause-game::before,
 #game-controls button#surrender-game::before,
@@ -907,6 +909,7 @@ body.float-layout-dragging {
 #game-controls button#reset-move::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011a9%209%200%201%201%202.6%206.4%22%2F%3E%3Cpath%20d%3D%22M3%204v7h7%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%2011a9%209%200%201%201%202.6%206.4%22%2F%3E%3Cpath%20d%3D%22M3%204v7h7%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#swap-tiles::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%203l4%204-4%204M4%207h16M8%2021l-4-4%204-4M4%2017h16%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M16%203l4%204-4%204M4%207h16M8%2021l-4-4%204-4M4%2017h16%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#pass-turn::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m5%205%2010%207-10%207z%22%2F%3E%3Cpath%20d%3D%22M19%205v14%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m5%205%2010%207-10%207z%22%2F%3E%3Cpath%20d%3D%22M19%205v14%22%2F%3E%3C%2Fsvg%3E"); }
+#game-controls button#undo-last-move::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%207v6h6%22%2F%3E%3Cpath%20d%3D%22M3.5%2013A8.5%208.5%200%201%200%206%206.5L3%209%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M3%207v6h6%22%2F%3E%3Cpath%20d%3D%22M3.5%2013A8.5%208.5%200%201%200%206%206.5L3%209%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#new-game::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%208v8M8%2012h8%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%208v8M8%2012h8%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#pause-game::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%226%22%20y%3D%224%22%20width%3D%224%22%20height%3D%2216%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%224%22%20width%3D%224%22%20height%3D%2216%22%20rx%3D%221%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%226%22%20y%3D%224%22%20width%3D%224%22%20height%3D%2216%22%20rx%3D%221%22%2F%3E%3Crect%20x%3D%2214%22%20y%3D%224%22%20width%3D%224%22%20height%3D%2216%22%20rx%3D%221%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#pause-game[data-paused="true"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m7%204%2013%208-13%208z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m7%204%2013%208-13%208z%22%2F%3E%3C%2Fsvg%3E"); }
@@ -1190,7 +1193,7 @@ body .board, body.dark-mode .board {
 .modal-overlay .bg-yellow-600 { background-color: #a98a2c !important; } .modal-overlay .bg-yellow-600:hover { background-color: #8c7222 !important; }
 /* toolbar: khaki by default, olive for submit, brick for new game, bronze for surrender */
 body #game-controls button#reset-move, body #game-controls button#swap-tiles, body #game-controls button#pass-turn,
-body #game-controls button#pause-game, body #game-controls button#theme-toggle {
+body #game-controls button#undo-last-move, body #game-controls button#pause-game, body #game-controls button#theme-toggle {
     background: linear-gradient(145deg, #c0ba8c, #928d5e) !important; color: #2a3016 !important;
     border: 1px solid rgba(30, 35, 14, .55) !important; box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .3) !important;
 }
@@ -1299,7 +1302,7 @@ html body.girly-mode .rack .tile.tile-hidden .tile-content {
     box-shadow: inset 0 0 0 3px rgba(60,5,30,.25), inset 0 0 0 4px rgba(246,201,182,.45), 0 2px 3px rgba(60,5,30,.4) !important; }
 /* toolbar buttons */
 html body.girly-mode #game-controls button#reset-move, html body.girly-mode #game-controls button#swap-tiles, html body.girly-mode #game-controls button#pass-turn,
-html body.girly-mode #game-controls button#pause-game, html body.girly-mode #game-controls button#theme-toggle {
+html body.girly-mode #game-controls button#undo-last-move, html body.girly-mode #game-controls button#pause-game, html body.girly-mode #game-controls button#theme-toggle {
     background: linear-gradient(145deg, #ffd9e6, #f2a2bf) !important; color: #7a1f4a !important;
     border: 1px solid rgba(150,40,90,.4) !important; box-shadow: 0 3px 9px rgba(150,40,90,.3), inset 0 1px 0 rgba(255,255,255,.6) !important; }
 html body.girly-mode #game-controls button#submit-move { background: linear-gradient(145deg, #f06b9c, #c2336c) !important; color: #fff !important;
@@ -1335,7 +1338,7 @@ html body.girly-mode #install-help-card { background: linear-gradient(145deg, #f
 html body.girly-mode #install-help-close { background: #c2336c !important; color: #fff !important; }
 /* online room window */
 html body.girly-mode #mp-chip { background: rgba(110,25,70,.9) !important; color: #ffeaf2 !important; border-color: rgba(255,205,224,.6) !important; }
-html body.girly-mode #mp-modal { background: rgba(80,15,50,.66) !important; }
+html body.girly-mode #mp-modal, html body.girly-mode #mp-undo-modal { background: rgba(80,15,50,.66) !important; }
 html body.girly-mode #mp-card { background: linear-gradient(145deg, #fff0f5, #ffd3e2) !important; color: #5b1a3a !important; border-color: rgba(190,70,110,.55) !important; }
 html body.girly-mode #mp-card button.mp-btn { background: #d6477b !important; }
 html body.girly-mode #mp-card button.mp-btn.mp-alt { background: #a566b0 !important; }
@@ -1375,7 +1378,7 @@ html body.horror-mode .rack .tile.tile-hidden .tile-content {
     box-shadow: inset 0 0 0 3px rgba(0,0,0,.45), inset 0 0 0 4px rgba(160,25,30,.45), 0 2px 3px rgba(0,0,0,.6) !important; }
 /* toolbar */
 html body.horror-mode #game-controls button#reset-move, html body.horror-mode #game-controls button#swap-tiles, html body.horror-mode #game-controls button#pass-turn,
-html body.horror-mode #game-controls button#pause-game, html body.horror-mode #game-controls button#theme-toggle {
+html body.horror-mode #game-controls button#undo-last-move, html body.horror-mode #game-controls button#pause-game, html body.horror-mode #game-controls button#theme-toggle {
     background: linear-gradient(145deg, #54433d, #261c19) !important; color: #e9dfc8 !important;
     border: 1px solid rgba(0,0,0,.6) !important; box-shadow: 0 3px 9px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12) !important; }
 html body.horror-mode #game-controls button#submit-move { background: linear-gradient(145deg, #c4141f, #6b0a12) !important; color: #fff0e6 !important;
@@ -1410,7 +1413,7 @@ html body.horror-mode #result-close-btn { background: #4d3f3a !important; } html
 html body.horror-mode #install-help-card { background: linear-gradient(145deg, #2a1011, #100606) !important; color: #e9dfc8 !important; border-color: rgba(170,25,30,.6) !important; }
 html body.horror-mode #install-help-close { background: #a8161f !important; color: #fff !important; }
 html body.horror-mode #mp-chip { background: rgba(20,6,7,.92) !important; color: #e9dfc8 !important; border-color: rgba(170,25,30,.7) !important; }
-html body.horror-mode #mp-modal { background: rgba(0,0,0,.82) !important; }
+html body.horror-mode #mp-modal, html body.horror-mode #mp-undo-modal { background: rgba(0,0,0,.82) !important; }
 html body.horror-mode #mp-card { background: linear-gradient(145deg, #2a1011, #100606) !important; color: #e9dfc8 !important; border-color: rgba(170,25,30,.65) !important; }
 html body.horror-mode #mp-card input[type="text"] { background: #0e0707 !important; color: #e9dfc8 !important; border-color: #7d1218 !important; }
 html body.horror-mode #mp-card button.mp-btn { background: #a8161f !important; }
@@ -1540,6 +1543,10 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="pass-turn" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition duration-300">
                 تمرير الدور 
             </button>
+            <!-- Undo Button -->
+            <button id="undo-last-move" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg shadow-md transition duration-300 disabled:opacity-50" disabled>
+                إلغاء الحركة الأخيرة 
+            </button>
             <button id="new-game" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-red-700 hover:bg-red-800 text-white font-bold rounded-lg shadow-md transition duration-300">
                 بدء لعبة جديدة 
             </button>
@@ -1646,6 +1653,25 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             </div>
         </div>
     </div>
+
+    <!-- NEW: Confirmation Modal for Undo Last Move -->
+    <div id="confirm-undo-modal" class="modal-overlay hidden opacity-0">
+        <div class="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95">
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4 text-center">تأكيد إلغاء الحركة الأخيرة</h2>
+            <p class="text-lg text-gray-200 mb-6 text-center">
+                هل أنت متأكد من أنك تريد إلغاء آخر حركة؟ لا يمكن التراجع بعد التأكيد.
+            </p>
+            <div class="flex justify-between gap-4">
+                <button id="cancel-undo-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">
+                    إلغاء 
+                </button>
+                <button id="confirm-undo-btn" class="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg shadow-md transition duration-300">
+                    نعم، إلغاء الحركة الأخيرة
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- NEW: Blank tile letter selection modal -->
     <div id="blank-select-modal" class="modal-overlay hidden opacity-0">
@@ -1781,7 +1807,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
         let draggedTileOrigin = null; // Stores { type: 'rack', index: i } or { type: 'board', r: r, c: c }
         let selectedRackTileId = null; // Used for click-to-place
         
-        // Last *submitted* move (kept in the saved game state)
+        // State to store data needed to undo the last *submitted* move
         let lastMoveData = null; 
 
         // Timer State
@@ -1960,7 +1986,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             console.log(finalStatus);
 
             // Lock controls
-            ['submit-move','reset-move','swap-tiles','pass-turn'].forEach(id => {
+            ['submit-move','reset-move','swap-tiles','pass-turn','undo-last-move'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.disabled = true;
             });
@@ -2296,6 +2322,47 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             hideConfirmModal();
         };
 
+        // NEW: Undo confirmation dialog helpers
+        const showConfirmUndoModal = () => {
+            if (gameEnded) {
+                showStatus('انتهت اللعبة. لا يمكن إلغاء الحركات.', true);
+                return;
+            }
+            // Prevent undo while there is an active (unsubmitted) move — used for human validation workflow
+            if (placedTilesInTurn.length > 0) {
+                showStatus('يجب تأكيد أو إلغاء الحركة الحالية قبل إلغاء الحركة السابقة.', true);
+                return;
+            }
+            if (!lastMoveData) {
+                showStatus('لا توجد حركة سابقة لإلغائها.', true);
+                return;
+            }
+            const modal = document.getElementById('confirm-undo-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.shadow-2xl').classList.remove('scale-95');
+                modal.querySelector('.shadow-2xl').classList.add('scale-100');
+            }, 10);
+        };
+
+        const hideConfirmUndoModal = () => {
+            const modal = document.getElementById('confirm-undo-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('.shadow-2xl').classList.remove('scale-100');
+            modal.querySelector('.shadow-2xl').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        };
+
+        const confirmUndoAction = () => {
+            hideConfirmUndoModal();
+            // Call the existing undo logic
+            undoLastMove();
+        };
+
+
         // --- Initialization ---
 
         /** Fills the tile bag based on ARABIC_TILES counts. */
@@ -2342,7 +2409,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             draggedTileId = null;
             draggedTileOrigin = null; 
             selectedRackTileId = null;
-            lastMoveData = null;
+            lastMoveData = null; // Clear undo data
             consecutiveScorelessTurns = 0;
             
             // Reset end/paused state
@@ -2363,6 +2430,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             
             // Hide any modals that might be open
             try { hideConfirmModal(); } catch(e){/*ignore*/ }
+            try { hideConfirmUndoModal(); } catch(e){/*ignore*/ }
             try { hideBlankSelectionModal(); } catch(e){/*ignore*/ }
 
             // Re-enable visual state for control buttons but DO NOT reassign onclick/addEventListener here.
@@ -2481,7 +2549,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             }
 
             // 6. Finalize Move
-            lastMoveData = null; // Swapping is a move that prevents challenging the previous move
+            lastMoveData = null; // Swapping is a move that prevents undo
             consecutiveScorelessTurns++;
             const formerPlayer = currentPlayer;
             currentPlayer = formerPlayer === 1 ? 2 : 1;
@@ -2629,6 +2697,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const resetBtn = document.getElementById('reset-move');
             const swapBtn = document.getElementById('swap-tiles');
             const passBtn = document.getElementById('pass-turn');
+            const undoBtn = document.getElementById('undo-last-move');
             const pauseBtn = document.getElementById('pause-game');
             const newGameBtn = document.getElementById('new-game');
 
@@ -2651,7 +2720,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             // If game is ended: disable most action buttons but keep New Game enabled
             if (gameEnded) {
-                 [submitBtn, resetBtn, swapBtn, passBtn].forEach(b => { if (b) b.disabled = true; });
+                 [submitBtn, resetBtn, swapBtn, passBtn, undoBtn].forEach(b => { if (b) b.disabled = true; });
             } else if (isSwappingMode) {
                 // Submit button becomes Confirm Swap (Purple)
                 submitBtn.textContent = 'تأكيد التبديل';
@@ -2667,10 +2736,11 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 
                 swapBtn.disabled = true; 
                 passBtn.disabled = true; 
+                undoBtn.disabled = true;
 
             } else if (gamePaused) {
                 // When paused, disable interactive actions but keep Pause & New Game active
-                [submitBtn, resetBtn, swapBtn, passBtn].forEach(b => { if (b) b.disabled = true; });
+                [submitBtn, resetBtn, swapBtn, passBtn, undoBtn].forEach(b => { if (b) b.disabled = true; });
             } else {
                 // Normal move mode
                 submitBtn.textContent = 'احتساب النقطة';
@@ -2686,7 +2756,9 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 // You can only swap or pass if no tiles are currently placed
                 swapBtn.disabled = moveInPlay; 
                 passBtn.disabled = moveInPlay; 
-
+                
+                // The UNDO button is enabled only if lastMoveData is present AND there is no current unsubmitted move
+                undoBtn.disabled = lastMoveData === null || moveInPlay;
             }
 
             // Only re-render the heavy components if explicitly requested (to avoid flicker on Pass/non-tile actions)
@@ -3192,7 +3264,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 playerId: formerPlayer,
                 score: score,
                 boardPlacements: JSON.parse(JSON.stringify(placedTilesInTurn)),
-                tilesDrawn: newTiles
+                tilesDrawn: newTiles.slice()   // a copy: the refill loop below empties newTiles, and undo needs these tiles back
             };
 
             scores[formerPlayer] += score;
@@ -3280,6 +3352,76 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             updateUI(true);
         };
 
+
+        /** UNDO: Reverts the last *submitted* move. */
+        const undoLastMove = () => {
+            if (window.MP && MP.active) { MP.undo(); return; }
+             // Prevent when game ended or paused
+            if (gameEnded || gamePaused) {
+                showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن إلغاء الحركات.', true);
+                return;
+            }
+            
+            if (!lastMoveData) {
+                showStatus('لا توجد حركة سابقة لإلغائها.', true);
+                return;
+            }
+
+            const { playerId, score, boardPlacements, tilesDrawn } = lastMoveData;
+            const rack = playerId === 1 ? player1Rack : player2Rack;
+
+            // 1. Revert Score
+            scores[playerId] -= score;
+            if (scores[playerId] < 0) scores[playerId] = 0; // Safety
+
+            // (drawn tiles leave the rack first, so the restored tiles get their own slots back instead of being pushed past the 7th)
+            // 3. Revert Tiles Drawn (remove new tiles from rack and return to bag)
+            tilesDrawn.forEach(drawnTile => {
+                const rackIndex = rack.findIndex(t => t && t.id === drawnTile.id);
+                if (rackIndex !== -1) {
+                    rack[rackIndex] = null;
+                }
+            });
+
+            // 2. Revert Board and Rack
+            
+            // Remove tiles from the board and collect them for return to the rack
+            boardPlacements.forEach(placement => {
+                const { r, c, originalTile } = placement;
+                
+                // Remove from board
+                if (boardState[r][c] && boardState[r][c].id === originalTile.id) {
+                    boardState[r][c] = null;
+                }
+                
+                // Restore the original tile object to the rack (finding the first available null slot)
+                const emptySlotIndex = rack.findIndex(t => t === null);
+                if (emptySlotIndex !== -1) {
+                    rack[emptySlotIndex] = originalTile;
+                } else {
+                    rack.push(originalTile); // Failsafe
+                }
+            });
+
+            // Return drawn tiles to the start of the bag (to be redrawn in the future)
+            tileBag.unshift(...tilesDrawn);
+
+            // 4. Revert Player Turn
+            currentPlayer = playerId;
+
+            // 5. Clear Undo state
+            lastMoveData = null;
+            consecutiveScorelessTurns = 0;
+
+            showStatus(`تم إلغاء الحركة الأخيرة ${playerFor(playerId === 1 ? 1 : 2)} واستعادة ${score} نقطة.`, true);
+            updateUI(true); // Full render is needed as board/rack changed
+            
+            // Re-start the timer for the reverted player, if the game has started
+            if(gameStarted) {
+                startTimer();
+            }
+        };
+
         /** Word list for the local game (the online game is checked by the server). Loaded on first use, then cached by the service worker. */
         let wordListPromise = null;
         const loadWordList = () => {
@@ -3334,6 +3476,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             currentPlayer = formerPlayer === 1 ? 2 : 1;
             consecutiveScorelessTurns++;
             
+            // A pass move prevents the previous player's move from being undone (pass is a new action).
             lastMoveData = null; 
 
             showStatus(`تم تمرير الدور. الآن دور ${playerName(currentPlayer === 1 ? 1 : 2)}.`);
@@ -3432,7 +3575,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 showStatus(`استسلم ${playerName(losingPlayer === 1 ? 1 : 2)}. ${playerName(winningPlayer === 1 ? 1 : 2)} يفوز ويكسب ${remainingValue} نقطة من قطع المستسلم.`, false);
 
                 // Lock most controls but KEEP Pause and New Game available
-                ['submit-move','reset-move','swap-tiles','pass-turn'].forEach(id => {
+                ['submit-move','reset-move','swap-tiles','pass-turn','undo-last-move'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.disabled = true;
                 });
@@ -3473,9 +3616,18 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             };
             document.getElementById('reset-move').onclick = resetMove; // Handles both Reset Move and Cancel Swap
             document.getElementById('pass-turn').onclick = passTurn; 
+            // Show confirmation dialog before undoing the last move
+            document.getElementById('undo-last-move').onclick = () => {
+                showConfirmUndoModal();
+            };
             
-            // New Game: button -> confirmation dialog -> resetGame() (this wiring was lost when the Undo feature was removed)
-            document.getElementById('new-game').onclick = showConfirmModal;
+            // NEW: Confirmation handlers for New Game button
+            document.getElementById('new-game').onclick = showConfirmModal; 
+            document.getElementById('confirm-new-game-btn').onclick = confirmNewGame;
+            document.getElementById('cancel-new-game-btn').onclick = cancelNewGame;
+            // Confirmation handlers for Undo Last Move modal
+            document.getElementById('confirm-undo-btn').onclick = confirmUndoAction;
+            document.getElementById('cancel-undo-btn').onclick = hideConfirmUndoModal;
             
             document.getElementById('swap-tiles').onclick = toggleSwapMode; // NEW: Swap Toggle
 
@@ -3568,7 +3720,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
                 'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button'
+                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button'
             ]);
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
@@ -4231,6 +4383,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         'reset-move': 'Clear current move',
         'swap-tiles': 'Swap tiles',
         'pass-turn': 'Pass turn',
+        'undo-last-move': 'Undo last move',
         'new-game': 'New game',
         'pause-game': 'Pause game',
         'surrender-game': 'Surrender game',
@@ -4319,7 +4472,7 @@ html body.academic-mode .rack .tile.tile-hidden .tile-content {
     box-shadow: inset 0 0 0 3px rgba(5,12,28,.45), inset 0 0 0 4px rgba(201,162,74,.5), 0 2px 3px rgba(0,0,0,.5) !important; }
 /* toolbar */
 html body.academic-mode #game-controls button#reset-move, html body.academic-mode #game-controls button#swap-tiles, html body.academic-mode #game-controls button#pass-turn,
-html body.academic-mode #game-controls button#pause-game, html body.academic-mode #game-controls button#theme-toggle {
+html body.academic-mode #game-controls button#undo-last-move, html body.academic-mode #game-controls button#pause-game, html body.academic-mode #game-controls button#theme-toggle {
     background: linear-gradient(145deg, #f2e8cb, #cdb98a) !important; color: #1d3253 !important;
     border: 1px solid rgba(19,40,74,.5) !important; box-shadow: 0 3px 9px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.6) !important; }
 html body.academic-mode #game-controls button#submit-move { background: linear-gradient(145deg, #3f8a64, #1f5139) !important; color: #f3ffe9 !important;
@@ -4353,7 +4506,7 @@ html body.academic-mode #install-help-card { background: linear-gradient(145deg,
 html body.academic-mode #install-help-close { background: #1d3253 !important; color: #f3e9cf !important; }
 /* online room window: parchment paper */
 html body.academic-mode #mp-chip { background: rgba(18,32,58,.94) !important; color: #f3e9cf !important; border-color: #c9a24a !important; }
-html body.academic-mode #mp-modal { background: rgba(4,10,24,.74) !important; }
+html body.academic-mode #mp-modal, html body.academic-mode #mp-undo-modal { background: rgba(4,10,24,.74) !important; }
 html body.academic-mode #mp-card { background: linear-gradient(145deg, #f6edd3, #e6d7ae) !important; color: #13284a !important; border-color: #c9a24a !important; }
 html body.academic-mode #mp-card button.mp-btn { background: #1d3253 !important; color: #f3e9cf !important; }
 html body.academic-mode #mp-card button.mp-btn.mp-alt { background: #3a78a0 !important; }
@@ -4484,7 +4637,7 @@ html body.girly-mode .sq-star {
   }
   // eyes only appear in empty dark spots: never on the board, a player card, the buttons or a dialog
   function emptySpot() {
-    const W = innerWidth, H = innerHeight, BLOCK = '.board, .player-area, #game-controls, .modal-overlay, #mp-modal, #mp-chip, #install-help-backdrop';
+    const W = innerWidth, H = innerHeight, BLOCK = '.board, .player-area, #game-controls, .modal-overlay, #mp-modal, #mp-undo-modal, #mp-chip, #install-help-backdrop';
     for (let i = 0; i < 25; i++) {
       const x = rand(.03, .94) * W, y = rand(.12, .92) * H;
       const pts = [[x, y], [x + 46, y], [x, y + 16], [x + 46, y + 16], [x + 23, y + 8]];
