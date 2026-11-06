@@ -3474,6 +3474,9 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             document.getElementById('reset-move').onclick = resetMove; // Handles both Reset Move and Cancel Swap
             document.getElementById('pass-turn').onclick = passTurn; 
             
+            // New Game: button -> confirmation dialog -> resetGame() (this wiring was lost when the Undo feature was removed)
+            document.getElementById('new-game').onclick = showConfirmModal;
+            
             document.getElementById('swap-tiles').onclick = toggleSwapMode; // NEW: Swap Toggle
 
             // Start Game
