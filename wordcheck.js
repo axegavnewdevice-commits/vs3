@@ -42,9 +42,9 @@
     // اب ام ان اخ are deliberately NOT on the list: the game has no أ tile and plain ا is not أ (owner's rule).
     var WORD2 = ' ات اذ ار اس اف اه او اي بت بث بح بخ بر بط بع بق بك بل بن به بي تب تل تم ته تو ثب ثج ثر ثق ثم جئ جب جد جذ جر جز جس جص جف جل جم جن جو حب حت حث حج حد حر حز حس حش حص حض حط حظ حق حك حل حم حن حي خب خد خذ خر خز خس خص خض خط خف خل خن دب در دس دع دف دق دك دل دم دن ذا ذب ذر ذق ذل ذم ذو ذي رب رث رج رخ رد رز رس رش رص رض رف رق رم رن ري زج زد زر زف زق زل زم زن زي سب ست سح سد سر سك سل سم سن شب شج شح شد شذ شر شط شف شق شك شل شم صب صح صد صر صغ صف صك صل صم صن صه ضب ضج ضخ ضد ضر ضع ضل ضم ضن طب طر طف طل طم طن طي ظل ظن عج عد عز عس عش عض عظ عف عق عم عن عي غب غث غد غر غش غص غض غط غل غم غن غي فئ فت فج فخ فذ فر فش فص فض فظ فك فل فم فن في قئ قح قد قر قس قش قص قط قف قل قم كب كد كر كف كل كم كن كي لا لب لذ لص لط لف لك لم لن له لو لي ما مت مج مخ مد مذ مر مس مص مط مع مل من مه نث ند نر نص نط نق نل نم ها هب هد هر هز هش هل هم هن هو هي ود ول يا يد يم ';
     // BLOCKLIST: words the owner declared invalid (game spelling, any length). Refused always. A blocked word of 3+ letters is also refused with ال in front.
-    var BLOCKED = ' ال اخو اخت اخوان اكل اسلام احسان افضل احسن انا انت انتم انتما انتن الم طسم كهيعص يس طه امة اليس ام اب ان اخ الاب الام الاخ الان الارض الاخير الاخري الاخرة الاخيرة دؤب اخير اخري اخرة اخيرة ';
+    var BLOCKED = ' ال اخو اخت اخوان اكل اسلام احسان افضل احسن انا انت انتم انتما انتن الم طسم كهيعص يس طه امة اليس ام اب ان اخ الاب الام الاخ الان الارض الاخير الاخري الاخرة الاخيرة دؤب اخير اخري اخرة اخيرة ابو امي اصل اباء امهات ابوان امان اختان اخوات اخوة ابي الي اخي اختي اذن اذني اذان انف انفي الف اليف اذنان انفان امر امران امور امراء اخوي اخوك اخوكم اخوكن اخونا اخوه اخوهم اخوهن اخوها اخوهما اختك اختكم اختكن اختها اخته اختهن اختهم اختهما اخذ ';
     // ALLOWLIST: words the owner declared valid even if the dictionary does not know them (game spelling, any length). A blocked word is never allowed. An allowed word of 3+ letters is also accepted with ال in front.
-    var ALLOWED = ' طئ ';
+    var ALLOWED = ' طئ سقاف ';
     function isValid(raw) {
       // TILE RULES (hamza has two tiles): the connecting tile (ئـ) can never end a word, and the plain tile (ئ) can only end a word (never be followed by another letter).
       var rawText = String(raw == null ? '' : raw);
