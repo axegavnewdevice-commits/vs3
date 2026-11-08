@@ -5634,8 +5634,19 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
   function trusted(wl, raw) {
     let w = raw;
     try { if (window.WordCheck && WordCheck.normalize) w = WordCheck.normalize(raw); } catch (_) {}
-    if (w.length >= 5 && w.indexOf('ال') === 0 && !wl.has(w)) w = w.slice(2);   // ال + word: judge the word itself
-    if (w.length <= 2) return true;                                              // two-letter words are already a hand-checked list
+    if (w.length >= 5 && w.indexOf('ال') === 0) w = w.slice(2);                  // ال + word: judge the word itself
+    // This game has no أ إ آ tiles, and the word list cannot tell ا from أ. So the computer never plays a word that only
+    // exists with a hamza on the alif: two-letter words starting with ا (ات اذ اف اه او اي ...), and ordinary words starting with ا
+    // (اهواء، ارض، اخذ ...). A word starting with ا is allowed only where the alif is a real one (verb forms): است + 3 letters,
+    // ان + 3 or 4 letters, or the pattern ا؟ت؟؟ (احتفل، اقترب، اجتمع).
+    if (w.charAt(0) === 'ا') {
+      if (w.length <= 2) return false;
+      const ok = (/^است.{3,}$/.test(w)) || (/^ان.{3,4}$/.test(w)) || (/^ا[^ت]ت.{2}$/.test(w));
+      if (!ok) return false;
+    }
+    if (/ءي$/.test(w)) return false;                                             // attached "my": اهواءي، سماءي ...
+    if (w.length >= 5 && /نا$/.test(w)) return false;                            // attached "our": ذهبنا، بيتنا ...
+    if (w.length <= 2) return true;                                              // other two-letter words are already a hand-checked list
     const need = w.length === 3 ? 3 : w.length === 4 ? 2 : 1;
     let n = 0;
     for (let i = 0; i < REL_SUF.length && n < need; i++) {
