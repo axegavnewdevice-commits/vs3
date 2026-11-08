@@ -5540,7 +5540,7 @@ html body.academic-mode #game-controls button#bag-count-button {
   content: "" !important; display: block !important; width: 56% !important; height: 56% !important;
   min-width: 14px !important; min-height: 14px !important; max-width: 27px !important; max-height: 27px !important;
   flex: 0 0 auto !important; background-color: currentColor !important;
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='8' width='16' height='11' rx='3'/%3E%3Cpath d='M12 8V5'/%3E%3Ccircle cx='12' cy='3.8' r='1.2'/%3E%3Ccircle cx='9' cy='13' r='1.2'/%3E%3Ccircle cx='15' cy='13' r='1.2'/%3E%3Cpath d='M9.5 16.5h5'/%3E%3Cpath d='M2 12.5v3M22 12.5v3'/%3E%3C/svg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='8' width='16' height='11' rx='3'/%3E%3Cpath d='M12 8V5'/%3E%3Ccircle cx='12' cy='3.8' r='1.2'/%3E%3Ccircle cx='9' cy='13' r='1.2'/%3E%3Ccircle cx='15' cy='13' r='1.2'/%3E%3Cpath d='M9.5 16.5h5'/%3E%3Cpath d='M2 12.5v3M22 12.5v3'/%3E%3C/svg%3E") !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17.6 6.9A7.4 7.4 0 1 0 19.3 12H12.6' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.2 14.2c-2.6-1.7-3.2-3-3.2-4.1 0-1 .8-1.7 1.6-1.7.6 0 1.2.3 1.6.9.4-.6 1-.9 1.6-.9.8 0 1.6.7 1.6 1.7 0 1.1-.6 2.4-3.2 4.1z' fill='black' transform='translate%28.8 .4%29 scale%28.9%29'/%3E%3C/svg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M17.6 6.9A7.4 7.4 0 1 0 19.3 12H12.6' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M9.2 14.2c-2.6-1.7-3.2-3-3.2-4.1 0-1 .8-1.7 1.6-1.7.6 0 1.2.3 1.6.9.4-.6 1-.9 1.6-.9.8 0 1.6.7 1.6 1.7 0 1.1-.6 2.4-3.2 4.1z' fill='black' transform='translate%28.8 .4%29 scale%28.9%29'/%3E%3C/svg%3E") !important;
   -webkit-mask-repeat: no-repeat !important; mask-repeat: no-repeat !important;
   -webkit-mask-position: center !important; mask-position: center !important;
   -webkit-mask-size: contain !important; mask-size: contain !important; pointer-events: none !important;
@@ -5592,7 +5592,7 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
 (() => {
   'use strict';
   const LS_LEVEL = 'arabicScrabble.cpuLevel.v1';
-  const NAME = 'Computer';
+  const NAME = 'ghost';
   const $ = (id) => document.getElementById(id);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const yieldUI = () => new Promise((r) => setTimeout(r, 0));
