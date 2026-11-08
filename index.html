@@ -1574,6 +1574,9 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </button>
             <button id="bag-count-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Tiles left in bag: 88" title="Tiles left in bag"><span class="bag-count-num" aria-hidden="true">88</span></button>
+            <button id="vs-computer-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Play vs computer (offline)" title="Play vs computer (offline)" aria-pressed="false">
+                ضد الكمبيوتر
+            </button>
         </div>
 
         <div id="status-message" class="text-center h-8 mb-1 font-semibold transition-all duration-500"></div>
@@ -2400,6 +2403,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Resets the entire game state for a new game. */
         const resetGame = () => {
             if (window.MP && MP.active) { MP.newGame(); return; }
+            window.CPU && CPU.onReset && CPU.onReset();   // vs computer: a turn still being played must never touch the new game
             initializeTileBag();
             initializeRacks();
             boardState = Array(15).fill(0).map(() => Array(15).fill(null)); 
@@ -2459,6 +2463,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Toggles the swapping mode. */
         const toggleSwapMode = () => {
             if (window.MP && MP.active && !MP.canAct()) return;
+            if (window.CPU && CPU.blocked()) return;
              // Block when paused or ended
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن التبديل القطع.', true);
@@ -2490,6 +2495,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Performs the tile swap action. */
         const performSwap = () => {
             if (window.MP && MP.active) { MP.swap(); return; }
+            if (window.CPU && CPU.blocked()) return;
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن التبديل.', true);
                 return;
@@ -2763,6 +2769,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             // Only re-render the heavy components if explicitly requested (to avoid flicker on Pass/non-tile actions)
             window.MP && MP.afterUpdateUI && MP.afterUpdateUI();   // online: only the active player gets action buttons
+            window.CPU && CPU.afterUpdateUI && CPU.afterUpdateUI();   // vs computer: buttons are locked on the computer's turn, and the computer moves
             if (renderFull) {
                 renderRack(1);
                 renderRack(2);
@@ -2777,6 +2784,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Handles the start of a drag operation. */
         const handleDragStart = (e) => {
             if (window.MP && MP.active && !MP.canAct()) { e.preventDefault(); return; }
+            if (window.CPU && CPU.blocked()) { e.preventDefault(); return; }
             // Block dragging when paused or ended
             if (gameEnded || gamePaused) {
                 e.preventDefault();
@@ -2840,6 +2848,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         const handleBoardDrop = (e) => {
             e.preventDefault();
             if (window.MP && MP.active && !MP.canAct()) { draggedTileId = null; draggedTileOrigin = null; return; }
+            if (window.CPU && CPU.blocked()) { draggedTileId = null; draggedTileOrigin = null; return; }
             // Block drops when paused or ended
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة.', true);
@@ -2892,6 +2901,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         const handleRackDrop = (e) => {
             e.preventDefault();
             if (window.MP && MP.active && !MP.canAct()) { draggedTileId = null; draggedTileOrigin = null; return; }
+            if (window.CPU && CPU.blocked()) { draggedTileId = null; draggedTileOrigin = null; return; }
             // Block rack drops when paused or ended
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة.', true);
@@ -2941,6 +2951,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Handles click on a rack slot (for mobile/alternative placement or swapping). */
         const handleRackSlotClick = (e) => {
             if (window.MP && MP.active && !MP.canAct()) return;
+            if (window.CPU && CPU.blocked()) return;
             // Block when paused or ended
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن وضع أو تحريك القطع.', true);
@@ -3002,6 +3013,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Handles click on a square (for click-to-place/click-to-return). */
         const handleSquareClick = (e) => {
             if (window.MP && MP.active && !MP.canAct()) return;
+            if (window.CPU && CPU.blocked()) return;
             // Block interactions when paused or ended
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن وضع أو تحريك القطع.', true);
@@ -3209,6 +3221,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Finalizes the current move, updates score, refills rack, and switches turn. */
         const submitMove = async () => {
             if (window.MP && MP.active) { MP.submitMove(); return; }
+            if (window.CPU && CPU.blocked()) return;
             if (submitting) return;
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن احتساب الحركة.', true);
@@ -3356,6 +3369,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** UNDO: Reverts the last *submitted* move. */
         const undoLastMove = () => {
             if (window.MP && MP.active) { MP.undo(); return; }
+            if (window.CPU && CPU.active) return;   // no undo against the computer
              // Prevent when game ended or paused
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن إلغاء الحركات.', true);
@@ -3461,6 +3475,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Allows the current player to pass their turn without playing tiles. */
         const passTurn = () => {
             if (window.MP && MP.active) { MP.pass(); return; }
+            if (window.CPU && CPU.blocked()) return;
              // Prevent when game ended or paused
             if (gameEnded || gamePaused) {
                 showStatus(gamePaused ? 'اللعبة موقوفة مؤقتاً.' : 'انتهت اللعبة. لا يمكن تمرير الدور.', true);
@@ -3539,7 +3554,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             modalContent.innerHTML = `
                 <h2 class="text-2xl font-bold text-red-400 mb-2 text-center">تأكيد الاستسلام</h2>
-                <p class="text-gray-200 mb-4 text-center">هل تريد حقاً الاستسلام؟ سيفوز ${playerName((window.MP && MP.active ? MP.seat : currentPlayer) === 1 ? 2 : 1)} باللعبة.</p>
+                <p class="text-gray-200 mb-4 text-center">هل تريد حقاً الاستسلام؟ سيفوز ${playerName((window.MP && MP.active ? MP.seat : (window.CPU && CPU.active ? 1 : currentPlayer)) === 1 ? 2 : 1)} باللعبة.</p>
                 <div class="flex justify-center gap-4">
                     <button id="confirm-surrender-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">نعم، استسلم</button>
                     <button id="cancel-surrender-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">إلغاء</button>
@@ -3548,7 +3563,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             document.getElementById('confirm-surrender-btn').onclick = () => {
                 if (window.MP && MP.active) { hideConfirmModal(); MP.surrender(); return; }
-                const losingPlayer = currentPlayer;
+                const losingPlayer = (window.CPU && CPU.active) ? 1 : currentPlayer;   // against the computer only the human can surrender
                 const winningPlayer = losingPlayer === 1 ? 2 : 1;
 
                 hideConfirmModal();
@@ -3720,12 +3735,14 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
                 'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button'
+                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button', 'vs-computer-button'
             ]);
+            // These buttons never keep a size of their own: they always take the standard toolbar size (see syncUniformButtons).
+            const UNIFORM_IDS = ['mp-online-button', 'support-button', 'vs-computer-button'];
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
             const MIN_BOARD_SIZE = 225;
-            const resizable = [board, ...players, ...controls.filter(button => controlIds.has(button.id))].filter(Boolean);
+            const resizable = [board, ...players, ...controls.filter(button => controlIds.has(button.id) && !UNIFORM_IDS.includes(button.id))].filter(Boolean);
             const resizeHandles = new Map();
             [board, ...players, status].forEach(element => { if (!element.hasAttribute('tabindex')) element.tabIndex = 0; });
             resizable.forEach(element => {
@@ -4032,6 +4049,28 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 setPosition(status, (width - Math.min(800 * S, width - 8)) / 2, controlsBottom + 8);
             }
 
+            /** The online, donate and computer buttons always get exactly the size most of the other toolbar buttons have
+             *  (width and height), so they can never differ from the rest, whatever was saved or resized before. */
+            function syncUniformButtons() {
+                const uni = controls.filter(button => UNIFORM_IDS.includes(button.id));
+                const rest = controls.filter(button => controlIds.has(button.id) && !UNIFORM_IDS.includes(button.id) && button.offsetWidth > 0 && button.offsetHeight > 0);
+                if (!uni.length || !rest.length) return;
+                const tally = new Map();
+                let best = null;
+                rest.forEach(button => {
+                    const rect = button.getBoundingClientRect();
+                    const key = rect.width.toFixed(2) + 'x' + rect.height.toFixed(2);
+                    const entry = tally.get(key) || { w: rect.width, h: rect.height, n: 0 };
+                    entry.n++;
+                    tally.set(key, entry);
+                    if (!best || entry.n > best.n) best = entry;
+                });
+                uni.forEach(button => {
+                    button.style.setProperty('--float-button-width', best.w.toFixed(2) + 'px');
+                    button.style.setProperty('--float-button-height', best.h.toFixed(2) + 'px');
+                });
+            }
+
             function applySavedSizes(modeName) {
                 const saved = safeLoad(modeName);
                 if (!saved) return;
@@ -4074,6 +4113,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             }
 
             function savePositions(modeName) {
+                syncUniformButtons();
                 const width = Math.max(1, container.clientWidth);
                 const viewportHeight = Math.max(1, window.innerHeight || 700);
                 const data = safeLoad(modeName) || {};
@@ -4098,6 +4138,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 activeMode = mode();
                 applyResponsiveGeometry();
                 applySavedSizes(activeMode);
+                syncUniformButtons();
                 applySavedPositions(activeMode);
                 updateStageHeight();
             }
@@ -4337,6 +4378,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 requestAnimationFrame(() => {
                     applyResponsiveGeometry();
                     applySavedSizes(activeMode);
+                    syncUniformButtons();
                     applySavedPositions(activeMode);
                     updateStageHeight();
                 });
@@ -4859,12 +4901,14 @@ html body.girly-mode .sq-star {
           if (gameStarted && !gameEnded) {
             localStorage.setItem(KEY, JSON.stringify({
               v: 1, savedAt: Date.now(), tileBag, player1Rack, player2Rack, boardState, placedTilesInTurn, scores,
-              currentPlayer, lastMoveData, playerTimes, gameStarted, gamePaused, gameEnded, consecutiveScorelessTurns
+              currentPlayer, lastMoveData, playerTimes, gameStarted, gamePaused, gameEnded, consecutiveScorelessTurns,
+              cpu: window.CPU && CPU.snapshot ? CPU.snapshot() : null
             }));
           } else clear();                                       // finished or brand-new game: nothing to continue
         } catch (_) {}
       };
       const restore = (d) => {
+        window.CPU && CPU.restore && CPU.restore(d.cpu);   // a saved game against the computer comes back as one
         tileBag = d.tileBag; player1Rack = d.player1Rack; player2Rack = d.player2Rack; boardState = d.boardState;
         placedTilesInTurn = d.placedTilesInTurn || []; scores = d.scores; currentPlayer = d.currentPlayer === 2 ? 2 : 1;
         lastMoveData = d.lastMoveData || null; playerTimes = d.playerTimes;
@@ -5067,7 +5111,7 @@ html body.girly-mode .sq-star {
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const HALF = 340, STEP = 70, P = 'perspective(600px) ';
       let lastCurrent = null, lastEnded = null;
-      const hiddenFor = (n, cur, ended) => (window.MP && MP.active) ? n !== MP.seat : (!ended && n !== cur);
+      const hiddenFor = (n, cur, ended) => (window.MP && MP.active) ? n !== MP.seat : (window.CPU && CPU.active) ? (!ended && n === 2) : (!ended && n !== cur);
       // a rack is created face-down if it is face-down now, or was face-down before a turn change (it then flips open)
       window.rackBornHidden = (n) => hiddenFor(n, currentPlayer, gameEnded) || (lastCurrent !== null && hiddenFor(n, lastCurrent, lastEnded));
       const setHidden = (tile, hidden) => {
@@ -5279,7 +5323,7 @@ html body.girly-mode .sq-star {
   /* Whose rack the shuffle works on. Online it is always MY OWN seat, so I can shuffle while the opponent is thinking
      (my rack is always face-up on my screen and its order never reaches the server). Local pass-and-play is unchanged:
      only the player on turn, because the other rack is face-down. */
-  const shuffleTarget = () => ((window.MP && MP.active && MP.seat) ? MP.seat : currentPlayer);
+  const shuffleTarget = () => ((window.MP && MP.active && MP.seat) ? MP.seat : ((window.CPU && CPU.active) ? 1 : currentPlayer));
   const blocked = () => {
     try {
       if (gameEnded || gamePaused || isSwappingMode) return true;
@@ -5477,6 +5521,610 @@ html body.academic-mode #game-controls button#bag-count-button {
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(center);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+})();
+</script>
+
+<style id="vs-computer-style">
+/* ===== Play vs computer: toolbar button (same icon-only family as the other toolbar buttons) ===== */
+#game-controls button#vs-computer-button {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  padding: 0 !important; min-width: calc(34px * var(--ui-scale, 1)) !important; min-height: calc(34px * var(--ui-scale, 1)) !important;
+  font-size: 0 !important; line-height: 1 !important; border-radius: 12px !important;
+  background: linear-gradient(145deg, #6f93ab, #38596f) !important; color: #f1f6f4 !important;
+  border: 1px solid rgba(15, 30, 40, .55) !important;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+  touch-action: none !important; overflow: hidden !important; white-space: nowrap !important;
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease !important;
+}
+#game-controls button#vs-computer-button::before {
+  content: "" !important; display: block !important; width: 56% !important; height: 56% !important;
+  min-width: 14px !important; min-height: 14px !important; max-width: 27px !important; max-height: 27px !important;
+  flex: 0 0 auto !important; background-color: currentColor !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='8' width='16' height='11' rx='3'/%3E%3Cpath d='M12 8V5'/%3E%3Ccircle cx='12' cy='3.8' r='1.2'/%3E%3Ccircle cx='9' cy='13' r='1.2'/%3E%3Ccircle cx='15' cy='13' r='1.2'/%3E%3Cpath d='M9.5 16.5h5'/%3E%3Cpath d='M2 12.5v3M22 12.5v3'/%3E%3C/svg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='8' width='16' height='11' rx='3'/%3E%3Cpath d='M12 8V5'/%3E%3Ccircle cx='12' cy='3.8' r='1.2'/%3E%3Ccircle cx='9' cy='13' r='1.2'/%3E%3Ccircle cx='15' cy='13' r='1.2'/%3E%3Cpath d='M9.5 16.5h5'/%3E%3Cpath d='M2 12.5v3M22 12.5v3'/%3E%3C/svg%3E") !important;
+  -webkit-mask-repeat: no-repeat !important; mask-repeat: no-repeat !important;
+  -webkit-mask-position: center !important; mask-position: center !important;
+  -webkit-mask-size: contain !important; mask-size: contain !important; pointer-events: none !important;
+}
+#game-controls button#vs-computer-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
+body.dark-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #8fb1c6, #3f647a) !important; color: #0f1a14 !important; }
+html body.girly-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #9a86dc, #5d48ac) !important; color: #fff !important; }
+html body.horror-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #3d4270, #1a1c38) !important; color: #dfe4ff !important; }
+html body.academic-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7ea5cc, #3d6591) !important; color: #06182e !important; }
+/* playing against the computer: lit green, like the online button when connected */
+body.cpu-mode #game-controls button#vs-computer-button,
+body.dark-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7fbf6a, #3f8a2f) !important; color: #0f2a0a !important; }
+html body.girly-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7fd0a2, #3f9c6a) !important; color: #0f3a24 !important; }
+html body.horror-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #5fd17a, #1e7a3c) !important; color: #03210e !important; }
+html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #5fbf8a, #2f8059) !important; color: #05261a !important; }
+
+/* ===== One shared box for the online, donate and computer buttons: the same border, radius and box model as the rest ===== */
+#game-controls button#mp-online-button,
+#game-controls button#support-button,
+#game-controls button#vs-computer-button {
+  box-sizing: border-box !important; margin: 0 !important; border-radius: 12px !important;
+  border: 1px solid rgba(0, 0, 0, .32) !important;
+}
+
+/* ===== dialog ===== */
+#vs-computer-modal.hidden { display: none; }
+#vs-computer-modal.opacity-0 { opacity: 0; }
+#vs-computer-modal > div { padding: 1.5rem; border-radius: .75rem; width: 91.6%; max-width: 24rem; box-sizing: border-box; }
+#vs-computer-modal h2 { margin: 0 0 .25rem; text-align: center; }
+#vs-computer-modal p { margin: 0 0 .75rem; text-align: center; }
+#vs-computer-modal .vsc-actions { display: flex; gap: .75rem; margin-top: 1rem; }
+#vs-computer-modal .vsc-actions button { flex: 1; padding: .5rem .75rem; border-radius: .5rem; }
+#vs-computer-modal .vsc-level { padding: .5rem 1rem; border-radius: .5rem; }
+#vs-computer-modal .vsc-levels { display: flex; flex-direction: column; gap: .6rem; }
+#vs-computer-modal .vsc-level { display: flex; align-items: center; justify-content: space-between; font-size: 1.1rem; min-height: 44px; }
+#vs-computer-modal .vsc-en { font-weight: 600; font-size: .8rem; opacity: .85; direction: ltr; }
+#vs-computer-modal .vsc-level.vsc-current { outline: 3px solid #f5e6b9; outline-offset: 2px; }
+#vs-computer-modal .vsc-level:focus-visible { outline: 3px solid #fef3c7; outline-offset: 2px; }
+</style>
+<script id="vs-computer">
+/* =====================================================================================================
+   Play against the computer (offline).
+   Player 1 = the human (always moves first), player 2 = the computer.
+   Everything runs on the device: the move search uses the same word list (words.bin) and the same
+   scoring / placement rules as the two-player game. The chosen move is put on the board and then
+   submitted through the game's own submitMove(), so scoring, tile drawing, game end, the blink
+   animation and clocks all behave exactly like a human move.
+   ===================================================================================================== */
+(() => {
+  'use strict';
+  const LS_LEVEL = 'arabicScrabble.cpuLevel.v1';
+  const NAME = 'Computer';
+  const $ = (id) => document.getElementById(id);
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const yieldUI = () => new Promise((r) => setTimeout(r, 0));
+  const now = () => (window.performance && performance.now ? performance.now() : Date.now());
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  const LEVELS = {
+    //        search budget (ms) | may use the blank in the search | how the move is picked      | thinking time (ms)
+    easy:   { budget: 450,  blank: false, pick: 'low',  think: [800, 1500] },
+    medium: { budget: 1500, blank: true,  pick: 'mid',  think: [700, 1300] },
+    hard:   { budget: 4200, blank: true,  pick: 'best', think: [600, 1000] }
+  };
+  const LEVEL_LABEL = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' };
+
+  const CPU = (window.CPU = {
+    active: false,
+    level: 'medium',
+    busy: false,       // the computer is thinking / playing
+    acting: false,     // true only while the computer itself drives the game functions (they refuse human input otherwise)
+    gen: 0             // bumped on every new game / mode change, so an old, still running turn can never touch the new game
+  });
+
+  const mp = () => !!(window.MP && window.MP.active);
+  const alive = (tok) => tok === CPU.gen && CPU.active && !gameEnded && !mp();
+  const toast = (msg) => { try { if (window.MP && MP.toast) MP.toast(msg, 3200); } catch (_) {} };
+
+  /* ---------------------------------------------------------------------------------------------
+     Search
+     --------------------------------------------------------------------------------------------- */
+  let validCache = new Map();                    // word -> bool (the word list never changes during a game)
+  const cacheOk = () => { if (validCache.size > 160000) validCache = new Map(); };
+
+  /** All moves the given rack can play on the current board (same rules as validatePlacement + scoreWord). */
+  async function findMoves(rack, cfg, tok, opts = {}) {
+    const wl = await loadWordList();
+    cacheOk();
+    const valid = (s) => {
+      let v = validCache.get(s);
+      if (v === undefined) { v = !!wl.isValid(s); validCache.set(s, v); }
+      return v;
+    };
+    const budget = opts.budget != null ? opts.budget : cfg.budget;
+    const startedAt = now();
+    const deadline = startedAt + budget;
+    const isAlive = opts.alive || (() => alive(tok));
+
+    // board snapshot
+    const g = [];
+    let tilesOnBoard = 0;
+    for (let r = 0; r < 15; r++) {
+      g[r] = [];
+      for (let c = 0; c < 15; c++) {
+        const t = boardState[r][c];
+        g[r][c] = t ? { l: t.letter, v: t.value } : null;
+        if (t) tilesOnBoard++;
+      }
+    }
+    const emptyBoard = tilesOnBoard === 0;
+
+    // rack, grouped by letter (a blank is always its own group)
+    const types = [];
+    const byLetter = new Map();
+    let rackCount = 0;
+    let hasBlank = false;
+    rack.forEach((t, i) => {
+      if (!t) return;
+      rackCount++;
+      if (t.isBlank) { hasBlank = true; types.push({ blank: true, idxs: [i], left: 1, value: t.value }); return; }
+      let ty = byLetter.get(t.letter);
+      if (!ty) { ty = { blank: false, letter: t.letter, value: t.value, idxs: [], left: 0 }; byLetter.set(t.letter, ty); types.push(ty); }
+      ty.idxs.push(i); ty.left++;
+    });
+    if (!rackCount) return { moves: [], complete: true };
+    const BLANK_LETTERS = ARABIC_TILES.filter((x) => !x.isBlank).map((x) => x.letter);
+
+    const moves = [];
+    const seenSingle = new Set();
+    let timedOut = false;
+    let nodes = 0;
+
+    // Build one line (a row for dir 0, a column for dir 1). k = position along the line, in reading order.
+    const buildLine = (dir, L) => {
+      const cell = new Array(15), cross = new Array(15), lm = new Array(15), wm = new Array(15), anchor = new Array(15);
+      let occupied = 0, anchors = 0;
+      for (let k = 0; k < 15; k++) {
+        const r = dir === 0 ? L : k, c = dir === 0 ? k : L;
+        cell[k] = g[r][c];
+        const m = BOARD_LAYOUT[r][c];
+        lm[k] = m === 1 ? 2 : m === 2 ? 3 : 1;
+        wm[k] = (m === 3 || m === 5) ? 2 : m === 4 ? 3 : 1;
+        if (cell[k]) { occupied++; continue; }
+        let pre = '', post = '', preSum = 0, postSum = 0;
+        if (dir === 0) {
+          const arr = []; let rr = r - 1;
+          while (rr >= 0 && g[rr][c]) { arr.push(g[rr][c]); rr--; }
+          for (let i = arr.length - 1; i >= 0; i--) { pre += arr[i].l; preSum += arr[i].v; }
+          rr = r + 1;
+          while (rr < 15 && g[rr][c]) { post += g[rr][c].l; postSum += g[rr][c].v; rr++; }
+        } else {
+          const arr = []; let cc = c - 1;
+          while (cc >= 0 && g[r][cc]) { arr.push(g[r][cc]); cc--; }
+          for (let i = arr.length - 1; i >= 0; i--) { pre += arr[i].l; preSum += arr[i].v; }
+          cc = c + 1;
+          while (cc < 15 && g[r][cc]) { post += g[r][cc].l; postSum += g[r][cc].v; cc++; }
+        }
+        cross[k] = { has: pre !== '' || post !== '', pre, post, sum: preSum + postSum };
+        anchor[k] = emptyBoard ? (r === 7 && c === 7) : cross[k].has;
+        if (anchor[k]) anchors++;
+      }
+      // need[k] = fewest tiles needed, starting at k, to touch the board (0 if an existing tile is reached for free)
+      const need = new Array(16).fill(99);
+      for (let k = 0; k < 15; k++) {
+        let empties = 0, best = 99;
+        for (let j = k; j < 15; j++) {
+          if (cell[j]) { best = Math.min(best, empties); break; }
+          if (anchor[j]) best = Math.min(best, empties + 1);
+          empties++;
+        }
+        need[k] = best;
+      }
+      return { dir, L, cell, cross, lm, wm, anchor, need, occupied, anchors };
+    };
+
+    // Depth-first search along one line, starting at cell s.
+    const runJob = (line, s, useBlank, blankOnly) => {
+      const { dir, L, cell, cross, lm, wm, need } = line;
+      let remaining = rackCount;
+      const placed = [];                                          // {k, idx, letter, blank}
+
+      const record = (word, mainSum, mainWM, crossSum, nNew) => {
+        if (blankOnly && !placed.some((p) => p.blank)) return;
+        if (nNew === 1) {                                         // a single tile is found by both directions: keep one copy
+          const p = placed[0];
+          const r = dir === 0 ? L : p.k, c = dir === 0 ? p.k : L;
+          const key = r + ',' + c + ',' + p.letter;
+          if (seenSingle.has(key)) return;
+          seenSingle.add(key);
+        }
+        const score = mainSum * mainWM + crossSum + (nNew === 7 ? 50 : 0);
+        moves.push({
+          dir, line: L, start: s, word, score, nNew,
+          cells: placed.map((p) => ({ r: dir === 0 ? L : p.k, c: dir === 0 ? p.k : L, idx: p.idx, letter: p.letter, blank: p.blank })),
+          usesBlank: placed.some((p) => p.blank)
+        });
+      };
+
+      const afterCell = (k, str, nNew, anchored, mainSum, mainWM, crossSum) => {
+        if ((k === 14 || !cell[k + 1]) && nNew >= 1 && anchored && str.length >= 2 && valid(str)) {
+          record(str, mainSum, mainWM, crossSum, nNew);
+        }
+        if (k < 14 && (cell[k + 1] || remaining > 0)) step(k + 1, str, nNew, anchored, mainSum, mainWM, crossSum);
+      };
+
+      const step = (k, str, nNew, anchored, mainSum, mainWM, crossSum) => {
+        if (timedOut) return;
+        if ((++nodes & 1023) === 0 && now() > deadline) { timedOut = true; return; }
+        const ce = cell[k];
+        if (ce) { afterCell(k, str + ce.l, nNew, true, mainSum + ce.v, mainWM, crossSum); return; }
+        if (remaining === 0) return;
+        if (!anchored && need[k] > remaining) return;
+        const ci = cross[k];
+        for (let ti = 0; ti < types.length; ti++) {
+          const t = types[ti];
+          if (t.left <= 0) continue;
+          if (t.blank && !useBlank) continue;
+          const letters = t.blank ? BLANK_LETTERS : [t.letter];
+          for (let li = 0; li < letters.length; li++) {
+            const letter = letters[li];
+            let cs = 0;
+            if (ci.has) {
+              if (!valid(ci.pre + letter + ci.post)) continue;
+              cs = (ci.sum + t.value * lm[k]) * wm[k];
+            }
+            const idx = t.idxs[t.idxs.length - t.left];
+            t.left--; remaining--;
+            placed.push({ k, idx, letter, blank: t.blank });
+            afterCell(k, str + letter, nNew + 1, anchored || ci.has || (emptyBoard && line.anchor[k]),
+              mainSum + t.value * lm[k], mainWM * wm[k], crossSum + cs);
+            placed.pop();
+            t.left++; remaining++;
+            if (timedOut) return;
+          }
+        }
+      };
+
+      step(s, '', 0, false, 0, 1, 0);
+    };
+
+    // all (line, start) jobs
+    const lines = [];
+    const dirs = emptyBoard ? [Math.random() < 0.5 ? 0 : 1] : [0, 1];
+    dirs.forEach((dir) => {
+      for (let L = 0; L < 15; L++) {
+        if (emptyBoard && L !== 7) continue;
+        const line = buildLine(dir, L);
+        if (!emptyBoard && line.occupied === 0 && line.anchors === 0) continue;
+        lines.push(line);
+      }
+    });
+    const jobs = [];
+    lines.forEach((line) => {
+      for (let s = 0; s < 15; s++) {
+        if (s > 0 && line.cell[s - 1]) continue;                  // a word must start where the previous cell is empty
+        if (line.need[s] > rackCount) continue;                   // cannot reach the board from here
+        jobs.push({ line, s, w: line.need[s] + Math.random() * 1.5 });
+      }
+    });
+    jobs.sort((a, b) => a.w - b.w);
+
+    const runAll = async (useBlank, blankOnly) => {
+      let sliceEnd = now() + 12;
+      for (let i = 0; i < jobs.length; i++) {
+        if (timedOut || now() > deadline) { timedOut = true; break; }
+        runJob(jobs[i].line, jobs[i].s, useBlank, blankOnly);
+        if (now() > sliceEnd) {
+          await yieldUI();
+          if (!isAlive()) return false;
+          sliceEnd = now() + 12;
+        }
+      }
+      return true;
+    };
+
+    if (!(await runAll(false, false))) return { moves: [], aborted: true };
+    // second pass: moves that use the blank (always when nothing else was found, otherwise only if allowed and time is left)
+    if (hasBlank && (cfg.blank || moves.length === 0) && !timedOut) {
+      if (!(await runAll(true, true))) return { moves: [], aborted: true };
+    }
+    return { moves, complete: !timedOut, ms: Math.round(now() - startedAt), nodes };
+  }
+
+  /* ---------------------------------------------------------------------------------------------
+     Choosing
+     --------------------------------------------------------------------------------------------- */
+  const VOWELS = new Set(['ا', 'و', 'ي']);
+  /** Rough value of the tiles that stay on the rack after a move (used by the hard level). */
+  function leaveValue(rack, usedIdx) {
+    const used = new Set(usedIdx);
+    const left = rack.filter((t, i) => t && !used.has(i));
+    let v = 0, vowels = 0;
+    const seen = {};
+    left.forEach((t) => {
+      if (t.isBlank) { v += 9; return; }
+      if (VOWELS.has(t.letter)) vowels++;
+      seen[t.letter] = (seen[t.letter] || 0) + 1;
+      if (seen[t.letter] > 1) v -= 2.5;                            // duplicates clog the rack
+    });
+    if (left.length >= 4) {
+      if (vowels === 0) v -= 5;
+      if (vowels > 3) v -= (vowels - 3) * 2.5;
+    }
+    return v;
+  }
+
+  function pickMove(moves, rack, level) {
+    if (!moves.length) return null;
+    const sorted = moves.slice().sort((a, b) => b.score - a.score);
+    const best = sorted[0].score;
+    if (level === 'hard') {
+      const bagEmpty = tileBag.length === 0;
+      let top = null, topEq = -1e9;
+      for (let i = 0; i < Math.min(sorted.length, 400); i++) {
+        const m = sorted[i];
+        let eq = m.score + leaveValue(rack, m.cells.map((c) => c.idx)) + Math.random() * 0.8;
+        if (bagEmpty) eq = m.score + m.nNew * 0.5;                  // end game: just score and empty the rack
+        if (m.usesBlank && m.score < 40) eq -= 8;                    // keep the blank unless it really pays
+        if (eq > topEq) { topEq = eq; top = m; }
+      }
+      return top;
+    }
+    if (level === 'medium') {
+      const pool = sorted.filter((m) => m.score >= Math.max(4, best * 0.5));
+      const m = pool[Math.floor(Math.random() * pool.length)] || sorted[0];
+      return m;
+    }
+    // easy: a weak move, short words preferred
+    const limit = Math.max(8, best * 0.35);
+    let pool = sorted.filter((m) => m.score <= limit);
+    if (!pool.length) pool = sorted.slice(-3);
+    pool.sort((a, b) => a.nNew - b.nNew);
+    pool = pool.slice(0, Math.max(3, Math.ceil(pool.length * 0.6)));
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  const KEEP = new Set(['ا', 'ل', 'ي', 'ن', 'م', 'ت', 'ر', 'و', 'ب', 'ه', 'هـ', 'ع', 'ك', 'د', 'س']);
+  function chooseSwap(rack, level) {
+    const idx = [];
+    const seen = {};
+    rack.forEach((t, i) => {
+      if (!t || t.isBlank) return;
+      if (level === 'hard') {
+        seen[t.letter] = (seen[t.letter] || 0) + 1;
+        if (!KEEP.has(t.letter) || seen[t.letter] > 1) idx.push(i);
+      } else idx.push(i);
+    });
+    let out = idx;
+    if (level !== 'hard') {                                          // easy / medium: swap a random handful
+      out = idx.slice().sort(() => Math.random() - 0.5).slice(0, Math.max(2, Math.min(idx.length, 3 + Math.floor(Math.random() * 4))));
+    } else if (!out.length) out = rack.map((t, i) => (t && !t.isBlank ? i : -1)).filter((i) => i >= 0).slice(0, 3);
+    return out;
+  }
+
+  /* ---------------------------------------------------------------------------------------------
+     Playing a turn
+     --------------------------------------------------------------------------------------------- */
+  async function waitUnpaused(tok) {
+    while (gamePaused && alive(tok)) await sleep(250);
+    return alive(tok);
+  }
+
+  async function placeAndSubmit(move, tok) {
+    const rack = player2Rack;
+    const ordered = move.cells.slice().sort((a, b) => (move.dir === 0 ? a.c - b.c : a.r - b.r));
+    for (const cell of ordered) {
+      if (!(await waitUnpaused(tok))) return 'abort';
+      const tile = rack[cell.idx];
+      if (!tile || boardState[cell.r][cell.c]) return 'bad';
+      if (tile.isBlank) tile.letter = cell.letter;
+      rack[cell.idx] = null;
+      boardState[cell.r][cell.c] = tile;
+      placedTilesInTurn.push({ r: cell.r, c: cell.c, originalTile: tile, tileId: tile.id, originalRackIndex: cell.idx });
+      renderBoard();
+      renderRack(2);
+      window.syncRackVisibility && window.syncRackVisibility();
+      await sleep(240);
+    }
+    if (!(await waitUnpaused(tok))) return 'abort';
+    await sleep(300);
+    if (!(await waitUnpaused(tok))) return 'abort';
+    await submitMove();
+    // submitMove clears placedTilesInTurn and hands the turn over when the move was accepted
+    if (alive(tok) && currentPlayer === 2 && placedTilesInTurn.length > 0) return 'bad';
+    return 'ok';
+  }
+
+  function giveBack() {                                              // put a half-placed move back on the computer's rack
+    if (placedTilesInTurn.length > 0 && currentPlayer === 2) resetMove(true);
+  }
+
+  async function takeTurn(tok) {
+    const cfg = LEVELS[CPU.level] || LEVELS.medium;
+    const t0 = now();
+    const rack = player2Rack;
+    let result;
+    try { result = await findMoves(rack, cfg, tok); }
+    catch (e) { console.warn('computer: word list not available', e); result = { moves: [], failed: true }; }
+    if (!alive(tok) || result.aborted) return;
+
+    // natural thinking time
+    const target = rand(cfg.think[0], cfg.think[1]);
+    const spent = now() - t0;
+    if (spent < target) await sleep(target - spent);
+    if (!alive(tok)) return;
+    if (!(await waitUnpaused(tok))) return;
+
+    let moves = result.moves;
+    const banned = new Set();
+    for (let attempt = 0; attempt < 6 && moves.length; attempt++) {
+      const m = pickMove(moves.filter((x) => !banned.has(x)), rack, CPU.level);
+      if (!m) break;
+      CPU._last = m;
+      CPU.acting = true;
+      let res;
+      try { res = await placeAndSubmit(m, tok); }
+      finally { CPU.acting = false; }
+      if (res === 'ok') return;
+      if (res === 'abort' || !alive(tok)) { if (placedTilesInTurn.length && currentPlayer === 2 && !gameEnded) giveBack(); return; }
+      banned.add(m);
+      CPU.acting = true; try { giveBack(); } finally { CPU.acting = false; }   // refused by the rules: take the tiles back, try another
+    }
+    if (!alive(tok)) return;
+
+    // no playable move: swap (when the bag allows it), otherwise pass
+    const swapIdx = tileBag.length >= 7 && (!moves.length || (CPU.level === 'hard' && Math.max(...moves.map((x) => x.score)) <= 4))
+      ? chooseSwap(rack, CPU.level) : [];
+    CPU.acting = true;
+    try {
+      if (swapIdx.length) {
+        tilesToSwapIndices = swapIdx.slice();
+        isSwappingMode = false;
+        performSwap();
+        toast('الكمبيوتر بدّل ' + swapIdx.length + ' قطع');
+      } else {
+        passTurn();
+        toast('الكمبيوتر مرّر دوره');
+      }
+    } finally { CPU.acting = false; }
+  }
+
+  CPU.kick = () => {
+    if (!CPU.active || CPU.busy || currentPlayer !== 2 || gameEnded || gamePaused || mp()) return;
+    if (placedTilesInTurn.length > 0) return;
+    CPU.busy = true;
+    const tok = CPU.gen;
+    setTimeout(async () => {
+      try { if (alive(tok) && !gamePaused) await takeTurn(tok); }
+      catch (e) { console.error('computer turn failed', e); try { if (alive(tok) && currentPlayer === 2) { CPU.acting = true; giveBack(); if (currentPlayer === 2) passTurn(); } } catch (_) {} finally { CPU.acting = false; } }
+      finally {
+        if (tok === CPU.gen) {
+          CPU.busy = false;
+          if (alive(tok) && currentPlayer === 2 && !gamePaused) setTimeout(CPU.kick, 400);   // e.g. the human paused during the search
+        }
+      }
+    }, 450);
+  };
+
+  /* ---------------------------------------------------------------------------------------------
+     Hooks used by the game
+     --------------------------------------------------------------------------------------------- */
+  /** true while the human must not act: it is the computer's turn. */
+  CPU.blocked = () => CPU.active && !CPU.acting && currentPlayer === 2;
+
+  CPU.afterUpdateUI = () => {
+    if (mp()) { if (CPU.active) { CPU.active = false; CPU.gen++; CPU.busy = false; applyMode(); } return; }
+    if (!CPU.active) return;
+    const off = (id) => { const b = $(id); if (b) b.disabled = true; };
+    off('undo-last-move');                                          // undo is not offered against the computer
+    if (currentPlayer === 2 && !gameEnded) ['submit-move', 'reset-move', 'swap-tiles', 'pass-turn'].forEach(off);
+    CPU.kick();
+  };
+
+  CPU.onReset = () => { CPU.gen++; CPU.busy = false; CPU.acting = false; };
+
+  CPU.snapshot = () => (CPU.active ? { active: true, level: CPU.level } : null);
+  CPU.restore = (s) => {
+    CPU.gen++; CPU.busy = false; CPU.acting = false;
+    CPU.active = !!(s && s.active) && !mp();
+    if (CPU.active && LEVELS[s.level]) CPU.level = s.level;
+    applyMode();
+  };
+
+  /* ---------------------------------------------------------------------------------------------
+     Mode switch, names, button and dialog
+     --------------------------------------------------------------------------------------------- */
+  let baseName = null;
+  function applyMode() {
+    document.body.classList.toggle('cpu-mode', CPU.active);
+    const btn = $('vs-computer-button');
+    if (btn) {
+      btn.setAttribute('aria-pressed', CPU.active ? 'true' : 'false');
+      const label = CPU.active ? 'Playing vs computer (' + CPU.level + ')' : 'Play vs computer (offline)';
+      btn.setAttribute('aria-label', label); btn.title = label;
+    }
+    const input = $('player-2-name');
+    if (input && baseName) {
+      input.value = CPU.active ? NAME : baseName(2);
+      input.setAttribute('aria-label', 'Player name: ' + input.value);
+    }
+  }
+
+  function start(level) {
+    if (mp()) { toast('غادر الغرفة الأونلاين أولاً'); return; }
+    if (!LEVELS[level]) level = 'medium';
+    CPU.active = true; CPU.level = level;
+    try { localStorage.setItem(LS_LEVEL, level); } catch (_) {}
+    applyMode();
+    resetGame();                                                    // a fresh game; the human (player 1) moves first
+  }
+  function stop() {
+    CPU.active = false; CPU.gen++; CPU.busy = false;
+    applyMode();
+    resetGame();
+  }
+  CPU.start = start; CPU.stop = stop;
+
+  let dlg = null;
+  function buildDialog() {
+    if (dlg) return dlg;
+    dlg = document.createElement('div');
+    dlg.id = 'vs-computer-modal';
+    dlg.className = 'modal-overlay hidden opacity-0';
+    dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-labelledby', 'vsc-title');
+    dlg.innerHTML =
+      '<div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95" dir="rtl">' +
+        '<h2 id="vsc-title" class="text-2xl font-bold text-yellow-300 mb-1 text-center">اللعب ضد الكمبيوتر</h2>' +
+        '<p class="text-sm text-gray-400 mb-3 text-center" dir="ltr">Play vs computer · works offline · you move first</p>' +
+        '<p id="vsc-warn" class="text-base text-gray-200 mb-3 text-center" style="display:none">ستبدأ لعبة جديدة وتُفقد اللعبة الحالية.</p>' +
+        '<div class="vsc-levels">' +
+          '<button type="button" data-level="easy" class="vsc-level px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">سهل <span class="vsc-en">Easy</span></button>' +
+          '<button type="button" data-level="medium" class="vsc-level px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg shadow-md transition duration-300">متوسط <span class="vsc-en">Medium</span></button>' +
+          '<button type="button" data-level="hard" class="vsc-level px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition duration-300">صعب <span class="vsc-en">Hard</span></button>' +
+        '</div>' +
+        '<div class="vsc-actions">' +
+          '<button type="button" id="vsc-two" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">لاعبان بدون كمبيوتر</button>' +
+          '<button type="button" id="vsc-cancel" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">إلغاء</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(dlg);
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) closeDialog(); });
+    dlg.querySelectorAll('.vsc-level').forEach((b) => b.addEventListener('click', () => { closeDialog(); start(b.dataset.level); }));
+    dlg.querySelector('#vsc-cancel').addEventListener('click', closeDialog);
+    dlg.querySelector('#vsc-two').addEventListener('click', () => { closeDialog(); if (CPU.active) stop(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && dlg && !dlg.classList.contains('hidden')) closeDialog(); });
+    return dlg;
+  }
+  function openDialog() {
+    if (mp()) { toast('غادر الغرفة الأونلاين أولاً'); return; }
+    const m = buildDialog();
+    const inGame = gameStarted && !gameEnded;
+    m.querySelector('#vsc-warn').style.display = inGame ? '' : 'none';
+    m.querySelector('#vsc-two').style.display = CPU.active ? '' : 'none';
+    m.querySelectorAll('.vsc-level').forEach((b) => b.classList.toggle('vsc-current', CPU.active && b.dataset.level === CPU.level));
+    const card = m.querySelector('.shadow-2xl');
+    m.classList.remove('hidden');
+    setTimeout(() => { m.classList.remove('opacity-0'); card.classList.remove('scale-95'); card.classList.add('scale-100'); }, 10);
+    const cur = m.querySelector('[data-level="' + (CPU.level || 'medium') + '"]');
+    if (cur) cur.focus({ preventScroll: true });
+  }
+  function closeDialog() {
+    if (!dlg) return;
+    const card = dlg.querySelector('.shadow-2xl');
+    dlg.classList.add('opacity-0'); card.classList.remove('scale-100'); card.classList.add('scale-95');
+    setTimeout(() => dlg.classList.add('hidden'), 300);
+  }
+
+  function boot() {
+    try { const l = localStorage.getItem(LS_LEVEL); if (LEVELS[l]) CPU.level = l; } catch (_) {}
+    // names: the computer's name cannot be edited, and the game texts use it
+    baseName = window.playerName;
+    window.playerName = (n) => (CPU.active && n === 2 ? NAME : baseName(n));
+    const cont = $('player-racks-container');
+    if (cont) ['pointerup', 'dblclick', 'keydown', 'contextmenu'].forEach((t) => cont.addEventListener(t, (e) => {
+      if (CPU.active && e.target.closest && e.target.closest('#player-2-name')) e.stopPropagation();
+    }, true));
+    const btn = $('vs-computer-button');
+    if (btn) btn.addEventListener('click', openDialog);
+    applyMode();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
+
+  // exposed for tests only
+  CPU._findMoves = findMoves;
 })();
 </script>
 
