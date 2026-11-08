@@ -5629,25 +5629,32 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
      skeleton forms that no human would play. For the computer only, a word must be backed up by related forms in the
      same word list (plural, feminine, verb forms ...), which real words have and stray entries do not.
      The human's own check (wordsAreValid) is untouched. */
-  const REL_SUF = ['ة', 'ات', 'ان', 'ين', 'ون', 'ه', 'ها', 'ي', 'وا', 'ت', 'ا', 'تين', 'ية', 'ن', 'ك', 'نا', 'تم'];
+  // Related forms that back a word up. Attached-pronoun forms are deliberately NOT counted (they would back up each other).
+  const REL_SUF = ['ة', 'ات', 'ان', 'ين', 'ون', 'وا', 'ت', 'تين', 'ية', 'ا', 'ي'];
   const REL_PRE = ['ي', 'ت', 'ن', 'م'];
+  // Attached pronouns (verb/noun + him/her/them/you/me/us). The list generates many such forms (فائهو، كتبتها، بيتكم ...); the computer never plays them.
+  const SURE = ' كرسي حديقة قصة صحيفة لغة جبال صحراء ';
+  const PRONOUN_END = /(هو|هم|هن|ها|هما|كم|كن|كما|ني|نا|تهم|تها|ته|تك|تنا|تني)$/;
   function trusted(wl, raw) {
     let w = raw;
     try { if (window.WordCheck && WordCheck.normalize) w = WordCheck.normalize(raw); } catch (_) {}
     if (w.length >= 5 && w.indexOf('ال') === 0) w = w.slice(2);                  // ال + word: judge the word itself
-    // This game has no أ إ آ tiles, and the word list cannot tell ا from أ. So the computer never plays a word that only
-    // exists with a hamza on the alif: two-letter words starting with ا (ات اذ اف اه او اي ...), and ordinary words starting with ا
-    // (اهواء، ارض، اخذ ...). A word starting with ا is allowed only where the alif is a real one (verb forms): است + 3 letters,
-    // ان + 3 or 4 letters, or the pattern ا؟ت؟؟ (احتفل، اقترب، اجتمع).
+    // No أ إ آ tiles: a word starting with ا only where the alif is a real one (same rule as wordcheck.js).
     if (w.charAt(0) === 'ا') {
       if (w.length <= 2) return false;
-      const ok = (/^است.{3,}$/.test(w)) || (/^ان.{3,4}$/.test(w)) || (/^ا[^ت]ت.{2}$/.test(w));
+      const ok = (/^است.{3,}$/.test(w)) || (/^ان.{3,4}$/.test(w)) || (/^ا[^ت]ت.{2}$/.test(w)) || w === 'اسم' || w === 'ابن' || w === 'ابنة';
       if (!ok) return false;
     }
-    if (/ءي$/.test(w)) return false;                                             // attached "my": اهواءي، سماءي ...
-    if (w.length >= 5 && /نا$/.test(w)) return false;                            // attached "our": ذهبنا، بيتنا ...
     if (w.length <= 2) return true;                                              // other two-letter words are already a hand-checked list
-    const need = w.length === 3 ? 3 : w.length === 4 ? 2 : 1;
+    if (SURE.indexOf(' ' + w + ' ') >= 0) return true;                           // words the owner confirmed as real
+    if (/ءي$/.test(w)) return false;
+    if (w.length >= 4 && PRONOUN_END.test(w)) return false;                      // attached pronoun forms
+    if (w.length >= 4 && /[هك]$/.test(w) && wl.has(w.slice(0, -1))) return false; // verb/noun + attached ه / ك
+    if (w.length >= 4 && /ي$/.test(w) && !/ية$/.test(w) && wl.has(w.slice(0, -1))) return false; // attached "my" (نسبة words are skipped on purpose)
+    let need = w.length === 3 ? 3 : w.length === 4 ? 2 : 1;
+    // Shapes of ordinary nouns that often have no listed relatives: feminine ـة (قصة، لغة، صحيفة), ـاء plurals (صحراء)
+    // and the فعال pattern (جبال، رجال). The pronoun rules above already removed the junk shapes.
+    if (w.length >= 4 && (/ة$/.test(w) || /اء$/.test(w) || /^[^ا][^ا]ا[^ا]$/.test(w))) need = 0;
     let n = 0;
     for (let i = 0; i < REL_SUF.length && n < need; i++) {
       const s = REL_SUF[i];
@@ -5659,6 +5666,8 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
       if (wl.has(p + w)) n++;
       if (n < need && w.length > 3 && w.charAt(0) === p && wl.has(w.slice(1))) n++;
     }
+    if (n < need && w.length > 3 && /ة$/.test(w) && wl.has(w.slice(0, -1) + 'ات')) n++;
+    if (n < need && w.length > 4 && /ات$/.test(w) && wl.has(w.slice(0, -2) + 'ة')) n++;
     return n >= need;
   }
 
