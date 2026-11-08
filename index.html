@@ -5654,7 +5654,10 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
     let need = w.length === 3 ? 3 : w.length === 4 ? 2 : 1;
     // Shapes of ordinary nouns that often have no listed relatives: feminine ـة (قصة، لغة، صحيفة), ـاء plurals (صحراء)
     // and the فعال pattern (جبال، رجال). The pronoun rules above already removed the junk shapes.
-    if (w.length >= 4 && (/ة$/.test(w) || /اء$/.test(w) || /^[^ا][^ا]ا[^ا]$/.test(w))) need = 0;
+    // Only for SHORT words (4-6 letters). The word-list file wrongly says "yes" to roughly 1 random string in 15,000 and the
+    // computer tries hundreds of thousands per turn, so a LONG string ending in ة / اء (e.g. a 8-11 letter nonsense word) must
+    // always be backed up by related forms like every other long word.
+    if (w.length >= 4 && w.length <= 6 && (/ة$/.test(w) || /اء$/.test(w) || /^[^ا][^ا]ا[^ا]$/.test(w))) need = 0;
     let n = 0;
     for (let i = 0; i < REL_SUF.length && n < need; i++) {
       const s = REL_SUF[i];
