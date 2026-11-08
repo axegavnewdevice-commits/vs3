@@ -5638,7 +5638,7 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
   function trusted(wl, raw) {
     let w = raw;
     try { if (window.WordCheck && WordCheck.normalize) w = WordCheck.normalize(raw); } catch (_) {}
-    if (w.length >= 5 && w.indexOf('ال') === 0) w = w.slice(2);                  // ال + word: judge the word itself
+    if (w.length >= 4 && w.indexOf('ال') === 0) w = w.slice(2);                  // ال + word: judge the word itself
     // No أ إ آ tiles: a word starting with ا only where the alif is a real one (same rule as wordcheck.js).
     if (w.charAt(0) === 'ا') {
       if (w.length <= 2) return false;

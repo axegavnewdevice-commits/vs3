@@ -55,7 +55,7 @@
       // NO-HAMZA-TILE RULES (the game has no أ إ آ tile and the list cannot tell ا from أ): the same for every player and for the computer.
       // A word starting with ا is accepted only when that alif is a real one: ال + word, ابن اسم اثنان ..., است + 3 letters, ان + 3-4 letters, or ا؟ت؟؟ (احتفل، اقترب).
       // This refuses ات اذ اف او اهواء ارض اخذ ... Also refused: attached "my" in ...ءي (اهواءي).
-      var core = (w.length >= 5 && w.indexOf('ال') === 0) ? w.slice(2) : w;
+      var core = (w.length >= 4 && w.indexOf('ال') === 0) ? w.slice(2) : w;
       if (core.charAt(0) === 'ا' && ' ابن ابنة اسم اثنان اثنين '.indexOf(' ' + core + ' ') < 0) {
         if (core.length <= 2) return false;
         if (!(/^است.{3,}$/.test(core) || /^ان.{3,4}$/.test(core) || /^ا[^ت]ت.{2}$/.test(core))) return false;
