@@ -5625,13 +5625,39 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
   let validCache = new Map();                    // word -> bool (the word list never changes during a game)
   const cacheOk = () => { if (validCache.size > 160000) validCache = new Map(); };
 
+  /* The computer tries hundreds of thousands of letter strings per turn, so it also finds odd dictionary entries and
+     skeleton forms that no human would play. For the computer only, a word must be backed up by related forms in the
+     same word list (plural, feminine, verb forms ...), which real words have and stray entries do not.
+     The human's own check (wordsAreValid) is untouched. */
+  const REL_SUF = ['ة', 'ات', 'ان', 'ين', 'ون', 'ه', 'ها', 'ي', 'وا', 'ت', 'ا', 'تين', 'ية', 'ن', 'ك', 'نا', 'تم'];
+  const REL_PRE = ['ي', 'ت', 'ن', 'م'];
+  function trusted(wl, raw) {
+    let w = raw;
+    try { if (window.WordCheck && WordCheck.normalize) w = WordCheck.normalize(raw); } catch (_) {}
+    if (w.length >= 5 && w.indexOf('ال') === 0 && !wl.has(w)) w = w.slice(2);   // ال + word: judge the word itself
+    if (w.length <= 2) return true;                                              // two-letter words are already a hand-checked list
+    const need = w.length === 3 ? 3 : w.length === 4 ? 2 : 1;
+    let n = 0;
+    for (let i = 0; i < REL_SUF.length && n < need; i++) {
+      const s = REL_SUF[i];
+      if (wl.has(w + s)) n++;
+      if (n < need && w.length > 3 && w.endsWith(s) && wl.has(w.slice(0, -s.length))) n++;
+    }
+    for (let i = 0; i < REL_PRE.length && n < need; i++) {
+      const p = REL_PRE[i];
+      if (wl.has(p + w)) n++;
+      if (n < need && w.length > 3 && w.charAt(0) === p && wl.has(w.slice(1))) n++;
+    }
+    return n >= need;
+  }
+
   /** All moves the given rack can play on the current board (same rules as validatePlacement + scoreWord). */
   async function findMoves(rack, cfg, tok, opts = {}) {
     const wl = await loadWordList();
     cacheOk();
     const valid = (s) => {
       let v = validCache.get(s);
-      if (v === undefined) { v = !!wl.isValid(s); validCache.set(s, v); }
+      if (v === undefined) { v = !!wl.isValid(s) && trusted(wl, s); validCache.set(s, v); }
       return v;
     };
     const budget = opts.budget != null ? opts.budget : cfg.budget;
