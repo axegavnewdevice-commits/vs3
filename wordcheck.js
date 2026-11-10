@@ -36,7 +36,7 @@
     // Exact match, or ال + a listed word (المدرسة، الكتاب، الوحي، الكلام). ال alone is allowed because it is part of the same word.
     // Other prefixes (و ف ب ك ل س) and attached pronouns are NOT accepted. The word after ال must be 3+ letters (or one of a few real 2-letter nouns).
     // Real two-letter nouns that may follow ال (الأب، اليد، الدم، الفم ...). Hand-picked: the list also holds many 2-letter fragments.
-    var NOUN2 = ' بر بن جد جن جو حب حج حد حر حس حص حل حي خط خل دب دم دن ذر ذم رب رد رق زن سد سر سل سم سن شب شر شك صد ضد طب طن عد عز عم غد غر غم فخ فم فن قط لب مد مل نص نم هم يد ';
+    var NOUN2 = ' بت بث بر بط بق بن تب تل تم تو ثج جب جد جذ جر جز جس جص جف جل جم جن جو حب حت حث حج حد حر حز حس حش حص حض حط حظ حق حك حل حن حي خب خد خذ خر خز خس خص خط خف خل خن دب در دس دف دق دك دل دم دن ذب ذر ذل ذم رب رث رج رخ رد رز رس رش رص رض رف رق رم ري زج زر زف زق زل زم زن زي سب ست سح سد سر سك سل سم سن شب شج شح شد شذ شر شط شف شق شك شل شم صب صد صر صف صك صل صم صن ضب ضج ضخ ضد ضر ضم ضن طب طر طف طل طم طن طي ظن عج عد عز عس عش عض عف عق عم عي غب غث غد غر غش غض غط غل غم غن غي فت فج فخ فذ فر فش فص فض فظ فك فل فم فن قح قر قس قش قص قط قل كب كد كر كف كل كم كن لب لذ لص لط لف مت مج مخ مد مر مس مص مط مل نث ند نص نم هد هر هز هش هم ود يد يم ';
     // Standalone two-letter words: the dictionary holds hundreds of 2-letter fragments that are not words (e.g. بؤ، تذ، شص), so a 2-letter move is accepted
     // only if it is on this hand-checked list of real Arabic words AND the dictionary knows it (this list can only remove words, never add one).
     // اب ام ان اخ are deliberately NOT on the list: the game has no أ tile and plain ا is not أ (owner's rule).
@@ -59,7 +59,8 @@
       if (w.length === 2) return WORD2.indexOf(' ' + w + ' ') >= 0 && has(w);
       if (has(w)) return true;
       if (w.indexOf('ال') === 0) {
-        if (w.length >= 5 && has(w.slice(2))) return true;
+        // ال never meets tanween (الكتابا) and never meets a verb: the word file marks every such word with a '#' twin key.
+        if (w.length >= 5 && has(w.slice(2)) && !has(w.slice(2) + '#')) return true;
         if (w.length === 4 && NOUN2.indexOf(' ' + w.slice(2) + ' ') >= 0 && has(w.slice(2))) return true;
       }
       return false;
