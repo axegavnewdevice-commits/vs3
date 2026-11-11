@@ -594,6 +594,15 @@
         #welcome-splash.ws-go .ws-dia { animation: wsPop .5s cubic-bezier(.2, 1.4, .4, 1) 1.1s forwards; }
         @keyframes wsDraw { to { stroke-dashoffset: 0; } }
         @keyframes wsPop  { to { opacity: 1; transform: scale(1); } }
+        /* blessing on the Prophet, under the flourish: gold Naskh, fades in once the flourish has drawn */
+        .ws-bless { display: block; max-width: 88vw; margin: calc(var(--ws-fs, 3rem) * .3) auto 0; direction: rtl; text-align: center; white-space: normal;
+            font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', 'Traditional Arabic', serif; font-weight: 400;
+            font-size: calc(var(--ws-fs, 3rem) * .34); line-height: 1.9;
+            background: linear-gradient(180deg, #fff6d2 0%, #ecc96f 48%, #b3862b 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, .5)); opacity: 0; transform: translateY(.4em); }
+        #welcome-splash.ws-go .ws-bless { animation: wsBless .9s ease-out 2.1s forwards; }
+        @keyframes wsBless { to { opacity: 1; transform: none; } }
         .ws-sp {
             position: absolute; left: var(--x); top: var(--y); width: .38rem; height: .38rem; border-radius: 50%;
             background: #f6e0a0; box-shadow: 0 0 10px 3px rgba(246, 224, 160, .7); opacity: 0;
@@ -606,6 +615,8 @@
             #welcome-splash.ws-go .ws-fl, #welcome-splash.ws-go .ws-dia, #welcome-splash.ws-go .ws-sp, #welcome-splash.ws-go .ws-frame, #welcome-splash.ws-go .ws-corner, #welcome-splash.ws-go .ws-emblem { animation: none !important; }
             .ws-fl { stroke-dashoffset: 0; } .ws-dia, .ws-frame, .ws-corner, .ws-emblem { opacity: 1; transform: none; } .ws-c2 { transform: scaleX(-1); } .ws-c3 { transform: scaleY(-1); } .ws-c4 { transform: scale(-1); } .ws-sp { display: none; }
             @keyframes wsFade { to { opacity: 1; } }
+            .ws-bless { transform: none; }
+            #welcome-splash.ws-go .ws-bless { animation: wsFade .8s ease .1s forwards !important; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1472,6 +1483,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             </g>
             <path class="ws-dia" d="M200 3 L209 12 L200 21 L191 12 Z" fill="#f6e0a0"/>
         </svg>
+        <span class="ws-bless" lang="ar" dir="rtl">اللهم صل على سيدنا محمد وآله وصحبه أجمعين</span>
     </div>
 </div>
 <script>
