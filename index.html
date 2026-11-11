@@ -5076,7 +5076,7 @@ html body.girly-mode .sq-star {
       const COLOR = '#0D9488';
       let cells = null, sig = '', freshAt = 0;
       const css = document.createElement('style');
-      css.textContent = '.last-word-outline{position:absolute;box-sizing:border-box;pointer-events:none;z-index:6;border:2px solid ' + COLOR + ';border-radius:7px}'
+      css.textContent = '.last-word-outline{position:absolute;box-sizing:border-box;pointer-events:none;z-index:6;border:2px solid ' + COLOR + ';border-radius:7px;box-shadow:inset 0 0 0 1px #000}'
         + '.last-word-outline.lw-fresh{animation:lwIn .35s ease 1s both}@keyframes lwIn{from{opacity:0}to{opacity:1}}'
         + '@media (prefers-reduced-motion:reduce){.last-word-outline.lw-fresh{animation:none}}';
       document.head.appendChild(css);
