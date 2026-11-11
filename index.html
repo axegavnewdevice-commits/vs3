@@ -3228,17 +3228,22 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 return;
             }
 
+            // A refused move (bad placement or word not in the list) sends the tiles back to the rack. The computer opponent
+            // handles its own refusals, so it is left alone here.
+            const sendBack = () => { if (!(window.CPU && CPU.acting) && placedTilesInTurn.length > 0) resetMove(true); };
+
             const validationResult = validatePlacement();
             if (typeof validationResult === 'string') {
                 showStatus(validationResult, true);
+                sendBack();
                 return;
             }
 
-            // The words must be in the word list. A refused move stays on the board for the player to change; nothing is scored.
+            // The words must be in the word list. A refused move goes back to the rack; nothing is scored.
             submitting = true;
             const wordsOk = await wordsAreValid(validationResult.words);
             submitting = false;
-            if (!wordsOk) return;
+            if (!wordsOk) { if (!gameEnded) sendBack(); return; }
             if (gameEnded || gamePaused) return;                                            // the game changed while the list was loading
 
             if (!gameStarted) {

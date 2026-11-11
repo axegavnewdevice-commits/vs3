@@ -286,10 +286,16 @@
     } catch (e) {
       if (e.data && e.data.view) apply(e.data);                    // the server sends its current state with each refusal
       if (e.status === 410) { sessionLost(e); return false; }
+      if (action && action.type === 'move' && e.data && (e.data.error === 'invalid_word' || e.data.error === 'invalid_placement')) recallTiles();   // refused move: tiles back to my rack
       // a refused word / illegal placement is silent (the tiles just stay on the board); real problems still show a message
       if (!silent && !(e.data && (e.data.error === 'invalid_word' || e.data.error === 'invalid_placement'))) toast(errText(e));
       return false;
     } finally { MP.busy = false; updateUI(false); }
+  }
+
+  /** A refused move: take the staged tiles off the board and put them back on my rack. */
+  function recallTiles() {
+    try { if (placedTilesInTurn.length > 0 && !gameEnded) resetMove(true); } catch (_) {}
   }
 
   MP.canAct = canAct;
@@ -298,7 +304,7 @@
   MP.submitMove = async () => {
     if (!canAct()) return;
     const check = validatePlacement();                              // instant local feedback; the server re-validates everything
-    if (typeof check === 'string') { showStatus(check, true); return; }   // refused silently (no pop-up), same as the local game
+    if (typeof check === 'string') { showStatus(check, true); recallTiles(); return; }   // refused silently (no pop-up); the tiles go back to the rack
     if (placedTilesInTurn.some((p) => p.originalTile.isBlank && p.originalTile.letter === ' ')) return;
     await send({ type: 'move', placements: placedTilesInTurn.map((p) => ({ r: p.r, c: p.c, id: p.tileId, letter: p.originalTile.letter })) });
   };
