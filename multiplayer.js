@@ -227,6 +227,7 @@
 
       clockTick();
       if (draft) restage(draft);
+      if (window.setLastWord) window.setLastWord(Array.isArray(v.lastWord) ? v.lastWord.map(([r, c]) => ({ r, c })) : null, false);   // green outline round the last word (same for both players)
       MP.lastDraftSig = JSON.stringify(placedTilesInTurn.map((p) => [p.r, p.c, p.tileId, p.originalTile.letter]));
       updateUI(true);
     } finally { MP.applying = false; }

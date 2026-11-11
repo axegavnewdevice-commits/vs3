@@ -2414,6 +2414,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             draggedTileOrigin = null; 
             selectedRackTileId = null;
             lastMoveData = null; // Clear undo data
+            window.setLastWord && window.setLastWord(null);
             consecutiveScorelessTurns = 0;
             
             // Reset end/paused state
@@ -3246,6 +3247,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             if (!wordsOk) { if (!gameEnded) sendBack(); return; }
             if (gameEnded || gamePaused) return;                                            // the game changed while the list was loading
 
+            window.setLastWordFromMove && window.setLastWordFromMove(validationResult.words, placedTilesInTurn.length);   // green outline round the new main word
+
             if (!gameStarted) {
                 gameStarted = true;
                 startTimer();
@@ -3388,6 +3391,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             const { playerId, score, boardPlacements, tilesDrawn } = lastMoveData;
             const rack = playerId === 1 ? player1Rack : player2Rack;
+            window.setLastWord && window.setLastWord(null);                                 // the undone word is no longer the last word
 
             // 1. Revert Score
             scores[playerId] -= score;
@@ -4907,6 +4911,7 @@ html body.girly-mode .sq-star {
             localStorage.setItem(KEY, JSON.stringify({
               v: 1, savedAt: Date.now(), tileBag, player1Rack, player2Rack, boardState, placedTilesInTurn, scores,
               currentPlayer, lastMoveData, playerTimes, gameStarted, gamePaused, gameEnded, consecutiveScorelessTurns,
+              lastWord: window.getLastWord ? window.getLastWord() : null,
               cpu: window.CPU && CPU.snapshot ? CPU.snapshot() : null
             }));
           } else clear();                                       // finished or brand-new game: nothing to continue
@@ -4917,6 +4922,7 @@ html body.girly-mode .sq-star {
         tileBag = d.tileBag; player1Rack = d.player1Rack; player2Rack = d.player2Rack; boardState = d.boardState;
         placedTilesInTurn = d.placedTilesInTurn || []; scores = d.scores; currentPlayer = d.currentPlayer === 2 ? 2 : 1;
         lastMoveData = d.lastMoveData || null; playerTimes = d.playerTimes;
+        window.setLastWord && window.setLastWord(d.lastWord || null, false);
         gameStarted = !!d.gameStarted; gamePaused = !!d.gamePaused; gameEnded = false;
         consecutiveScorelessTurns = Number(d.consecutiveScorelessTurns) || 0;
         isSwappingMode = false; tilesToSwapIndices = [];
@@ -5059,6 +5065,82 @@ html body.girly-mode .sq-star {
           setTimeout(() => layer.remove(), (end + 1.3) * 1000);
         } catch (_) {}
       };
+    })();
+    </script>
+
+    <script id="last-word-mark">
+    /* Marks the last submitted word: one continuous bright-green line around the main word (not the cross words).
+       The line is a layer inside #game-board, positioned in percentages, so it never touches the tiles and always follows the board size.
+       It is redrawn whenever the board is rebuilt (MutationObserver) or resized. */
+    (() => {
+      const COLOR = '#22A845';
+      let cells = null, sig = '', freshAt = 0;
+      const css = document.createElement('style');
+      css.textContent = '.last-word-outline{position:absolute;box-sizing:border-box;pointer-events:none;z-index:6;border:3px solid ' + COLOR + ';border-radius:7px;box-shadow:0 0 0 1px rgba(255,255,255,.9),inset 0 0 0 1px rgba(255,255,255,.9)}'
+        + '.last-word-outline.lw-fresh{animation:lwIn .35s ease 1s both}@keyframes lwIn{from{opacity:0}to{opacity:1}}'
+        + '@media (prefers-reduced-motion:reduce){.last-word-outline.lw-fresh{animation:none}}';
+      document.head.appendChild(css);
+
+      const draw = () => {
+        const board = document.getElementById('game-board');
+        if (!board) return;
+        board.querySelectorAll(':scope > .last-word-outline').forEach((n) => n.remove());
+        if (!cells || !cells.length) return;
+        const squares = cells.map(({ r, c }) => board.querySelector('.square[data-r="' + r + '"][data-c="' + c + '"]'));
+        if (squares.some((q) => !q)) return;
+        const b = board.getBoundingClientRect(), W = board.clientWidth, H = board.clientHeight;
+        if (!W || !H) return;
+        let l = 1e9, t = 1e9, rr = -1e9, bb = -1e9;
+        squares.forEach((q) => { const x = q.getBoundingClientRect(); l = Math.min(l, x.left); t = Math.min(t, x.top); rr = Math.max(rr, x.right); bb = Math.max(bb, x.bottom); });
+        if (getComputedStyle(board).position === 'static') board.style.position = 'relative';
+        const pad = 2;                                                   // sits just outside the tiles
+        const o = document.createElement('div');
+        const age = (Date.now() - freshAt) / 1000;                       // a board rebuild during the fade-in carries on where it was
+        const isFresh = freshAt > 0 && age < 1.4;
+        o.className = 'last-word-outline' + (isFresh ? ' lw-fresh' : '');
+        if (isFresh) o.style.animationDelay = (1 - age).toFixed(3) + 's';
+        o.style.left = ((l - b.left - board.clientLeft - pad) / W * 100) + '%';
+        o.style.top = ((t - b.top - board.clientTop - pad) / H * 100) + '%';
+        o.style.width = ((rr - l + pad * 2) / W * 100) + '%';
+        o.style.height = ((bb - t + pad * 2) / H * 100) + '%';
+        o.setAttribute('aria-hidden', 'true');
+        board.appendChild(o);
+      };
+
+      /** cells: [{r,c}, ...] or null to clear. animate=false for restores / refreshes. */
+      window.setLastWord = (list, animate) => {
+        const next = Array.isArray(list) && list.length > 1 ? list.map(({ r, c }) => ({ r, c })) : null;
+        const nextSig = next ? next.map((x) => x.r + ',' + x.c).join('|') : '';
+        if (nextSig !== sig) freshAt = next && animate !== false ? Date.now() : 0;
+        cells = next; sig = nextSig;
+        draw();
+      };
+      window.getLastWord = () => (cells ? cells.map((x) => ({ r: x.r, c: x.c })) : null);
+
+      /** The main word of a move: the word along the placed tiles (for one tile: the longer word, a tie goes to the horizontal one). */
+      window.setLastWordFromMove = (words, placedCount) => {
+        try {
+          if (!Array.isArray(words) || !words.length) return window.setLastWord(null);
+          let pick = words[0];
+          if (placedCount <= 1) {
+            pick = words.reduce((best, w) => {
+              if (!best || w.length > best.length) return w;
+              if (w.length === best.length && w.length > 1 && w[0].r === w[1].r && !(best[0].r === best[1].r)) return w;
+              return best;
+            }, null);
+          }
+          window.setLastWord(pick.map(({ r, c }) => ({ r, c })), true);
+        } catch (_) {}
+      };
+
+      const start = () => {
+        const board = document.getElementById('game-board');
+        if (!board) return;
+        new MutationObserver(() => { if (cells && !board.querySelector(':scope > .last-word-outline')) draw(); }).observe(board, { childList: true });
+        if (window.ResizeObserver) new ResizeObserver(() => { if (cells) draw(); }).observe(board);
+        window.addEventListener('resize', () => { if (cells) draw(); });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
     })();
     </script>
 

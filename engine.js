@@ -248,7 +248,7 @@ export function createGame(game = 1) {
     scores: { 1: 0, 2: 0 }, current: 1, turnNo: 0,
     started: false, paused: false, ended: false,
     clocks: { 1: INITIAL_TIME_MS, 2: INITIAL_TIME_MS }, turnStartedAt: null,
-    scoreless: 0, lastMove: null, undoRequest: null, result: null,
+    scoreless: 0, lastMove: null, lastWord: null, undoRequest: null, result: null,
     history: [], rackRev: { 1: 0, 2: 0 }, event: null, eventNo: 0, seen: [],
   };
 }
@@ -367,10 +367,20 @@ function actMove(G, seat, a, now, isValidWord) {
 
   const score = scoreMove(work, placed);
   const wordCells = validation.words.map((w) => w.map(({ r, c }) => [r, c]));
+  // The main word of this move (marked on the board): the word along the placed tiles; for one tile the longer word, a tie goes to the horizontal one.
+  let mainWord = wordCells[0] || null;
+  if (staged.length <= 1) {
+    mainWord = wordCells.reduce((best, w) => {
+      if (!best || w.length > best.length) return w;
+      if (w.length === best.length && w.length > 1 && w[0][0] === w[1][0] && best[0][0] !== best[1][0]) return w;
+      return best;
+    }, null);
+  }
 
   // --- from here the move is legal: mutate ---
   checkpoint(G, now);
   if (!G.started) G.started = true;
+  G.lastWord = mainWord;
   G.scoreless = 0;
   G.undoRequest = null;
   const placements = staged.map((s) => ({ r: s.r, c: s.c, tile: work[s.r][s.c] }));
@@ -470,6 +480,7 @@ function performUndo(G, now) {
   G.rackRev[seat] += 1;
   G.current = seat;
   G.lastMove = null;
+  G.lastWord = null;
   G.undoRequest = null;
   G.scoreless = 0;
   G.turnStartedAt = G.started && !G.paused && !G.ended ? now : null;
@@ -625,6 +636,7 @@ export function publicView(G) {
     rackCounts: { 1: G.racks[1].filter(Boolean).length, 2: G.racks[2].filter(Boolean).length },
     scoreless: G.scoreless,
     lastMove: G.lastMove ? { seat: G.lastMove.seat, score: G.lastMove.score } : null,
+    lastWord: Array.isArray(G.lastWord) ? G.lastWord : null,
     undoRequest: G.undoRequest, history: G.history, rackRev: G.rackRev, event: ev,
   };
 }
