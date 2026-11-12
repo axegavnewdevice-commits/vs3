@@ -5153,15 +5153,16 @@ html body.girly-mode .sq-star {
     #fab-layer svg.fab-track { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
     #fab-layer .fab-item { position: absolute; left: 0; top: 0; margin: 0; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;
       cursor: pointer; border: 1px solid var(--fab-bd); background: var(--fab-bg); color: var(--fab-ic);
-      -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px); box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
-      transition: opacity .16s ease, transform .22s cubic-bezier(.2, .8, .2, 1); will-change: transform, opacity; touch-action: none; -webkit-tap-highlight-color: transparent; }
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+      transition: opacity .16s ease; will-change: transform, opacity; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    #fab-layer .fab-item.fab-enter { transition: opacity .16s ease, transform .22s cubic-bezier(.2, .8, .2, 1); }
     #fab-layer .fab-item svg { width: 52%; height: 52%; pointer-events: none; }
     #fab-layer .fab-item:disabled { opacity: .35 !important; cursor: default; }
     #fab-layer .fab-item.fab-on { box-shadow: 0 0 0 2px var(--fab-ic), 0 2px 8px rgba(0, 0, 0, .25); }
     #fab-layer .fab-item:focus-visible { outline: 2px solid var(--fab-ic); outline-offset: 3px; }
     #fab-layer .fab-tip { position: absolute; z-index: 2; padding: 5px 12px; border-radius: 999px; font-size: 14px; line-height: 1.2; white-space: nowrap; pointer-events: none;
       background: var(--fab-bg2); color: var(--fab-ic); border: 1px solid var(--fab-bd); transform: translate(-50%, -50%); }
-    @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item, #fab-layer .fab-item.fab-enter { transition: none; } }
     </style>
     <script id="fab-menu">
     /* One round menu button (floating and resizable like the others). Tapping it spreads the eleven less-used buttons as a ring of
@@ -5213,7 +5214,7 @@ html body.girly-mode .sq-star {
 
       let layer = null, track = null, items = [], list = [], isOpen = false;
       let offset = 0, total = 0, N = 5, mid = 180, sp = 32, R = 84, D = 40, cx = 0, cy = 0;
-      let justClosed = 0, dragEnd = 0, drag = null, tipTimer = 0, tipEl = null, tipShown = false, wheelAt = 0, anim = 0;
+      let justClosed = 0, dragEnd = 0, drag = null, tipTimer = 0, tipEl = null, tipShown = false, wheelAt = 0, anim = 0, openW = 0, openH = 0, openScroll = 0;
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
       const labelOf = (real) => ((real.textContent || '').replace(/\s+/g, ' ').trim()) || real.getAttribute('aria-label') || real.title || '';
@@ -5241,18 +5242,18 @@ html body.girly-mode .sq-star {
           it.setAttribute('aria-hidden', dist > 0.5 ? 'true' : 'false');
         });
       }
-      function animateTo(target) {
-        cancelAnimationFrame(anim);
-        const from = offset, t0 = performance.now(), dur = reduced() ? 0 : 170;
-        if (!dur) { offset = target; render(); return; }
-        const tick = (now) => {
-          const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-          offset = from + (target - from) * e; render();
-          if (k < 1) anim = requestAnimationFrame(tick);
-        };
-        anim = requestAnimationFrame(tick);
+      let goal = 0, enterTimer = 0;
+      const endEnter = () => { clearTimeout(enterTimer); items.forEach((it) => it.classList.remove('fab-enter')); };
+      function loop() {
+        anim = 0;
+        const diff = goal - offset;
+        if (reduced() || Math.abs(diff) < 0.002) { offset = goal; render(); return; }
+        offset += diff * (drag && drag.moved ? 0.5 : 0.3);
+        render();
+        anim = requestAnimationFrame(loop);
       }
-      const step = (d) => { if (total > N) animateTo(clamp(Math.round(offset) + d, 0, total - N)); };
+      const setGoal = (g) => { goal = g; endEnter(); if (!anim) anim = requestAnimationFrame(loop); };
+      const step = (d) => { if (total > N) setGoal(clamp(Math.round(goal) + d, 0, total - N)); };
 
       function showTip(item) {
         hideTip();
@@ -5264,25 +5265,31 @@ html body.girly-mode .sq-star {
       }
       function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
 
-      const angOf = (e) => Math.atan2(-(e.clientY - cy), e.clientX - cx) * 180 / Math.PI;
       function onDown(e) {
         if (e.target.classList.contains('fab-back')) { e.preventDefault(); close(false); return; }
         const item = e.target.closest('.fab-item');
         tipShown = false;
         if (item) { clearTimeout(tipTimer); tipTimer = setTimeout(() => showTip(item), 480); }
-        if (total > N && (item || e.target.closest('svg'))) drag = { ang: angOf(e), x: e.clientX, y: e.clientY, moved: false };
+        if (total > N && (item || e.target.closest('svg'))) drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, moved: false };
       }
       function onMove(e) {
         if (!drag) return;
-        if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 8) { drag.moved = true; clearTimeout(tipTimer); hideTip(); tipShown = false; cancelAnimationFrame(anim); }
-        if (!drag.moved) return;
-        const a = angOf(e); let d = a - drag.ang;
-        while (d > 180) d -= 360; while (d < -180) d += 360;
-        drag.ang = a; offset = clamp(offset - d / sp, -0.35, total - N + 0.35); render();
+        if (!drag.moved) {
+          if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) <= 8) return;
+          drag.moved = true; clearTimeout(tipTimer); hideTip(); tipShown = false; endEnter();
+        }
+        const rx = drag.lx - cx, ry = drag.ly - cy, r = Math.hypot(rx, ry);
+        const dx = e.clientX - drag.lx, dy = e.clientY - drag.ly;
+        drag.lx = e.clientX; drag.ly = e.clientY;
+        if (r < R * 0.45) return;                                      // a finger right over the button has no clear direction
+        const along = (dx * ry - dy * rx) / r;                         // finger movement along the ring (counter-clockwise is positive)
+        const deg = clamp(along / Math.max(r, R * 0.8) * 180 / Math.PI, -18, 18);   // a fast flick can never jump the ring
+        goal = clamp(goal - deg / sp, -0.35, total - N + 0.35);
+        if (!anim) anim = requestAnimationFrame(loop);
       }
       function onUp() {
         clearTimeout(tipTimer); hideTip();
-        if (drag && drag.moved) { dragEnd = Date.now(); animateTo(clamp(Math.round(offset), 0, total - N)); }
+        if (drag && drag.moved) { dragEnd = Date.now(); drag = null; setGoal(clamp(Math.round(goal), 0, total - N)); return; }
         drag = null;
       }
       function onClick(e) {
@@ -5328,7 +5335,7 @@ html body.girly-mode .sq-star {
           if (b.over < 2) { best = { n, b }; break; }
           if (!best || b.over < best.b.over) best = { n, b };
         }
-        N = best.n; mid = best.b.mid; offset = 0;
+        N = best.n; mid = best.b.mid; offset = 0; goal = 0; openW = window.innerWidth; openH = window.innerHeight; openScroll = window.scrollY || 0;
         ensureLayer(); layer.innerHTML = '';
         const back = document.createElement('div'); back.className = 'fab-back'; layer.appendChild(back);
         // dotted track
@@ -5350,16 +5357,17 @@ html body.girly-mode .sq-star {
           layer.appendChild(b); return b;
         });
         layer.classList.add('fab-open'); isOpen = true; btn.setAttribute('aria-expanded', 'true');
-        if (!reduced()) {                                                         // the circles grow out of the menu button
+        if (!reduced()) {                                                         // the circles grow out of the menu button (only when it opens)
           items.forEach((it) => { it.style.transition = 'none'; it.style.opacity = '0'; it.style.transform = 'translate(' + (cx - D / 2) + 'px,' + (cy - D / 2) + 'px) scale(.3)'; });
-          void layer.offsetWidth; items.forEach((it) => { it.style.transition = ''; });
+          void layer.offsetWidth; items.forEach((it) => { it.style.transition = ''; it.classList.add('fab-enter'); });
+          const mine = items; enterTimer = setTimeout(() => mine.forEach((it) => it.classList.remove('fab-enter')), 320);
         }
         render();
         if (viaKeyboard) { const f = items.find((x) => !x.disabled && x.style.visibility === 'visible'); if (f) f.focus({ preventScroll: true }); }
       }
       function close(refocus) {
         if (!isOpen) return;
-        isOpen = false; cancelAnimationFrame(anim); clearTimeout(tipTimer); hideTip(); drag = null;
+        isOpen = false; cancelAnimationFrame(anim); anim = 0; clearTimeout(enterTimer); clearTimeout(tipTimer); hideTip(); drag = null;
         layer.classList.remove('fab-open'); layer.innerHTML = ''; items = [];
         justClosed = Date.now();
         const btn = $('menu-fab-button'); if (btn) { btn.setAttribute('aria-expanded', 'false'); if (refocus) btn.focus({ preventScroll: true }); }
@@ -5371,8 +5379,9 @@ html body.girly-mode .sq-star {
           if (Date.now() - justClosed < 350) return;                          // the tap that closed the ring must not reopen it
           if (isOpen) close(false); else open(e.detail === 0);
         });
-        ['resize', 'orientationchange'].forEach((ev) => window.addEventListener(ev, () => close(false)));
-        window.addEventListener('scroll', () => close(false), { passive: true });
+        window.addEventListener('orientationchange', () => close(false));
+        window.addEventListener('resize', () => { if (isOpen && (Math.abs(window.innerWidth - openW) > 40 || Math.abs(window.innerHeight - openH) > 120)) close(false); });
+        window.addEventListener('scroll', () => { if (isOpen && Math.abs((window.scrollY || 0) - openScroll) > 30) close(false); }, { passive: true });
         document.addEventListener('visibilitychange', () => { if (document.hidden) close(false); });
         document.addEventListener('keydown', onKey);                              // Escape closes, arrow keys turn the ring
       }
