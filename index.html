@@ -1589,6 +1589,9 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="vs-computer-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Play vs computer (offline)" title="Play vs computer (offline)" aria-pressed="false">
                 ضد الكمبيوتر
             </button>
+            <button id="sound-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="الصوت: مفعّل" title="الصوت: مفعّل" aria-pressed="true">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path class="sw" d="M15.5 8.5a5 5 0 0 1 0 7M18.2 5.8a8.8 8.8 0 0 1 0 12.4"/><path class="ss" d="M4 4l16 16"/></svg>
+            </button>
         </div>
 
         <div id="status-message" class="text-center h-8 mb-1 font-semibold transition-all duration-500"></div>
@@ -2838,6 +2841,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 return;
             }
 
+            window.gameSound && window.gameSound('pick');
             draggedTileId = tileId;
             e.dataTransfer.setData('text/plain', tileId);
             tileElement.classList.add('is-dragged');
@@ -2886,10 +2890,12 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             if (draggedTileOrigin.type === 'rack') {
                 const tileIndex = draggedTileOrigin.index;
                 placeTileFromRack(tileId, destR, destC, tileIndex);
+                window.gameSound && window.gameSound('place');
             } else if (draggedTileOrigin.type === 'board') {
                 const sourceR = draggedTileOrigin.r;
                 const sourceC = draggedTileOrigin.c;
                 moveTileOnBoard(sourceR, sourceC, destR, destC);
+                window.gameSound && window.gameSound('place');
             }
 
             draggedTileId = null;
@@ -2944,6 +2950,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const sourceR = draggedTileOrigin.r;
             const sourceC = draggedTileOrigin.c;
             returnTileToRack(sourceR, sourceC); // Removed destIndex
+            window.gameSound && window.gameSound('back');
 
             draggedTileId = null;
             draggedTileOrigin = null;
@@ -3011,6 +3018,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
                     // Select new tile
                     selectedRackTileId = tile.dataset.tileId;
+                    window.gameSound && window.gameSound('pick');
                     tile.classList.add('ring-4', 'ring-offset-2', 'tile-selected-border');
                     
                     // Clear selected tile visual if any swap selection was lingering
@@ -3050,6 +3058,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     if (tileIndex !== -1) {
 
                         placeTileFromRack(selectedRackTileId, r, c, tileIndex);
+                        window.gameSound && window.gameSound('place');
                         selectedRackTileId = null;
                         updateUI(true); // Full render
                     }
@@ -3063,6 +3072,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 if (placedTile) {
                     // Allows user to click a placed tile and return it to the rack
                     returnTileToRack(r, c); 
+                    window.gameSound && window.gameSound('back');
                     updateUI(true); // Full render
                 }
             }
@@ -3243,7 +3253,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             // A refused move (bad placement or word not in the list) sends the tiles back to the rack. The computer opponent
             // handles its own refusals, so it is left alone here.
-            const sendBack = () => { if (!(window.CPU && CPU.acting) && placedTilesInTurn.length > 0) resetMove(true); };
+            const sendBack = () => { if (!(window.CPU && CPU.acting) && placedTilesInTurn.length > 0) { resetMove(true); window.gameSound && window.gameSound('back'); } };
 
             const validationResult = validatePlacement();
             if (typeof validationResult === 'string') {
@@ -3403,6 +3413,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             const { playerId, score, boardPlacements, tilesDrawn } = lastMoveData;
             const rack = playerId === 1 ? player1Rack : player2Rack;
+            window.gameSound && window.gameSound('undo');
             window.setLastWord && window.setLastWord(null);                                 // the undone word is no longer the last word
 
             // 1. Revert Score
@@ -3650,7 +3661,11 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     submitMove(); // Otherwise, it performs the regular move
                 }
             };
-            document.getElementById('reset-move').onclick = resetMove; // Handles both Reset Move and Cancel Swap
+            document.getElementById('reset-move').onclick = (e) => {   // Handles both Reset Move and Cancel Swap
+                const had = placedTilesInTurn.length > 0 && !isSwappingMode;
+                resetMove(e);
+                if (had && placedTilesInTurn.length === 0) window.gameSound && window.gameSound('back');
+            };
             document.getElementById('pass-turn').onclick = passTurn; 
             // Show confirmation dialog before undoing the last move
             document.getElementById('undo-last-move').onclick = () => {
@@ -3756,10 +3771,10 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
                 'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button', 'vs-computer-button'
+                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button', 'vs-computer-button', 'sound-toggle-button'
             ]);
             // These buttons never keep a size of their own: they always take the standard toolbar size (see syncUniformButtons).
-            const UNIFORM_IDS = ['mp-online-button', 'support-button', 'vs-computer-button'];
+            const UNIFORM_IDS = ['mp-online-button', 'support-button', 'vs-computer-button', 'sound-toggle-button'];
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
             const MIN_BOARD_SIZE = 225;
@@ -5080,6 +5095,101 @@ html body.girly-mode .sq-star {
     })();
     </script>
 
+    <script id="game-sound">
+    /* Quiet wooden sounds for five actions: pick up a tile, place it, return it to the rack, shuffle the rack, undo.
+       Everything is generated live (no audio files): a felt-soft wooden knock with a small room reverb.
+       Opponent and computer moves play the same knock. Exchanging tiles with the bag stays silent.
+       The speaker button in the toolbar switches it on or off; the choice is remembered. */
+    (() => {
+      const KEY = 'arabicScrabble.sound.v1';
+      let AC = null, M = null, DRY = null, REV = null;
+      let enabled = true;
+      try { enabled = localStorage.getItem(KEY) !== 'off'; } catch (_) {}
+      const last = {};
+      const GAP = { pick: 40, place: 60, back: 70, shuffle: 300, undo: 120, opp: 300 };
+
+      const ir = (sec, dec) => {
+        const n = Math.floor(AC.sampleRate * sec), b = AC.createBuffer(2, n, AC.sampleRate), a = Math.floor(AC.sampleRate * 0.012);
+        for (let c = 0; c < 2; c++) { const x = b.getChannelData(c); let lp = 0; for (let i = 0; i < n; i++) { lp += 0.3 * ((Math.random() * 2 - 1) - lp); x[i] = lp * Math.pow(1 - i / n, dec) * (i < a ? i / a : 1); } }
+        return b;
+      };
+      const init = () => {
+        if (!AC) {
+          const C = window.AudioContext || window.webkitAudioContext;
+          if (!C) return false;
+          AC = new C();
+          M = AC.createGain(); M.gain.value = 0.5;
+          const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7500;
+          const k = AC.createDynamicsCompressor(); k.threshold.value = -18; k.ratio.value = 3;
+          M.connect(lp); lp.connect(k); k.connect(AC.destination);
+          DRY = AC.createGain(); DRY.gain.value = 0.85; DRY.connect(M);
+          REV = AC.createConvolver(); REV.buffer = ir(2.6, 3.2); REV.connect(M);
+        }
+        if (AC.state === 'suspended') AC.resume();
+        return true;
+      };
+      const route = (g, w) => { g.connect(DRY); if (w > 0) { const s = AC.createGain(); s.gain.value = w; g.connect(s); s.connect(REV); } };
+      const env = (g, t, a, p, d) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(p, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); };
+      const part = (f, t, a, d, v, w) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = f; env(g, t, a, v, d); o.connect(g); route(g, w); o.start(t); o.stop(t + a + d + 0.1); };
+      const click = (t, fr, v) => {
+        const n = Math.floor(AC.sampleRate * 0.03), b = AC.createBuffer(1, n, AC.sampleRate), x = b.getChannelData(0);
+        for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+        const s = AC.createBufferSource(); s.buffer = b;
+        const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = fr; f.Q.value = 0.8;
+        const g = AC.createGain(); env(g, t, 0.001, v, 0.012); s.connect(f); f.connect(g); route(g, 0.05); s.start(t);
+      };
+      const wood = (t, f, v, s, w) => {
+        f *= 1 + (Math.random() - 0.5) * 0.05; v *= 1 + (Math.random() - 0.5) * 0.2;
+        [[1, 1, 0.09], [2.4, 0.5, 0.05], [4.3, 0.25, 0.03]].forEach((p) => part(f * p[0], t, 0.001, p[2] * s, v * p[1], w));
+        click(t, 2400, v * 0.25);
+      };
+      const SOUNDS = {
+        pick:    (t) => wood(t, 430, 0.22, 0.6, 0.08),
+        place:   (t) => { wood(t, 230, 0.5, 1.3, 0.12); part(80, t, 0.003, 0.09, 0.5, 0); },
+        back:    (t) => wood(t, 340, 0.2, 0.8, 0.08),
+        undo:    (t) => wood(t, 260, 0.18, 0.9, 0.08),
+        shuffle: (t) => { for (let i = 0; i < 4; i++) wood(t + i * (0.08 + Math.random() * 0.02), 340, 0.18, 0.8, 0.08); },
+        opp:     (t, n) => { for (let i = 0; i < n; i++) wood(t + i * 0.16, 230, 0.4, 1.3, 0.12); }
+      };
+
+      window.gameSound = (name, n) => {
+        try {
+          if (!enabled || document.hidden || !SOUNDS[name]) return;
+          const now = Date.now();
+          if (last[name] && now - last[name] < GAP[name]) return;      // several tiles at once make one knock, not a burst
+          last[name] = now;
+          if (!init()) return;
+          SOUNDS[name](AC.currentTime + 0.02, Math.max(1, Math.min(4, n || 2)));
+        } catch (_) {}
+      };
+      window.gameSoundEnabled = () => enabled;
+
+      // the audio engine can only start after a tap, so get it ready on the first touch or key
+      const unlock = () => { try { init(); } catch (_) {} };
+      ['pointerdown', 'touchend', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true, capture: true }));
+
+      // toolbar speaker button
+      const paint = () => {
+        const b = document.getElementById('sound-toggle-button'); if (!b) return;
+        b.classList.toggle('sound-off', !enabled);
+        b.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+        const label = enabled ? 'الصوت: مفعّل' : 'الصوت: متوقف';
+        b.setAttribute('aria-label', label); b.title = label;
+      };
+      const start = () => {
+        const b = document.getElementById('sound-toggle-button'); if (!b) return;
+        paint();
+        b.addEventListener('click', () => {
+          enabled = !enabled;
+          try { localStorage.setItem(KEY, enabled ? 'on' : 'off'); } catch (_) {}
+          paint();
+          if (enabled) { last.place = 0; window.gameSound('place'); }
+        });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
     <script id="last-word-mark">
     /* Marks the last submitted word: one continuous bright-green line around the main word (not the cross words).
        The line is a layer inside #game-board, positioned in percentages, so it never touches the tiles and always follows the board size.
@@ -5132,6 +5242,7 @@ html body.girly-mode .sq-star {
       /** The main word of a move: the word along the placed tiles (for one tile: the longer word, a tie goes to the horizontal one). */
       window.setLastWordFromMove = (words, placedCount) => {
         try {
+          if (window.CPU && CPU.acting && window.gameSound) window.gameSound('opp', placedCount || 2);   // the computer's tiles land with the same knock
           if (!Array.isArray(words) || !words.length) return window.setLastWord(null);
           let pick = words[0];
           if (placedCount <= 1) {
@@ -5496,6 +5607,7 @@ html body.girly-mode .sq-star {
     pos.forEach((i, k) => { rack[i] = tiles[k]; });
     remember(rack);
     window.gameHaptic && window.gameHaptic();
+    window.gameSound && window.gameSound('shuffle');
     redraw();
     if (!reducedMotion()) glide(document.getElementById('rack-' + who), before);
   };
@@ -5663,6 +5775,28 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
   box-sizing: border-box !important; margin: 0 !important; border-radius: 12px !important;
   border: 1px solid rgba(0, 0, 0, .32) !important;
 }
+
+/* ===== Sound on/off: same icon-only toolbar family ===== */
+#game-controls button#sound-toggle-button {
+  display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  padding: 0 !important; min-width: calc(34px * var(--ui-scale, 1)) !important; min-height: calc(34px * var(--ui-scale, 1)) !important;
+  font-size: 0 !important; line-height: 1 !important; box-sizing: border-box !important; margin: 0 !important; border-radius: 12px !important;
+  background: linear-gradient(145deg, #c2a35a, #7d6122) !important; color: #fff8e6 !important;
+  border: 1px solid rgba(0, 0, 0, .32) !important;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+  touch-action: none !important; overflow: hidden !important;
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease !important;
+}
+#game-controls button#sound-toggle-button svg { width: 56% !important; height: 56% !important; min-width: 14px; min-height: 14px; max-width: 24px; max-height: 24px; pointer-events: none; }
+#game-controls button#sound-toggle-button .ss { display: none; }
+#game-controls button#sound-toggle-button.sound-off .sw { display: none; }
+#game-controls button#sound-toggle-button.sound-off .ss { display: inline; }
+#game-controls button#sound-toggle-button.sound-off { filter: saturate(.3) brightness(.85) !important; }
+#game-controls button#sound-toggle-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
+body.dark-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #d6b868, #8a6d2a) !important; color: #1b1405 !important; }
+html body.girly-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #f09ac0, #b24a80) !important; color: #fff !important; }
+html body.horror-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #7a2a2a, #3a0d10) !important; color: #ffd9d9 !important; }
+html body.academic-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #86a8d0, #3d6591) !important; color: #06182e !important; }
 
 /* ===== dialog ===== */
 #vs-computer-modal.hidden { display: none; }

@@ -238,6 +238,8 @@
       if (!prev) MP.lastEventNo = ev.no;
       else if (ev.no > MP.lastEventNo) {
         MP.lastEventNo = ev.no;
+        if (ev.type === 'move' && ev.seat !== MP.seat && window.gameSound) window.gameSound('opp', 2);   // the opponent's tiles land
+        if (ev.type === 'undo' && window.gameSound) window.gameSound('undo');
         if (ev.type === 'move' && Array.isArray(ev.cells) && window.animateFormedWords) window.animateFormedWords(ev.cells.map((w) => w.map(([r, c]) => ({ r, c }))));
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'pause' && ev.seat !== MP.seat) toast(T.paused);
@@ -296,7 +298,7 @@
 
   /** A refused move: take the staged tiles off the board and put them back on my rack. */
   function recallTiles() {
-    try { if (placedTilesInTurn.length > 0 && !gameEnded) resetMove(true); } catch (_) {}
+    try { if (placedTilesInTurn.length > 0 && !gameEnded) { resetMove(true); window.gameSound && window.gameSound('back'); } } catch (_) {}
   }
 
   MP.canAct = canAct;

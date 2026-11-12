@@ -1,5 +1,5 @@
 /* Arabic Scrabble service worker — bump CACHE_VERSION on every deploy. */
-const CACHE_VERSION = 'v94';
+const CACHE_VERSION = 'v95';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const SCOPE = self.registration.scope; // works at the domain root or in a sub-folder
