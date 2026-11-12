@@ -1592,6 +1592,10 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="sound-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="الصوت: مفعّل" title="الصوت: مفعّل" aria-pressed="true">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path class="sw" d="M15.5 8.5a5 5 0 0 1 0 7M18.2 5.8a8.8 8.8 0 0 1 0 12.4"/><path class="ss" d="M4 4l16 16"/></svg>
             </button>
+            <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="القائمة" title="القائمة" aria-haspopup="true" aria-expanded="false">
+                <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
         </div>
 
         <div id="status-message" class="text-center h-8 mb-1 font-semibold transition-all duration-500"></div>
@@ -3770,11 +3774,10 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const status = document.getElementById('status-message');
             const controls = Array.from(document.querySelectorAll('#game-controls button'));
             const controlIds = new Set([
-                'submit-move', 'reset-move', 'swap-tiles', 'pass-turn',
-                'undo-last-move', 'new-game', 'pause-game', 'surrender-game', 'theme-toggle', 'install-app-button', 'fullscreen-app-button', 'mp-online-button', 'support-button', 'bag-count-button', 'vs-computer-button', 'sound-toggle-button'
+                'submit-move', 'reset-move', 'swap-tiles', 'pass-turn', 'bag-count-button', 'menu-fab-button'
             ]);
             // These buttons never keep a size of their own: they always take the standard toolbar size (see syncUniformButtons).
-            const UNIFORM_IDS = ['mp-online-button', 'support-button', 'vs-computer-button', 'sound-toggle-button'];
+            const UNIFORM_IDS = [];   // the menu buttons are no longer separate toolbar items
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
             const MIN_BOARD_SIZE = 225;
@@ -5092,6 +5095,276 @@ html body.girly-mode .sq-star {
           setTimeout(() => layer.remove(), (end + 1.3) * 1000);
         } catch (_) {}
       };
+    })();
+    </script>
+
+    <style id="fab-menu-style">
+    /* The eleven menu buttons stay in the page, so all their code keeps working, but they are hidden:
+       the round menu button shows them as a ring of icons around itself. */
+    html body #game-controls button#undo-last-move, html body #game-controls button#pause-game,
+    html body #game-controls button#surrender-game, html body #game-controls button#new-game,
+    html body #game-controls button#mp-online-button, html body #game-controls button#vs-computer-button,
+    html body #game-controls button#sound-toggle-button, html body #game-controls button#theme-toggle,
+    html body #game-controls button#fullscreen-app-button, html body #game-controls button#install-app-button,
+    html body #game-controls button#support-button {
+      visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
+      width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
+      padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
+    }
+    /* the round menu button: floats and resizes like the other toolbar buttons */
+    html body #game-controls button#menu-fab-button {
+      display: inline-flex !important; align-items: center !important; justify-content: center !important;
+      padding: 0 !important; font-size: 0 !important; line-height: 1 !important;
+      height: auto !important; aspect-ratio: 1 / 1 !important; border-radius: 50% !important; overflow: hidden !important;
+      background: linear-gradient(145deg, rgba(63, 69, 39, .94), rgba(38, 43, 24, .94)) !important; color: #f5e6b8 !important;
+      border: 1px solid rgba(245, 230, 185, .65) !important;
+      box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .18) !important;
+    }
+    html body.dark-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(34, 40, 24, .94), rgba(20, 24, 14, .94)) !important; color: #e9c873 !important; border-color: rgba(233, 200, 115, .6) !important; }
+    html body.girly-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(222, 100, 148, .94), rgba(178, 62, 110, .94)) !important; color: #fff !important; border-color: rgba(255, 255, 255, .75) !important; }
+    html body.horror-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(74, 20, 24, .94), rgba(38, 8, 10, .94)) !important; color: #ffb3b3 !important; border-color: rgba(239, 59, 59, .55) !important; }
+    html body.academic-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(44, 72, 112, .94), rgba(26, 46, 78, .94)) !important; color: #e6eefc !important; border-color: rgba(200, 215, 240, .7) !important; }
+    #game-controls button#menu-fab-button svg { width: 52%; height: 52%; pointer-events: none; }
+    #game-controls button#menu-fab-button .fab-x { display: none; }
+    #game-controls button#menu-fab-button[aria-expanded="true"] .fab-x { display: block; }
+    #game-controls button#menu-fab-button[aria-expanded="true"] .fab-g { display: none; }
+
+    /* the ring: see-through, tinted by the theme, no dimming layer */
+    #fab-layer { --fab-bg: rgba(63, 69, 39, .50); --fab-bg2: rgba(40, 45, 25, .94); --fab-bd: rgba(245, 230, 185, .65); --fab-ic: #f5e6b8;
+      position: fixed; inset: 0; z-index: 9500; display: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    body.dark-mode #fab-layer { --fab-bg: rgba(27, 32, 19, .50); --fab-bg2: rgba(27, 32, 19, .94); --fab-bd: rgba(233, 200, 115, .55); --fab-ic: #e9c873; }
+    html body.girly-mode #fab-layer { --fab-bg: rgba(201, 75, 123, .45); --fab-bg2: rgba(178, 62, 110, .94); --fab-bd: rgba(255, 255, 255, .75); --fab-ic: #ffffff; }
+    html body.horror-mode #fab-layer { --fab-bg: rgba(58, 13, 16, .55); --fab-bg2: rgba(38, 8, 10, .94); --fab-bd: rgba(239, 59, 59, .55); --fab-ic: #ffb3b3; }
+    html body.academic-mode #fab-layer { --fab-bg: rgba(29, 50, 83, .50); --fab-bg2: rgba(26, 46, 78, .94); --fab-bd: rgba(200, 215, 240, .7); --fab-ic: #e6eefc; }
+    #fab-layer.fab-open { display: block; }
+    #fab-layer .fab-back { position: absolute; inset: 0; background: transparent; }
+    #fab-layer svg.fab-track { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    #fab-layer .fab-item { position: absolute; left: 0; top: 0; margin: 0; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 1px solid var(--fab-bd); background: var(--fab-bg); color: var(--fab-ic);
+      -webkit-backdrop-filter: blur(1.5px); backdrop-filter: blur(1.5px); box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+      transition: opacity .16s ease, transform .22s cubic-bezier(.2, .8, .2, 1); will-change: transform, opacity; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    #fab-layer .fab-item svg { width: 52%; height: 52%; pointer-events: none; }
+    #fab-layer .fab-item:disabled { opacity: .35 !important; cursor: default; }
+    #fab-layer .fab-item.fab-on { box-shadow: 0 0 0 2px var(--fab-ic), 0 2px 8px rgba(0, 0, 0, .25); }
+    #fab-layer .fab-item:focus-visible { outline: 2px solid var(--fab-ic); outline-offset: 3px; }
+    #fab-layer .fab-tip { position: absolute; z-index: 2; padding: 5px 12px; border-radius: 999px; font-size: 14px; line-height: 1.2; white-space: nowrap; pointer-events: none;
+      background: var(--fab-bg2); color: var(--fab-ic); border: 1px solid var(--fab-bd); transform: translate(-50%, -50%); }
+    @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item { transition: none; } }
+    </style>
+    <script id="fab-menu">
+    /* One round menu button (floating and resizable like the others). Tapping it spreads the eleven less-used buttons as a ring of
+       see-through icon circles around it, on the side with room, avoiding the board and racks where it can. Five show at a time;
+       swipe along the ring (or use the wheel or arrow keys) to turn it. Each circle simply presses the real, hidden button. */
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'],
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['install-app-button', 'download'], ['support-button', 'heart']];
+      const ICON = {
+        undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+        pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+        play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+        flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+        refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+        wifi: '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+        cpu: '<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>',
+        vol: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+        volx: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
+        moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+        sun: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>',
+        max: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',
+        download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+        heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
+      };
+      const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
+      const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* Chooses which way the arc opens: every 15 degrees is tried, an arc that stays on the screen and avoids the board and racks wins. */
+      function fabPick(cx, cy, R, D, sp, N, W, H, rects) {
+        var best = null;
+        for (var mid = 0; mid < 360; mid += 15) {
+          var over = 0, pen = 0, gx = 0, gy = 0;
+          for (var w = 0; w < N; w++) {
+            var a = (mid - ((N - 1) / 2 - w) * sp) * Math.PI / 180;
+            var x = cx + R * Math.cos(a), y = cy - R * Math.sin(a), m = D / 2 + 6;
+            over += Math.max(0, m - x, x - (W - m), m - y, y - (H - m));
+            for (var k = 0; k < rects.length; k++) {
+              var rc = rects[k];
+              if (x > rc.left - D / 2 && x < rc.right + D / 2 && y > rc.top - D / 2 && y < rc.bottom + D / 2) pen += 10;
+            }
+            gx += x; gy += y;
+          }
+          var score = over * 1000 + pen + Math.hypot(gx / N - W / 2, gy / N - H / 2) * 0.005;
+          if (!best || score < best.score) best = { mid: mid, score: score, over: over, pen: pen };
+        }
+        return best;
+      }
+
+      let layer = null, track = null, items = [], list = [], isOpen = false;
+      let offset = 0, total = 0, N = 5, mid = 180, sp = 32, R = 84, D = 40, cx = 0, cy = 0;
+      let justClosed = 0, dragEnd = 0, drag = null, tipTimer = 0, tipEl = null, tipShown = false, wheelAt = 0, anim = 0;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+      const labelOf = (real) => ((real.textContent || '').replace(/\s+/g, ' ').trim()) || real.getAttribute('aria-label') || real.title || '';
+      const iconOf = (o) => {
+        const t = (o.real.textContent || '');
+        if (o.k === 'pause') return /استئناف|متابعة/.test(t) ? 'play' : 'pause';
+        if (o.k === 'vol') return o.real.classList.contains('sound-off') ? 'volx' : 'vol';
+        if (o.k === 'moon') return /الفاتح/.test(t) ? 'sun' : 'moon';
+        return o.k;
+      };
+      const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode'));
+
+      function render() {
+        const W = window.innerWidth, H = window.innerHeight, m = D / 2 + 4;
+        items.forEach((it, i) => {
+          const w = i - offset, a = (mid - ((N - 1) / 2 - w) * sp) * Math.PI / 180;
+          const x = clamp(cx + R * Math.cos(a), m, W - m), y = clamp(cy - R * Math.sin(a), m, H - m);
+          const dist = w < 0 ? -w : (w > N - 1 ? w - (N - 1) : 0);
+          const op = dist <= 0 ? 1 : (dist <= 1 ? 1 - 0.72 * dist : Math.max(0, 0.28 * (1.4 - dist) / 0.4));
+          const sc = dist <= 0 ? 1 : Math.max(0.6, 1 - 0.2 * Math.min(dist, 1));
+          it.style.transform = 'translate(' + (x - D / 2) + 'px,' + (y - D / 2) + 'px) scale(' + sc + ')';
+          it.style.opacity = String(op);
+          it.style.visibility = op < 0.02 ? 'hidden' : 'visible';
+          it.tabIndex = (w > -0.5 && w < N - 0.5) ? 0 : -1;
+          it.setAttribute('aria-hidden', dist > 0.5 ? 'true' : 'false');
+        });
+      }
+      function animateTo(target) {
+        cancelAnimationFrame(anim);
+        const from = offset, t0 = performance.now(), dur = reduced() ? 0 : 170;
+        if (!dur) { offset = target; render(); return; }
+        const tick = (now) => {
+          const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+          offset = from + (target - from) * e; render();
+          if (k < 1) anim = requestAnimationFrame(tick);
+        };
+        anim = requestAnimationFrame(tick);
+      }
+      const step = (d) => { if (total > N) animateTo(clamp(Math.round(offset) + d, 0, total - N)); };
+
+      function showTip(item) {
+        hideTip();
+        const i = +item.dataset.i, w = i - offset, a = (mid - ((N - 1) / 2 - w) * sp) * Math.PI / 180;
+        const ix = cx + R * Math.cos(a), iy = cy - R * Math.sin(a), len = D * 0.5 + 26;
+        const tx = clamp(ix + Math.cos(a) * len, 60, window.innerWidth - 60), ty = clamp(iy - Math.sin(a) * len, 24, window.innerHeight - 24);
+        tipEl = document.createElement('div'); tipEl.className = 'fab-tip'; tipEl.textContent = item.getAttribute('aria-label') || '';
+        tipEl.style.left = tx + 'px'; tipEl.style.top = ty + 'px'; layer.appendChild(tipEl); tipShown = true;
+      }
+      function hideTip() { if (tipEl) { tipEl.remove(); tipEl = null; } }
+
+      const angOf = (e) => Math.atan2(-(e.clientY - cy), e.clientX - cx) * 180 / Math.PI;
+      function onDown(e) {
+        if (e.target.classList.contains('fab-back')) { e.preventDefault(); close(false); return; }
+        const item = e.target.closest('.fab-item');
+        tipShown = false;
+        if (item) { clearTimeout(tipTimer); tipTimer = setTimeout(() => showTip(item), 480); }
+        if (total > N && (item || e.target.closest('svg'))) drag = { ang: angOf(e), x: e.clientX, y: e.clientY, moved: false };
+      }
+      function onMove(e) {
+        if (!drag) return;
+        if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 8) { drag.moved = true; clearTimeout(tipTimer); hideTip(); tipShown = false; cancelAnimationFrame(anim); }
+        if (!drag.moved) return;
+        const a = angOf(e); let d = a - drag.ang;
+        while (d > 180) d -= 360; while (d < -180) d += 360;
+        drag.ang = a; offset = clamp(offset - d / sp, -0.35, total - N + 0.35); render();
+      }
+      function onUp() {
+        clearTimeout(tipTimer); hideTip();
+        if (drag && drag.moved) { dragEnd = Date.now(); animateTo(clamp(Math.round(offset), 0, total - N)); }
+        drag = null;
+      }
+      function onClick(e) {
+        const item = e.target.closest('.fab-item'); if (!item) return;
+        e.preventDefault();
+        if (tipShown) { tipShown = false; return; }               // a long press only shows the name
+        if (Date.now() - dragEnd < 250) return;                    // the end of a swipe is not a tap
+        const i = +item.dataset.i, w = i - offset;
+        if (w < -0.4 || w > N - 0.6) { step(w < 0 ? -1 : 1); return; }   // tapping a faded edge circle turns the ring one step
+        const real = list[i].real;
+        if (real.disabled) return;
+        real.click(); close(false);
+      }
+      function onWheel(e) { e.preventDefault(); const now = Date.now(); if (total <= N || now - wheelAt < 140) return; wheelAt = now; step(e.deltaY > 0 ? 1 : -1); }
+      function onKey(e) {
+        if (!isOpen) return;
+        if (e.key === 'Escape') { e.preventDefault(); close(true); }
+        else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); step(1); }
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); step(-1); }
+      }
+      function ensureLayer() {
+        if (layer) return;
+        layer = document.createElement('div'); layer.id = 'fab-layer'; layer.setAttribute('role', 'group'); layer.setAttribute('aria-label', 'القائمة');
+        document.body.appendChild(layer);
+        layer.addEventListener('pointerdown', onDown); layer.addEventListener('pointermove', onMove);
+        layer.addEventListener('pointerup', onUp); layer.addEventListener('pointercancel', onUp);
+        layer.addEventListener('click', onClick); layer.addEventListener('wheel', onWheel, { passive: false });
+      }
+
+      function open(viaKeyboard) {
+        const btn = $('menu-fab-button'); if (!btn || isOpen) return;
+        const r = btn.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+        list = SRC.map(([id, k]) => ({ id, k, real: $(id) })).filter((o) => o.real && getComputedStyle(o.real).display !== 'none');
+        if (!list.length) return;
+        total = list.length;
+        D = Math.round(clamp(r.width * 0.8, 34, 64)); R = Math.round(D * 2.1);
+        sp = 2 * Math.asin(Math.min(0.9, 1.18 * D / (2 * R))) * 180 / Math.PI;
+        const W = window.innerWidth, H = window.innerHeight;
+        const rects = ['game-board', 'player-1-area', 'player-2-area'].map($).filter(Boolean).map((e) => e.getBoundingClientRect());
+        let best = null;
+        for (let n = Math.min(5, total); n >= Math.min(3, total); n--) {            // in a tight spot show fewer circles at once
+          const b = fabPick(cx, cy, R, D, sp, n, W, H, rects);
+          if (b.over < 2) { best = { n, b }; break; }
+          if (!best || b.over < best.b.over) best = { n, b };
+        }
+        N = best.n; mid = best.b.mid; offset = 0;
+        ensureLayer(); layer.innerHTML = '';
+        const back = document.createElement('div'); back.className = 'fab-back'; layer.appendChild(back);
+        // dotted track
+        const half = ((N - 1) / 2 + 0.7) * sp, ns = 'http://www.w3.org/2000/svg';
+        const p = (deg) => [cx + R * Math.cos(deg * Math.PI / 180), cy - R * Math.sin(deg * Math.PI / 180)];
+        const a1 = p(mid - half), a2 = p(mid + half);
+        track = document.createElementNS(ns, 'svg'); track.setAttribute('class', 'fab-track'); track.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', 'M' + a1[0] + ' ' + a1[1] + ' A' + R + ' ' + R + ' 0 0 0 ' + a2[0] + ' ' + a2[1]);
+        path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'currentColor'); path.setAttribute('stroke-opacity', '0.4');
+        path.setAttribute('stroke-width', '1.5'); path.setAttribute('stroke-dasharray', '2 5'); path.setAttribute('stroke-linecap', 'round');
+        track.style.color = 'var(--fab-ic)'; track.appendChild(path); layer.appendChild(track);
+        items = list.map((o, i) => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'fab-item'; b.dataset.i = String(i);
+          b.style.width = b.style.height = D + 'px'; b.innerHTML = svg(iconOf(o));
+          const label = labelOf(o.real); b.setAttribute('aria-label', label); b.title = label;
+          if (o.real.disabled) b.disabled = true;
+          if (isOn(o)) b.classList.add('fab-on');
+          layer.appendChild(b); return b;
+        });
+        layer.classList.add('fab-open'); isOpen = true; btn.setAttribute('aria-expanded', 'true');
+        if (!reduced()) {                                                         // the circles grow out of the menu button
+          items.forEach((it) => { it.style.transition = 'none'; it.style.opacity = '0'; it.style.transform = 'translate(' + (cx - D / 2) + 'px,' + (cy - D / 2) + 'px) scale(.3)'; });
+          void layer.offsetWidth; items.forEach((it) => { it.style.transition = ''; });
+        }
+        render();
+        if (viaKeyboard) { const f = items.find((x) => !x.disabled && x.style.visibility === 'visible'); if (f) f.focus({ preventScroll: true }); }
+      }
+      function close(refocus) {
+        if (!isOpen) return;
+        isOpen = false; cancelAnimationFrame(anim); clearTimeout(tipTimer); hideTip(); drag = null;
+        layer.classList.remove('fab-open'); layer.innerHTML = ''; items = [];
+        justClosed = Date.now();
+        const btn = $('menu-fab-button'); if (btn) { btn.setAttribute('aria-expanded', 'false'); if (refocus) btn.focus({ preventScroll: true }); }
+      }
+
+      function start() {
+        const btn = $('menu-fab-button'); if (!btn) return;
+        btn.addEventListener('click', (e) => {
+          if (Date.now() - justClosed < 350) return;                          // the tap that closed the ring must not reopen it
+          if (isOpen) close(false); else open(e.detail === 0);
+        });
+        ['resize', 'orientationchange'].forEach((ev) => window.addEventListener(ev, () => close(false)));
+        window.addEventListener('scroll', () => close(false), { passive: true });
+        document.addEventListener('visibilitychange', () => { if (document.hidden) close(false); });
+        document.addEventListener('keydown', onKey);                              // Escape closes, arrow keys turn the ring
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
     })();
     </script>
 
