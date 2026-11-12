@@ -3867,7 +3867,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     const width = clamp(state.startWidth + (dx + dy) / 2, 140, Math.min(1400, availableWidth));
                     element.style.setProperty('--float-player-width', px(width));
                 } else if (controlIds.has(element.id)) {
-                    const width = clamp(state.startWidth + dx, 64, Math.min(1000, availableWidth));
+                    const width = clamp(state.startWidth + dx, element.id === 'menu-fab-button' ? 32 : 64, Math.min(1000, availableWidth));
                     element.style.setProperty('--float-button-width', px(width));
                     // Measure natural height after changing width. Never let the resize crop its label.
                     element.style.setProperty('--float-button-height', 'auto');
@@ -4125,7 +4125,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                         const value = clamp(size.w, 140, Math.min(1400, availableWidth));
                         element.style.setProperty('--float-player-width', px(value));
                     } else if (controlIds.has(element.id)) {
-                        const width = clamp(size.w, 64, Math.min(1000, availableWidth));
+                        const width = clamp(size.w, element.id === 'menu-fab-button' ? 32 : 64, Math.min(1000, availableWidth));
                         element.style.setProperty('--float-button-width', px(width));
                         element.style.setProperty('--float-button-height', 'auto');
                         const naturalHeight = Math.max(34, rectHeight(element), element.scrollHeight || 0);
@@ -4173,9 +4173,20 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 safeSave(modeName, data);
             }
 
+            /** The round menu button is as small as the circles inside it (80% of a toolbar slot), centred in its slot. */
+            function tuneMenuButton() {
+                const fab = document.getElementById('menu-fab-button');
+                if (!fab) return;
+                const slot = parseFloat(container.style.getPropertyValue('--float-button-width')) || 58;
+                fab.style.setProperty('--float-button-width', px(Math.max(34, slot * 0.8)));
+                const p = getPosition(fab), w = rectWidth(fab);
+                setPosition(fab, p.x + (slot - w) / 2, p.y);
+            }
+
             function layoutForCurrentMode() {
                 activeMode = mode();
                 applyResponsiveGeometry();
+                tuneMenuButton();
                 applySavedSizes(activeMode);
                 syncUniformButtons();
                 applySavedPositions(activeMode);
@@ -4416,6 +4427,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 // Let font and Tailwind styles settle, then measure once more for accurate rack/button heights.
                 requestAnimationFrame(() => {
                     applyResponsiveGeometry();
+                    tuneMenuButton();
                     applySavedSizes(activeMode);
                     syncUniformButtons();
                     applySavedPositions(activeMode);
@@ -5306,7 +5318,7 @@ html body.girly-mode .sq-star {
         list = SRC.map(([id, k]) => ({ id, k, real: $(id) })).filter((o) => o.real && getComputedStyle(o.real).display !== 'none');
         if (!list.length) return;
         total = list.length;
-        D = Math.round(clamp(r.width * 0.8, 34, 64)); R = Math.round(D * 2.1);
+        D = Math.round(clamp(btn.offsetWidth || r.width, 34, 64)); R = Math.round(D * 2.1);   // the circles are exactly as big as the menu button
         sp = 2 * Math.asin(Math.min(0.9, 1.18 * D / (2 * R))) * 180 / Math.PI;
         const W = window.innerWidth, H = window.innerHeight;
         const rects = ['game-board', 'player-1-area', 'player-2-area'].map($).filter(Boolean).map((e) => e.getBoundingClientRect());
