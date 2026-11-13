@@ -238,7 +238,7 @@
       if (!prev) MP.lastEventNo = ev.no;
       else if (ev.no > MP.lastEventNo) {
         MP.lastEventNo = ev.no;
-        if (ev.type === 'move' && ev.seat !== MP.seat && window.gameSound) window.gameSound('opp', 2);   // the opponent's tiles land
+        if (ev.type === 'move' && window.gameSound) window.gameSound('word', Array.isArray(v.lastWord) ? v.lastWord.length : (ev.cells && ev.cells[0] ? ev.cells[0].length : 4));   // the tiles settle into one word
         if (ev.type === 'undo' && window.gameSound) window.gameSound('undo');
         if (ev.type === 'move' && Array.isArray(ev.cells) && window.animateFormedWords) window.animateFormedWords(ev.cells.map((w) => w.map(([r, c]) => ({ r, c }))));
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);

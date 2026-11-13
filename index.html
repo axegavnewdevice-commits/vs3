@@ -5392,7 +5392,7 @@ html body.girly-mode .sq-star {
     <script id="game-sound">
     /* Quiet wooden sounds for five actions: pick up a tile, place it, return it to the rack, shuffle the rack, undo.
        Everything is generated live (no audio files): a felt-soft wooden knock with a small room reverb.
-       Opponent and computer moves play the same knock. Exchanging tiles with the bag stays silent.
+       An accepted word (yours, the computer's or an online opponent's) plays one tap per letter and a closing knock. Exchanging tiles with the bag stays silent.
        The speaker button in the toolbar switches it on or off; the choice is remembered. */
     (() => {
       const KEY = 'arabicScrabble.sound.v1';
@@ -5400,7 +5400,7 @@ html body.girly-mode .sq-star {
       let enabled = true;
       try { enabled = localStorage.getItem(KEY) !== 'off'; } catch (_) {}
       const last = {};
-      const GAP = { pick: 40, place: 60, back: 70, shuffle: 300, undo: 120, opp: 300 };
+      const GAP = { pick: 40, place: 60, back: 70, shuffle: 300, undo: 120, word: 500 };
 
       const ir = (sec, dec) => {
         const n = Math.floor(AC.sampleRate * sec), b = AC.createBuffer(2, n, AC.sampleRate), a = Math.floor(AC.sampleRate * 0.012);
@@ -5443,7 +5443,12 @@ html body.girly-mode .sq-star {
         back:    (t) => wood(t, 340, 0.2, 0.8, 0.08),
         undo:    (t) => wood(t, 260, 0.18, 0.9, 0.08),
         shuffle: (t) => { for (let i = 0; i < 4; i++) wood(t + i * (0.08 + Math.random() * 0.02), 340, 0.18, 0.8, 0.08); },
-        opp:     (t, n) => { for (let i = 0; i < n; i++) wood(t + i * 0.16, 230, 0.4, 1.3, 0.12); }
+        // an accepted word: one soft tap per letter, slightly rising, then a fuller knock as the tiles lock into one word
+        word:    (t, n) => {
+          for (let i = 0; i < n; i++) wood(t + i * 0.075 + Math.random() * 0.008, 300 + i * (70 / Math.max(1, n - 1)), 0.2, 0.8, 0.08);
+          const k = t + n * 0.075 + 0.07;
+          wood(k, 205, 0.5, 1.35, 0.14); part(78, k, 0.003, 0.12, 0.45, 0);
+        }
       };
 
       window.gameSound = (name, n) => {
@@ -5453,7 +5458,7 @@ html body.girly-mode .sq-star {
           if (last[name] && now - last[name] < GAP[name]) return;      // several tiles at once make one knock, not a burst
           last[name] = now;
           if (!init()) return;
-          SOUNDS[name](AC.currentTime + 0.02, Math.max(1, Math.min(4, n || 2)));
+          SOUNDS[name](AC.currentTime + 0.02, name === 'word' ? Math.max(2, Math.min(8, n || 4)) : Math.max(1, Math.min(4, n || 2)));
         } catch (_) {}
       };
       window.gameSoundEnabled = () => enabled;
@@ -5536,7 +5541,6 @@ html body.girly-mode .sq-star {
       /** The main word of a move: the word along the placed tiles (for one tile: the longer word, a tie goes to the horizontal one). */
       window.setLastWordFromMove = (words, placedCount) => {
         try {
-          if (window.CPU && CPU.acting && window.gameSound) window.gameSound('opp', placedCount || 2);   // the computer's tiles land with the same knock
           if (!Array.isArray(words) || !words.length) return window.setLastWord(null);
           let pick = words[0];
           if (placedCount <= 1) {
@@ -5546,6 +5550,7 @@ html body.girly-mode .sq-star {
               return best;
             }, null);
           }
+          window.gameSound && window.gameSound('word', pick.length);                       // the tiles settle into one word
           window.setLastWord(pick.map(({ r, c }) => ({ r, c })), true);
         } catch (_) {}
       };
