@@ -22,7 +22,8 @@
     oppRecon: 'الخصم غير متصل – بانتظار عودته', oppLong: 'الخصم غير متصل منذ فترة', reconnecting: 'جارٍ إعادة الاتصال…', offline: 'لا يوجد اتصال بالإنترنت',
     connecting: 'جارٍ الاتصال بالغرفة…', closed: 'تم إغلاق الغرفة', oppLeft: 'غادر الخصم الغرفة', joined: 'انضم الخصم – ابدؤوا اللعب!',
     undoAsk: 'يطلب الخصم إلغاء حركتك الأخيرة. هل توافق؟', yes: 'موافقة', no: 'رفض', undoSent: 'تم إرسال طلب إلغاء الحركة', undoDeclined: 'رفض الخصم إلغاء الحركة',
-    paused: 'تم إيقاف اللعبة مؤقتاً', resumed: 'تم استئناف اللعبة', synced: 'تم تحديث اللعبة',
+    paused: 'تم إيقاف اللعبة مؤقتاً', resumed: 'تم استئناف اللعبة',
+    valOn: 'تم تفعيل قواعد التحقق من الكلمات', valOff: 'تم إيقاف قواعد التحقق من الكلمات', oppValOn: 'الخصم فعّل قواعد التحقق من الكلمات', oppValOff: 'الخصم أوقف قواعد التحقق من الكلمات', synced: 'تم تحديث اللعبة',
     pass: 'مرّر', swap: 'بدّل', undone: 'ألغى حركته', ended: 'انتهت اللعبة', surrender: 'استسلم', timeout: 'انتهى الوقت',
   };
   const ERR = {
@@ -244,6 +245,7 @@
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'pause' && ev.seat !== MP.seat) toast(T.paused);
         if (ev.type === 'resume' && ev.seat !== MP.seat) toast(T.resumed);
+        if (ev.type === 'validation' && ev.seat !== MP.seat) toast(ev.on ? T.oppValOn : T.oppValOff);
         if (ev.type === 'new_game') closeResult();
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
       }
@@ -326,6 +328,11 @@
   };
   MP.pass = async () => { if (canAct() && !placedTilesInTurn.length) await send({ type: 'pass' }); };
   MP.togglePause = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: gamePaused ? 'resume' : 'pause' }); };
+  MP.toggleValidation = async () => {   // word-list / spelling check on or off for the whole room (the opponent is told)
+    if (!MP.active || MP.status !== 'playing' || !MP.view || gameEnded) return;
+    const on = MP.view.validation === false;
+    if (await send({ type: 'set_validation', on })) toast(on ? T.valOn : T.valOff);
+  };
   MP.surrender = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: 'surrender' }); };
   MP.newGame = async () => {
     if (MP.status === 'closed') { clearSession(); location.reload(); return; }
@@ -584,6 +591,7 @@
 
   /** Re-renders everything derived from MP state: chip, dialog, names. */
   function refresh() {
+    try { window.paintValidation && window.paintValidation(); } catch (_) {}
     const chip = $('mp-chip'); if (!chip) return;
     // ---- what to say about connection ----
     let state = 'wait', text = T.connecting;

@@ -246,7 +246,7 @@ export function createGame(game = 1) {
   return {
     game, board: emptyBoard(), bag, racks,
     scores: { 1: 0, 2: 0 }, current: 1, turnNo: 0,
-    started: false, paused: false, ended: false,
+    started: false, paused: false, ended: false, validation: true,   // validation: false = word-list/spelling check switched off for this room
     clocks: { 1: INITIAL_TIME_MS, 2: INITIAL_TIME_MS }, turnStartedAt: null,
     scoreless: 0, lastMove: null, lastWord: null, undoRequest: null, result: null,
     history: [], rackRev: { 1: 0, 2: 0 }, event: null, eventNo: 0, seen: [],
@@ -361,9 +361,11 @@ function actMove(G, seat, a, now, isValidWord) {
 
   // Dictionary check: a move that forms a word (main or crossing) that is not in the word list is refused and nothing changes.
   const wordText = validation.words.map((w) => w.map(({ tile }) => tile.letter).join(''));
-  if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
-  const unknown = wordText.filter((w) => !isValidWord(w));
-  if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };
+  if (G.validation !== false) {                       // both players can switch the check off (set_validation); a room made before this option existed has it on
+    if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
+    const unknown = wordText.filter((w) => !isValidWord(w));
+    if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };
+  }
 
   const score = scoreMove(work, placed);
   const wordCells = validation.words.map((w) => w.map(({ r, c }) => [r, c]));
@@ -523,6 +525,16 @@ function actPause(G, seat, a, now, pause) {
   return { G, rackChanged: [] };
 }
 
+/** Switches the word-list check on or off for the whole room (both players see the change). Does not touch the turn, clocks or history. */
+function actSetValidation(G, seat, a) {
+  if (typeof a.on !== 'boolean') return err('bad_action');
+  if ((G.validation !== false) === a.on) return { G, rackChanged: [] };
+  G.validation = a.on;
+  G.eventNo += 1;
+  G.event = { no: G.eventNo, type: 'validation', seat, on: a.on };
+  return { G, rackChanged: [] };
+}
+
 function actSurrender(G, seat, a, now, extra = {}) {
   const loser = seat, winner = other(seat);
   const remaining = G.racks[loser].reduce((s, t) => (t ? s + (t.isBlank ? 0 : t.value || 0) : s), 0);
@@ -555,6 +567,7 @@ function actNewGame(G, seat, a, now) {
   next.event = { no: next.eventNo, type: 'new_game', seat };
   next.turnNo = 0;
   next.seen = G.seen;
+  next.validation = G.validation !== false;   // the room keeps its setting for the next game
   return { G: next, rackChanged: [1, 2] };
 }
 
@@ -599,6 +612,10 @@ export function act(G, seat, a, now = Date.now(), opts = {}) {
       if (G.ended) return err('game_over');
       out = actPause(G, seat, a, now, a.type === 'pause');
       break;
+    case 'set_validation':
+      if (G.ended) return err('game_over');
+      out = actSetValidation(G, seat, a);
+      break;
     case 'surrender':
       if (G.ended) return err('game_over');
       out = actSurrender(G, seat, a, now);
@@ -631,7 +648,7 @@ export function publicView(G) {
   return {
     game: G.game, turnNo: G.turnNo, current: G.current, scores: G.scores,
     clocks: G.clocks, turnStartedAt: G.turnStartedAt,
-    started: G.started, paused: G.paused, ended: G.ended, result: G.result,
+    started: G.started, paused: G.paused, ended: G.ended, result: G.result, validation: G.validation !== false,
     board, bagCount: G.bag.length,
     rackCounts: { 1: G.racks[1].filter(Boolean).length, 2: G.racks[2].filter(Boolean).length },
     scoreless: G.scoreless,

@@ -1,7 +1,7 @@
 /** Route logic shared by the Vercel functions (api/*.js) and the local dev server. Storage is injected. */
 import { HttpError } from './service.js';
 
-const ALLOWED_ACTION_FIELDS = ['placements', 'tileIds', 'accept', 'type', 'actionId', 'game', 'turnNo'];
+const ALLOWED_ACTION_FIELDS = ['placements', 'tileIds', 'accept', 'on', 'type', 'actionId', 'game', 'turnNo'];
 
 export function buildRoutes({ backend, service }) {
   /** Wraps a handler: method check, bearer-token auth, JSON errors, no caching. */

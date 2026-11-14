@@ -1592,6 +1592,9 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="sound-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="الصوت: مفعّل" title="الصوت: مفعّل" aria-pressed="true">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path class="sw" d="M15.5 8.5a5 5 0 0 1 0 7M18.2 5.8a8.8 8.8 0 0 1 0 12.4"/><path class="ss" d="M4 4l16 16"/></svg>
             </button>
+            <button id="validation-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="true" title="قواعد التحقق من الكلمات">
+                قواعد التحقق: مفعّلة
+            </button>
             <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="القائمة" title="القائمة" aria-haspopup="true" aria-expanded="false">
                 <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -3500,6 +3503,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Dictionary check before a move is accepted (local game; online the server does the same). Moves are final once accepted. */
         let submitting = false;
         const wordsAreValid = async (words) => {
+            if (window.validationOn && !window.validationOn()) return true;   // the menu switch: word validation is off (never against the computer; online the server decides)
             let wl;
             try { wl = await loadWordList(); }
             catch (e) { notify('تعذر تحميل قائمة الكلمات. تحقق من الاتصال ثم حاول مجدداً.', true); return false; }
@@ -5118,7 +5122,7 @@ html body.girly-mode .sq-star {
     html body #game-controls button#mp-online-button, html body #game-controls button#vs-computer-button,
     html body #game-controls button#sound-toggle-button, html body #game-controls button#theme-toggle,
     html body #game-controls button#fullscreen-app-button, html body #game-controls button#install-app-button,
-    html body #game-controls button#support-button {
+    html body #game-controls button#support-button, html body #game-controls button#validation-toggle-button {
       visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
       width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
       padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
@@ -5170,7 +5174,7 @@ html body.girly-mode .sq-star {
        swipe along the ring (or use the wheel or arrow keys) to turn it. Each circle simply presses the real, hidden button. */
     (() => {
       const $ = (id) => document.getElementById(id);
-      const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'],
+      const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'],
                    ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['install-app-button', 'download'], ['support-button', 'heart']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
@@ -5186,6 +5190,8 @@ html body.girly-mode .sq-star {
         sun: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>',
         max: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',
         download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+        shieldx: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/>',
         heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
@@ -5222,10 +5228,11 @@ html body.girly-mode .sq-star {
         const t = (o.real.textContent || '');
         if (o.k === 'pause') return /استئناف|متابعة/.test(t) ? 'play' : 'pause';
         if (o.k === 'vol') return o.real.classList.contains('sound-off') ? 'volx' : 'vol';
+        if (o.k === 'shield') return (window.validationOn && !window.validationOn()) ? 'shieldx' : 'shield';
         if (o.k === 'moon') return /الفاتح/.test(t) ? 'sun' : 'moon';
         return o.k;
       };
-      const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode'));
+      const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode')) || (o.k === 'shield' && !(window.validationOn && !window.validationOn()));
 
       function render() {
         const W = window.innerWidth, H = window.innerHeight, m = D / 2 + 4;
@@ -5388,6 +5395,53 @@ html body.girly-mode .sq-star {
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
     })();
     </script>
+
+    <script id="validation-toggle">
+    /* Menu switch "قواعد التحقق" (word-list and spelling rules). Offline two-player: a local choice, remembered on this device.
+       Online: one setting for the whole room, kept on the server (either player can change it, the other is told).
+       Against the computer: always on, the switch is locked. Board and placement rules (centre star, connected words ...) are never switched off. */
+    (() => {
+      const KEY = 'arabicScrabble.validation.v1';
+      let local = true;
+      try { local = localStorage.getItem(KEY) !== 'off'; } catch (_) {}
+      const $ = (id) => document.getElementById(id);
+      const cpu = () => !!(window.CPU && CPU.active);
+      const online = () => !!(window.MP && MP.active);
+      window.validationOn = () => cpu() ? true : online() ? !(MP.view && MP.view.validation === false) : local;
+      const say = (m) => { try { if (window.MP && MP.toast) MP.toast(m); } catch (_) {} };
+      window.paintValidation = () => {
+        const b = $('validation-toggle-button'); if (!b) return;
+        const on = window.validationOn();
+        const txt = cpu() ? 'قواعد التحقق: مفعّلة دائماً ضد الكمبيوتر' : on ? 'قواعد التحقق: مفعّلة' : 'قواعد التحقق: متوقفة';
+        if (b.textContent.trim() !== txt) b.textContent = txt;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.title = txt;
+        b.disabled = cpu() || (online() && !(MP.status === 'playing' && MP.view && !gameEnded));
+        const fab = $('menu-fab-button');
+        if (fab) {
+          if (getComputedStyle(fab).position === 'static') fab.style.position = 'relative';
+          fab.classList.toggle('val-off', !on);   // a small red dot on the menu button while the check is off
+        }
+      };
+      const start = () => {
+        const b = $('validation-toggle-button'); if (!b) return;
+        b.addEventListener('click', () => {
+          if (cpu()) return;
+          if (online()) { if (MP.toggleValidation) MP.toggleValidation(); return; }
+          local = !local;
+          try { localStorage.setItem(KEY, local ? 'on' : 'off'); } catch (_) {}
+          window.paintValidation();
+          say(local ? 'تم تفعيل قواعد التحقق من الكلمات' : 'تم إيقاف قواعد التحقق من الكلمات');
+        });
+        if (window.MutationObserver) new MutationObserver(() => window.paintValidation()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        window.paintValidation();
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
+    <style id="validation-toggle-style">
+    #menu-fab-button.val-off::after { content: ''; position: absolute; top: 12%; right: 12%; width: 24%; height: 24%; border-radius: 50%; background: #ef4444; border: 1.5px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); pointer-events: none; }
+    </style>
 
     <script id="game-sound">
     /* Quiet wooden sounds for five actions: pick up a tile, place it, return it to the rack, shuffle the rack, undo.
