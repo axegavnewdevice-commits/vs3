@@ -6179,6 +6179,10 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
     }
     if (w.length <= 2) return true;                                              // other two-letter words are already a hand-checked list
     if (SURE.indexOf(' ' + w + ' ') >= 0) return true;                           // words the owner confirmed as real
+    // Hamza spelling (computer only): never play a look-alike with plain ي where the real spelling with ئ is also in the list (قايم for قائم، غايب for غائب).
+    for (let i = 1; i < w.length - 1; i++) {
+      if (w.charAt(i) === 'ي' && w.charAt(i - 1) === 'ا' && !/[اويةء]/.test(w.charAt(i + 1)) && wl.has(w.slice(0, i) + 'ئ' + w.slice(i + 1))) return false;
+    }
     if (/ءي$/.test(w)) return false;
     if (w.length >= 4 && PRONOUN_END.test(w)) return false;                      // attached pronoun forms
     if (w.length >= 4 && /[هك]$/.test(w) && wl.has(w.slice(0, -1))) return false; // verb/noun + attached ه / ك

@@ -2,7 +2,9 @@
  * Data: words.bin = a Bloom filter built from the AyaSpell Arabic dictionary (spelling reduced to the game's tile letters).
  * A word the list knows is always accepted; a word it does not know is accepted with a probability of about 0.01% (Bloom false-accept).
  * Accepted: the listed forms (base words, plurals, feminine, dual, verb conjugations, tanween, nisba) and ال + a listed word.
- * NOT accepted: the prefixes و ف ب ك ل س and attached pronouns (كتابهم، كتبته ...). */
+ * NOT accepted: the prefixes و ف ب ك ل س and attached pronouns (كتابهم، كتبته ...).
+ * HAMZA SPELLING (see hamzaWrong below): the word list is un-vowelled, so the exact hamza seat (ء ؤ ئ) cannot be derived from letters alone; the list's own
+ * spelling is trusted, and a guard on top refuses what no Arabic spelling rule allows plus a reviewed list of ي-for-ئ / و-for-ؤ mis-spellings. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.WordCheck = factory();
@@ -45,6 +47,29 @@
     var BLOCKED = ' ال اخو اخت اخوان اكل اسلام احسان افضل احسن انا انت انتم انتما انتن الم طسم كهيعص يس طه امة اليس ام اب ان اخ الاب الام الاخ الان الارض الاخير الاخري الاخرة الاخيرة دؤب اخير اخري اخرة اخيرة ابو امي اصل اباء امهات ابوان امان اختان اخوات اخوة ابي الي اخي اختي اذن اذني اذان انف انفي الف اليف اذنان انفان امر امران امور امراء اخوي اخوك اخوكم اخوكن اخونا اخوه اخوهم اخوهن اخوها اخوهما اختك اختكم اختكن اختها اخته اختهن اختهم اختهما اخذ ااب ااد ااس ااف اال اان ابا ابت ابث ابح ابخ ابد ابر ابز ابس ابش ابض ابط ابع ابل ابه ابئ ابؤ اتا اتب اتت اتح اتد اتر اتض اتف اتم اتن اته اتو اتي اثا اثب اثث اثج اثد اثر اثغ اثف اثق اثل اثم اثن اثو اجا اجب اجة اجت اجث اجج اجح اجد اجذ اجس اجش اجص اجع اجف اجل اجم اجن اجه اجو اجي اجئ احا احب احت احث احج احح احد احذ احر احز احس احش احص احض احط احظ احف احق احك احل احم احن اخا اخب اخد اخر اخز اخس اخص اخض اخط اخف اخل اخم اخن ادا ادب ادت ادث ادج ادح ادد ادر ادس ادش ادص ادف ادق ادك ادل ادم اده ادو ادي اذا اذب اذت اذح اذد اذر اذع اذف اذق اذك اذل اذم اذه اذو اذي ارا ارب ارت ارث ارج ارح ارخ ارد ارذ ارر ارز ارس ارش ارص ارض ارط ارع ارغ ارف ارك ارن اره اري ارئ ازا ازب ازة ازج ازح ازخ ازد ازر ازع ازغ ازف ازق ازك ازل ازم ازن ازه ازو ازي اسا اسب اسة اسج اسح اسخ اسد اسر اسس اسط اسغ اسف اسك اسل اسن اسه اسو اسي اسئ اسؤ اشا اشب اشت اشج اشح اشخ اشد اشذ اشر اشص اشط اشظ اشع اشق اشك اشل اشم اشن اشه اشي اشؤ اصب اصت اصح اصخ اصد اصر اصص اصع اصغ اصف اصك اصم اصن اصو اضا اضب اضت اضج اضح اضخ اضد اضر اضض اضع اضغ اضف اضق اضل اضم اضن اضه اضو اضي اضئ اضؤ اطا اطب اطح اطد اطر اطس اطش اطع اطغ اطف اطق اطل اطم اطن اطه اظب اظر اظف اظل اظم اظن اعب اعت اعث اعج اعد اعذ اعر اعز اعس اعش اعص اعض اعط اعظ اعق اعك اعل اعم اعن اعي اغب اغث اغذ اغر اغس اغش اغص اغض اغط اغظ اغف اغق اغل اغم اغن اغو افا افة افت افج افح افخ افذ افر افز افس افش افص افض افظ افف افق افك افل افن افه افو افي افئ اقا اقب اقت اقث اقح اقد اقذ اقر اقز اقس اقش اقص اقط اقظ اقع اقق اقل اقم اقن اقو اقي اقئ اكب اكت اكث اكح اكد اكر اكز اكس اكش اكظ اكف اكم اكن الا الب الة الت الث الج الح الخ الد الذ الز الص الط الظ الع الغ الك الن اله الو اما امت امث امج امد امز امس امص امض امط امع امق امك امل امم امن امه امو امؤ انب انة انث انح انخ اند انر انز انس انش انص انض انط انع انغ انق انك انل انم انن اني انئ انؤ اها اهب اهة اهت اهث اهج اهذ اهر اهز اهس اهش اهص اهض اهط اهف اهل اهم اهن اهي اهئ اوا اوب اوت اوج اوح اوخ اود اوذ اور اوز اوس اوش اوص اوط اوع اوف اوق اول اون اوه اوو اوي اوء ايا اية ايد اير ايس ايك ايل ايم اين ايه ايي ائب ائج ائد ائذ ائر ائس ائض ائف ائل ائم ائن ائو ائي اؤب اؤت اؤح اؤد اؤر اؤس اؤض اؤف اؤل اؤم اؤن اؤو ات اهواء اهواءي فائهو ';
     // ALLOWLIST: words the owner declared valid even if the dictionary does not know them (game spelling, any length). A blocked word is never allowed. An allowed word of 3+ letters is also accepted with ال in front.
     var ALLOWED = ' طئ سقاف ';
+    // HAMZA SPELLING GUARD (قاعدة كتابة الهمزة). The word list has no vowels, and the seat of the hamza (ء on the line, ؤ on waw, ئ on the nabra) depends on the vowels,
+    // so the list's own spelling is trusted (checked: all 7,000+ hamza words of 3-5 letters in the list obey rules 1-3 below). On top of that:
+    //  1) a hamza seat (ء ؤ ئ) never starts a word (the hamza of the first letter sits on alif, and this game has no أ tile; ال + word is judged on the word);
+    //  2) two hamza seats are never next to each other;
+    //  3) a final hamza after a long alif is always on the line (سماء، جاء، ضياء), never ؤ or ئ (ساؤ، سائ);
+    //  4) HAMZA_BAD_STEMS: mis-spellings the list wrongly contains: ي written instead of ئ (غايب for غائب، مسايل for مسائل، مصاير، مكايد، صنايع، نصايح، سايل، طاير، هايج، لاجي)
+    //     and و instead of ؤ (مومن for مؤمن، فواد for فؤاد، موازر for مؤازر). Checked with ال in front and with the usual endings (ة ات ان ين ون ي ا ه ها هم ...).
+    //     Real words that only look similar (بايع، ضايق، قايض، غاير، تباين، معايش، مصايد، يوم، دون، موت ...) are deliberately NOT listed. To add one: a stem here (game spelling, no ال, no ending).
+    //     The owner lists above win: a word on ALLOWED is accepted before this guard runs.
+    var HAMZA_BAD_STEMS = ' مومن فواد موازر سايل مسايل مصاير مكايد صنايع نصايح غايب طاير هايج لاجي ';
+    var HAMZA_ENDINGS = ['ات', 'ان', 'ين', 'ون', 'ها', 'هم', 'هن', 'كم', 'نا', 'وا', 'ة', 'ي', 'ا', 'ه', 'ك'];
+    function hamzaWrong(w) {
+      var b = (w.length > 4 && w.charAt(0) === 'ا' && w.charAt(1) === 'ل') ? w.slice(2) : w;
+      if (/^[ءؤئ]/.test(w) || /^[ءؤئ]/.test(b)) return true;                       // 1
+      if (/[ءؤئ][ءؤئ]/.test(w)) return true;                                          // 2
+      if (/ا[ؤئ]$/.test(w)) return true;                                              // 3
+      if (HAMZA_BAD_STEMS.indexOf(' ' + b + ' ') >= 0) return true;                   // 4
+      for (var i = 0; i < HAMZA_ENDINGS.length; i++) {
+        var e = HAMZA_ENDINGS[i];
+        if (b.length > e.length + 2 && b.slice(-e.length) === e && HAMZA_BAD_STEMS.indexOf(' ' + b.slice(0, -e.length) + ' ') >= 0) return true;
+      }
+      return false;
+    }
     function isValid(raw) {
       // TILE RULES (hamza has two tiles): the connecting tile (ئـ) can never end a word, and the plain tile (ئ) can only end a word (never be followed by another letter).
       var rawText = String(raw == null ? '' : raw);
@@ -56,6 +81,7 @@
       if (w.length > 4 && w.charAt(0) === 'ا' && w.charAt(1) === 'ل' && BLOCKED.indexOf(' ' + w.slice(2) + ' ') >= 0) return false;
       if (ALLOWED.indexOf(' ' + w + ' ') >= 0) return true;
       if (w.length > 4 && w.charAt(0) === 'ا' && w.charAt(1) === 'ل' && ALLOWED.indexOf(' ' + w.slice(2) + ' ') >= 0) return true;
+      if (hamzaWrong(w)) return false;
       if (w.length === 2) return WORD2.indexOf(' ' + w + ' ') >= 0 && has(w);
       if (has(w)) return true;
       if (w.indexOf('ال') === 0) {
