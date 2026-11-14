@@ -5408,7 +5408,6 @@ html body.girly-mode .sq-star {
       const cpu = () => !!(window.CPU && CPU.active);
       const online = () => !!(window.MP && MP.active);
       window.validationOn = () => cpu() ? true : online() ? !(MP.view && MP.view.validation === false) : local;
-      const say = (m) => { try { if (window.MP && MP.toast) MP.toast(m); } catch (_) {} };
       window.paintValidation = () => {
         const b = $('validation-toggle-button'); if (!b) return;
         const on = window.validationOn();
@@ -5430,7 +5429,6 @@ html body.girly-mode .sq-star {
           local = !local;
           try { localStorage.setItem(KEY, local ? 'on' : 'off'); } catch (_) {}
           window.paintValidation();
-          say(local ? 'تم تفعيل قواعد التحقق من الكلمات' : 'تم إيقاف قواعد التحقق من الكلمات');
         });
         if (window.MutationObserver) new MutationObserver(() => window.paintValidation()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         window.paintValidation();

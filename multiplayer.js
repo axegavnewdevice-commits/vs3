@@ -245,7 +245,6 @@
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'pause' && ev.seat !== MP.seat) toast(T.paused);
         if (ev.type === 'resume' && ev.seat !== MP.seat) toast(T.resumed);
-        if (ev.type === 'validation' && ev.seat !== MP.seat) toast(ev.on ? T.oppValOn : T.oppValOff);
         if (ev.type === 'new_game') closeResult();
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
       }
@@ -331,7 +330,7 @@
   MP.toggleValidation = async () => {   // word-list / spelling check on or off for the whole room (the opponent is told)
     if (!MP.active || MP.status !== 'playing' || !MP.view || gameEnded) return;
     const on = MP.view.validation === false;
-    if (await send({ type: 'set_validation', on })) toast(on ? T.valOn : T.valOff);
+    await send({ type: 'set_validation', on });   // silent: the red dot on the menu button shows the state
   };
   MP.surrender = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: 'surrender' }); };
   MP.newGame = async () => {
