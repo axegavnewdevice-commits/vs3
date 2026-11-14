@@ -243,8 +243,6 @@
         if (ev.type === 'undo' && window.gameSound) window.gameSound('undo');
         if (ev.type === 'move' && Array.isArray(ev.cells) && window.animateFormedWords) window.animateFormedWords(ev.cells.map((w) => w.map(([r, c]) => ({ r, c }))));
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
-        if (ev.type === 'pause' && ev.seat !== MP.seat) toast(T.paused);
-        if (ev.type === 'resume' && ev.seat !== MP.seat) toast(T.resumed);
         if (ev.type === 'new_game') closeResult();
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
       }

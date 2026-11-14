@@ -1252,8 +1252,8 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 /* ===== Face-down racks: the back of a tile ===== */
 .rack .tile-content, .rack .tile-content > * { transition: none !important; }   /* turning a tile face-down/up must never fade */
 .rack .tile.tile-hidden { pointer-events: none !important; cursor: default !important; }
-.rack .tile.tile-hidden .tile-content > * { visibility: hidden !important; }
-.rack .tile.tile-hidden .tile-content {
+.rack .tile.tile-hidden .tile-content > *, body.tiles-down #game-board > .square.has-tile > .tile > .tile-content > * { visibility: hidden !important; }
+.rack .tile.tile-hidden .tile-content, body.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #3a4426 !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23c9a45a'%3E%3Crect x='24' y='24' width='52' height='52'/%3E%3Crect x='24' y='24' width='52' height='52' transform='rotate(45 50 50)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='12' fill='%233a4426'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%23c9a45a'/%3E%3C/svg%3E"), repeating-linear-gradient(45deg, rgba(201, 164, 90, .13) 0 2px, transparent 2px 7px) !important;
     background-repeat: no-repeat, repeat !important; background-position: center, 0 0 !important; background-size: 64%, auto !important;
@@ -1307,7 +1307,7 @@ html body.girly-mode .player-area .text-gray-300 { color: #ffdce8 !important; }
 html body.girly-mode .player-area .text-yellow-400 { color: #ffe9a8 !important; }
 html body.girly-mode .float-resize-handle::before { border-color: #ffe3ee !important; background-color: #f2a3be !important; }
 /* tile back (face-down rack): rose with a rose-gold heart */
-html body.girly-mode .rack .tile.tile-hidden .tile-content {
+html body.girly-mode .rack .tile.tile-hidden .tile-content, html body.girly-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #b8456f !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f6c9b6' stroke='%23fff1ea' stroke-width='.8'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 58% !important; border: 1px solid #f6c9b6 !important;
     box-shadow: inset 0 0 0 3px rgba(60,5,30,.25), inset 0 0 0 4px rgba(246,201,182,.45), 0 2px 3px rgba(60,5,30,.4) !important; }
@@ -1383,7 +1383,7 @@ html body.horror-mode .player-area .text-yellow-400 { color: #ff7a5c !important;
 html body.horror-mode .turn-dot { background: #3a1010 !important; }
 html body.horror-mode .player-turn .turn-dot { background: #ff2d2d !important; box-shadow: 0 0 10px 2px rgba(255,40,40,.75) !important; }
 html body.horror-mode .float-resize-handle::before { border-color: #e6d9c2 !important; background-color: #8f1b22 !important; }
-html body.horror-mode .rack .tile.tile-hidden .tile-content {
+html body.horror-mode .rack .tile.tile-hidden .tile-content, html body.horror-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #2a0f10 !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 14C29 14 18 28 18 45c0 10 4 17 10 21v11c0 3 3 6 6 6h32c3 0 6-3 6-6V66c6-4 10-11 10-21C82 28 71 14 50 14z' fill='%23d8cdb4'/%3E%3Cellipse cx='37' cy='47' rx='8' ry='9.5' fill='%231a0b0c'/%3E%3Cellipse cx='63' cy='47' rx='8' ry='9.5' fill='%231a0b0c'/%3E%3Cpath d='M50 56l-5 10h10z' fill='%231a0b0c'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 66% !important; border: 1px solid #7d1218 !important;
     box-shadow: inset 0 0 0 3px rgba(0,0,0,.45), inset 0 0 0 4px rgba(160,25,30,.45), 0 2px 3px rgba(0,0,0,.6) !important; }
@@ -4563,7 +4563,7 @@ html body.academic-mode .player-area .text-yellow-400 { color: #e6c978 !importan
 html body.academic-mode .turn-dot { background: #34496e !important; }
 html body.academic-mode .player-turn .turn-dot { background: #e6c978 !important; box-shadow: 0 0 9px 2px rgba(230,201,120,.65) !important; }
 html body.academic-mode .float-resize-handle::before { border-color: #f3e9cf !important; background-color: #c9a24a !important; }
-html body.academic-mode .rack .tile.tile-hidden .tile-content {
+html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academic-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #1b3157 !important; background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23e6c978%27%20stroke-width%3D%273.2%27%20stroke-linecap%3D%27round%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2734%27%20stroke-opacity%3D%27.55%27%2F%3E%3Cpath%20d%3D%27M22%2062C14%2042%2022%2024%2038%2017M78%2062c8-20%200-38-16-45%27%20%2F%3E%3Cpath%20d%3D%27M26%2030l-7-1M22%2044l-8%200M25%2057l-7%203M74%2030l7-1M78%2044l8%200M75%2057l7%203%27%20stroke-width%3D%272.6%27%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%27M50%2028l6.5%2014.5%2015.5%201.6-11.6%2010.5%203.3%2015.4L50%2061.600%2036.300%2070l3.300-15.400L28%2044.100l15.500-1.600z%27%20fill%3D%27%23e6c978%27%2F%3E%3C%2Fsvg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 78% !important; border: 1px solid #c9a24a !important;
     box-shadow: inset 0 0 0 3px rgba(5,12,28,.45), inset 0 0 0 4px rgba(201,162,74,.5), 0 2px 3px rgba(0,0,0,.5) !important; }
@@ -5672,9 +5672,11 @@ html body.girly-mode .sq-star {
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
       const HALF = 340, STEP = 70, P = 'perspective(600px) ';
       let lastCurrent = null, lastEnded = null;
-      const hiddenFor = (n, cur, ended) => (window.MP && MP.active) ? n !== MP.seat : (window.CPU && CPU.active) ? (!ended && n === 2) : (!ended && n !== cur);
+      let lastPaused = false, lastBoardDown = null, boardTok = 0;
+      // paused (any mode): both racks and the board tiles lie face down; otherwise the usual privacy rule
+      const hiddenFor = (n, cur, ended, paused) => (!ended && paused) || ((window.MP && MP.active) ? n !== MP.seat : (window.CPU && CPU.active) ? (!ended && n === 2) : (!ended && n !== cur));
       // a rack is created face-down if it is face-down now, or was face-down before a turn change (it then flips open)
-      window.rackBornHidden = (n) => hiddenFor(n, currentPlayer, gameEnded) || (lastCurrent !== null && hiddenFor(n, lastCurrent, lastEnded));
+      window.rackBornHidden = (n) => hiddenFor(n, currentPlayer, gameEnded, gamePaused) || (lastCurrent !== null && hiddenFor(n, lastCurrent, lastEnded, lastPaused));
       const setHidden = (tile, hidden) => {
         tile.classList.toggle('tile-hidden', hidden);
         if (hidden) tile.setAttribute('aria-hidden', 'true'); else tile.removeAttribute('aria-hidden');
@@ -5709,8 +5711,8 @@ html body.girly-mode .sq-star {
           [1, 2].forEach(n => {
             const rack = document.getElementById('rack-' + n);
             if (!rack) return;
-            const want = hiddenFor(n, cur, ended);
-            const prev = first ? want : hiddenFor(n, lastCurrent, lastEnded);
+            const want = hiddenFor(n, cur, ended, gamePaused);
+            const prev = first ? want : hiddenFor(n, lastCurrent, lastEnded, lastPaused);
             [...rack.querySelectorAll('.tile')].forEach((tile, i) => {
               const wasNew = !tile.dataset.rv; tile.dataset.rv = '1';
               if (want === prev) {                                    // this rack's state did not change
@@ -5721,8 +5723,27 @@ html body.girly-mode .sq-star {
               flip(tile, want, i, wasNew);
             });
           });
-          lastCurrent = cur; lastEnded = ended;
+          lastCurrent = cur; lastEnded = ended; lastPaused = gamePaused;
+          boardDown(!ended && gamePaused);
         } catch (_) {}
+      };
+
+      // board tiles: the body class carries the face-down look (so a redraw while paused keeps it); the flip is played on the tile faces
+      const BSEL = '#game-board > .square.has-tile > .tile > .tile-content';
+      const boardDown = (want) => {
+        const first = lastBoardDown === null;
+        if (want === lastBoardDown) return;
+        lastBoardDown = want;
+        const tiles = [...document.querySelectorAll(BSEL)];
+        if (first || reduce || !tiles.length) { document.body.classList.toggle('tiles-down', want); return; }
+        const tok = ++boardTok;
+        const out = tiles.map(t => t.animate([{ transform: P + 'rotateY(0)' }, { transform: P + 'rotateY(90deg)' }], { duration: HALF, easing: 'ease-in', fill: 'forwards' }));
+        setTimeout(() => {
+          document.body.classList.toggle('tiles-down', lastBoardDown);
+          out.forEach(a => a.cancel());
+          if (tok !== boardTok) return;
+          document.querySelectorAll(BSEL).forEach(t => t.animate([{ transform: P + 'rotateY(-90deg)' }, { transform: P + 'rotateY(0)' }], { duration: HALF, easing: 'ease-out' }));
+        }, HALF);
       };
     })();
     </script>
