@@ -1259,6 +1259,8 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
     background-repeat: no-repeat, repeat !important; background-position: center, 0 0 !important; background-size: 64%, auto !important;
     border: 1px solid #c9a45a !important;
     box-shadow: inset 0 0 0 3px rgba(0, 0, 0, .28), inset 0 0 0 4px rgba(201, 164, 90, .4), 0 2px 3px rgba(0, 0, 0, .45) !important;
+    /* proportional version (every measure follows the tile's own width, so board and rack backs are the same picture at any size) */
+    border-width: max(1px, 2.2cqw) !important; border-radius: 8.7cqw !important; box-shadow: inset 0 0 0 6.5cqw rgba(0, 0, 0, .28), inset 0 0 0 8.7cqw rgba(201, 164, 90, .4), 0 4.3cqw 6.5cqw rgba(0, 0, 0, .45) !important; background-size: 64% 64%, auto !important;
 }
 @media (prefers-reduced-motion: reduce) {
     #game-board .tile, #game-board .tile-content { transition: none !important; }
@@ -1310,7 +1312,7 @@ html body.girly-mode .float-resize-handle::before { border-color: #ffe3ee !impor
 html body.girly-mode .rack .tile.tile-hidden .tile-content, html body.girly-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #b8456f !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z' fill='%23f6c9b6' stroke='%23fff1ea' stroke-width='.8'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 58% !important; border: 1px solid #f6c9b6 !important;
-    box-shadow: inset 0 0 0 3px rgba(60,5,30,.25), inset 0 0 0 4px rgba(246,201,182,.45), 0 2px 3px rgba(60,5,30,.4) !important; }
+    box-shadow: inset 0 0 0 3px rgba(60,5,30,.25), inset 0 0 0 4px rgba(246,201,182,.45), 0 2px 3px rgba(60,5,30,.4) !important; border-width: max(1px, 2.2cqw) !important; border-radius: 8.7cqw !important; box-shadow: inset 0 0 0 6.5cqw rgba(60,5,30,.25), inset 0 0 0 8.7cqw rgba(246,201,182,.45), 0 4.3cqw 6.5cqw rgba(60,5,30,.4) !important; background-size: 58% 58% !important; }
 /* toolbar buttons */
 html body.girly-mode #game-controls button#reset-move, html body.girly-mode #game-controls button#swap-tiles, html body.girly-mode #game-controls button#pass-turn,
 html body.girly-mode #game-controls button#undo-last-move, html body.girly-mode #game-controls button#pause-game, html body.girly-mode #game-controls button#theme-toggle {
@@ -1386,7 +1388,7 @@ html body.horror-mode .float-resize-handle::before { border-color: #e6d9c2 !impo
 html body.horror-mode .rack .tile.tile-hidden .tile-content, html body.horror-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #2a0f10 !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 14C29 14 18 28 18 45c0 10 4 17 10 21v11c0 3 3 6 6 6h32c3 0 6-3 6-6V66c6-4 10-11 10-21C82 28 71 14 50 14z' fill='%23d8cdb4'/%3E%3Cellipse cx='37' cy='47' rx='8' ry='9.5' fill='%231a0b0c'/%3E%3Cellipse cx='63' cy='47' rx='8' ry='9.5' fill='%231a0b0c'/%3E%3Cpath d='M50 56l-5 10h10z' fill='%231a0b0c'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 66% !important; border: 1px solid #7d1218 !important;
-    box-shadow: inset 0 0 0 3px rgba(0,0,0,.45), inset 0 0 0 4px rgba(160,25,30,.45), 0 2px 3px rgba(0,0,0,.6) !important; }
+    box-shadow: inset 0 0 0 3px rgba(0,0,0,.45), inset 0 0 0 4px rgba(160,25,30,.45), 0 2px 3px rgba(0,0,0,.6) !important; border-width: max(1px, 2.2cqw) !important; border-radius: 8.7cqw !important; box-shadow: inset 0 0 0 6.5cqw rgba(0,0,0,.45), inset 0 0 0 8.7cqw rgba(160,25,30,.45), 0 4.3cqw 6.5cqw rgba(0,0,0,.6) !important; background-size: 66% 66% !important; }
 /* toolbar */
 html body.horror-mode #game-controls button#reset-move, html body.horror-mode #game-controls button#swap-tiles, html body.horror-mode #game-controls button#pass-turn,
 html body.horror-mode #game-controls button#undo-last-move, html body.horror-mode #game-controls button#pause-game, html body.horror-mode #game-controls button#theme-toggle {
@@ -4566,7 +4568,7 @@ html body.academic-mode .float-resize-handle::before { border-color: #f3e9cf !im
 html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academic-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
     background-color: #1b3157 !important; background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%23e6c978%27%20stroke-width%3D%273.2%27%20stroke-linecap%3D%27round%27%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%2734%27%20stroke-opacity%3D%27.55%27%2F%3E%3Cpath%20d%3D%27M22%2062C14%2042%2022%2024%2038%2017M78%2062c8-20%200-38-16-45%27%20%2F%3E%3Cpath%20d%3D%27M26%2030l-7-1M22%2044l-8%200M25%2057l-7%203M74%2030l7-1M78%2044l8%200M75%2057l7%203%27%20stroke-width%3D%272.6%27%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%27M50%2028l6.5%2014.5%2015.5%201.6-11.6%2010.5%203.3%2015.4L50%2061.600%2036.300%2070l3.300-15.400L28%2044.100l15.500-1.600z%27%20fill%3D%27%23e6c978%27%2F%3E%3C%2Fsvg%3E") !important; background-repeat: no-repeat !important;
     background-position: center !important; background-size: 78% !important; border: 1px solid #c9a24a !important;
-    box-shadow: inset 0 0 0 3px rgba(5,12,28,.45), inset 0 0 0 4px rgba(201,162,74,.5), 0 2px 3px rgba(0,0,0,.5) !important; }
+    box-shadow: inset 0 0 0 3px rgba(5,12,28,.45), inset 0 0 0 4px rgba(201,162,74,.5), 0 2px 3px rgba(0,0,0,.5) !important; border-width: max(1px, 2.2cqw) !important; border-radius: 8.7cqw !important; box-shadow: inset 0 0 0 6.5cqw rgba(5,12,28,.45), inset 0 0 0 8.7cqw rgba(201,162,74,.5), 0 4.3cqw 6.5cqw rgba(0,0,0,.5) !important; background-size: 78% 78% !important; }
 /* toolbar */
 html body.academic-mode #game-controls button#reset-move, html body.academic-mode #game-controls button#swap-tiles, html body.academic-mode #game-controls button#pass-turn,
 html body.academic-mode #game-controls button#undo-last-move, html body.academic-mode #game-controls button#pause-game, html body.academic-mode #game-controls button#theme-toggle {
@@ -5670,9 +5672,11 @@ html body.girly-mode .sq-star {
        rack flips over and the new player's rack flips open, tile by tile. At the end of a game both racks open. */
     (() => {
       const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const HALF = 340, STEP = 70, P = 'perspective(600px) ';
+      const HALF = 340, STEP = 70, EDGE = 0.02;
+      const face = (tile) => tile.querySelector(':scope > .tile-content') || tile;
+      const X = (v, extra) => Object.assign({ transform: 'scaleX(' + v + ')' }, extra || {});
       let lastCurrent = null, lastEnded = null;
-      let lastPaused = false, lastBoardDown = null, boardTok = 0;
+      let lastPaused = false, lastBoardDown = null, boardTok = 0, pendingOut = [];
       // paused (any mode): both racks and the board tiles lie face down; otherwise the usual privacy rule
       const hiddenFor = (n, cur, ended, paused) => (!ended && paused) || ((window.MP && MP.active) ? n !== MP.seat : (window.CPU && CPU.active) ? (!ended && n === 2) : (!ended && n !== cur));
       // a rack is created face-down if it is face-down now, or was face-down before a turn change (it then flips open)
@@ -5681,8 +5685,8 @@ html body.girly-mode .sq-star {
         tile.classList.toggle('tile-hidden', hidden);
         if (hidden) tile.setAttribute('aria-hidden', 'true'); else tile.removeAttribute('aria-hidden');
       };
-      const secondHalf = (tile, delay) => tile.animate(
-        [{ transform: P + 'rotateY(-90deg) scale(1.06)', filter: 'brightness(1.3)' }, { transform: P + 'rotateY(0) scale(1)', filter: 'brightness(1)' }],
+      const secondHalf = (el, delay) => el.animate(
+        [X(EDGE, { filter: 'brightness(1.3)' }), X(1, { filter: 'brightness(1)' })],
         { duration: HALF, delay: delay || 0, easing: 'ease-out', fill: delay ? 'backwards' : 'none' });
 
       const flip = (tile, toHidden, i, wasNew) => {
@@ -5690,16 +5694,15 @@ html body.girly-mode .sq-star {
         const delay = i * STEP;
         if (toHidden && wasNew) {                      // freshly drawn tiles: their faces are never shown, only the back turning flat
           setHidden(tile, true);
-          secondHalf(tile, delay);
+          secondHalf(face(tile), delay);
           return;
         }
         if (!toHidden) setHidden(tile, true);          // opening: start face down
-        const a1 = tile.animate(
-          [{ transform: P + 'rotateY(0) scale(1)' }, { transform: P + 'rotateY(90deg) scale(1.06)' }],
-          { duration: HALF, delay, easing: 'ease-in', fill: 'both' });
+        const el = face(tile);
+        const a1 = el.animate([X(1), X(EDGE)], { duration: HALF, delay, easing: 'ease-in', fill: 'both' });
         a1.onfinish = () => {
-          setHidden(tile, toHidden);                   // swap the face while the tile is edge-on
-          const a2 = secondHalf(tile, 0);
+          setHidden(tile, tile._want === undefined ? toHidden : tile._want);   // swap the face while the tile is edge-on; the LAST request wins (pause then quick resume)
+          const a2 = secondHalf(el, 0);
           a2.onfinish = () => { window.recenterTileLetters && window.recenterTileLetters(); };
           a2.ready.then(() => a1.cancel()).catch(() => a1.cancel());
         };
@@ -5715,6 +5718,7 @@ html body.girly-mode .sq-star {
             const prev = first ? want : hiddenFor(n, lastCurrent, lastEnded, lastPaused);
             [...rack.querySelectorAll('.tile')].forEach((tile, i) => {
               const wasNew = !tile.dataset.rv; tile.dataset.rv = '1';
+              tile._want = want;
               if (want === prev) {                                    // this rack's state did not change
                 if (!tile.getAnimations().length) setHidden(tile, want);
                 return;
@@ -5737,13 +5741,19 @@ html body.girly-mode .sq-star {
         const tiles = [...document.querySelectorAll(BSEL)];
         if (first || reduce || !tiles.length) { document.body.classList.toggle('tiles-down', want); return; }
         const tok = ++boardTok;
-        const out = tiles.map(t => t.animate([{ transform: P + 'rotateY(0)' }, { transform: P + 'rotateY(90deg)' }], { duration: HALF, easing: 'ease-in', fill: 'forwards' }));
-        setTimeout(() => {
-          document.body.classList.toggle('tiles-down', lastBoardDown);
-          out.forEach(a => a.cancel());
-          if (tok !== boardTok) return;
-          document.querySelectorAll(BSEL).forEach(t => t.animate([{ transform: P + 'rotateY(-90deg)' }, { transform: P + 'rotateY(0)' }], { duration: HALF, easing: 'ease-out' }));
-        }, HALF);
+        pendingOut.forEach(a => { try { a.cancel(); } catch (_) {} });          // a quick pause/resume never leaves a tile stuck edge-on
+        const out = pendingOut = tiles.map(t => t.animate([X(1), X(EDGE)], { duration: HALF, easing: 'ease-in', fill: 'forwards' }));
+        let swapped = false;
+        const swap = () => {
+          if (swapped || tok !== boardTok) return;
+          swapped = true;
+          document.body.classList.toggle('tiles-down', lastBoardDown);           // change the face while every tile is edge-on
+          const back = [...document.querySelectorAll(BSEL)].map(t => t.animate([X(EDGE), X(1)], { duration: HALF, easing: 'ease-out' }));
+          const free = () => out.forEach(a => { try { a.cancel(); } catch (_) {} });   // the edge-on pose is held until the second half has started: no flash of a flat tile
+          Promise.all(back.map(a => a.ready)).then(free, free);
+        };
+        Promise.all(out.map(a => a.finished)).then(swap, swap);
+        setTimeout(swap, HALF + 150);
       };
     })();
     </script>
