@@ -1844,7 +1844,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
         let INITIAL_TIME_SECONDS = 25 * 60;                     // starting time of each player in this game
         let noClock = false;                                    // true = no clock at all (timers show ∞, nobody can lose on time, no time bonus)
         try { const raw = localStorage.getItem(CLOCK_KEY); const c = Number(raw); if (raw !== null && CLOCK_CHOICES.includes(c)) { if (c === 0) noClock = true; else INITIAL_TIME_SECONDS = c; } } catch (_) {}
-        const NO_CLOCK_TEXT = '\u2007\u2007∞\u2007\u2007';   // figure spaces keep it exactly as wide as 25:00, so the header never shifts
+        const NO_CLOCK_TEXT = '∞';   // the timer box keeps the width of 25:00 by CSS (see clock-choice-style), so the header never shifts
         const isNoClock = () => (window.MP && MP.active) ? !!(MP.view && MP.view.noClock) : noClock;
         let playerTimes = { 1: INITIAL_TIME_SECONDS, 2: INITIAL_TIME_SECONDS };
         let timerInterval = null;
@@ -5447,6 +5447,10 @@ html body.girly-mode .sq-star {
     /* Easy to hit on a phone without moving anything: the tap area is a little larger than the digits, and a quick double tap never zooms the page. */
     .player-head .player-timer { position: relative; touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
     .player-head .player-timer::before { content: ''; position: absolute; top: -8px; bottom: -8px; left: -6px; right: -6px; }
+    /* The timer box is always exactly as wide as "25:00" in the SAME font, size and letter-spacing (an invisible copy of the widest text sits inside it),
+       whatever it shows (digits or ∞) and whichever font the device uses (iPhone, Android, desktop). So nothing next to it, such as the shuffle button, can ever move. */
+    .player-head .player-timer { text-align: center; }
+    .player-head .player-timer::after { content: '25:00'; display: block; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
     </style>
 
     <script id="validation-toggle">
