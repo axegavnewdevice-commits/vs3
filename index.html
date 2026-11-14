@@ -1838,7 +1838,14 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
         let lastMoveData = null; 
 
         // Timer State
-        const INITIAL_TIME_SECONDS = 25 * 60; // 25 minutes in seconds (1500 seconds)
+        // Clock choice (tap a timer before the first move): 5 / 10 / 25 minutes or no clock. Remembered on this device; online the host's choice lives in the room.
+        const CLOCK_CHOICES = [300, 600, 1500, 0];              // seconds; 0 = no clock
+        const CLOCK_KEY = 'arabicScrabble.clock.v1';
+        let INITIAL_TIME_SECONDS = 25 * 60;                     // starting time of each player in this game
+        let noClock = false;                                    // true = no clock at all (timers show ∞, nobody can lose on time, no time bonus)
+        try { const raw = localStorage.getItem(CLOCK_KEY); const c = Number(raw); if (raw !== null && CLOCK_CHOICES.includes(c)) { if (c === 0) noClock = true; else INITIAL_TIME_SECONDS = c; } } catch (_) {}
+        const NO_CLOCK_TEXT = '\u2007\u2007∞\u2007\u2007';   // figure spaces keep it exactly as wide as 25:00, so the header never shifts
+        const isNoClock = () => (window.MP && MP.active) ? !!(MP.view && MP.view.noClock) : noClock;
         let playerTimes = { 1: INITIAL_TIME_SECONDS, 2: INITIAL_TIME_SECONDS };
         let timerInterval = null;
         let gameStarted = false;
@@ -1862,8 +1869,9 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
         /** Updates the HTML elements showing the time for both players. */
         const updateTimerDisplay = () => {
-            document.getElementById('player-1-timer').textContent = formatTime(playerTimes[1]);
-            document.getElementById('player-2-timer').textContent = formatTime(playerTimes[2]);
+            const none = isNoClock();
+            document.getElementById('player-1-timer').textContent = none ? NO_CLOCK_TEXT : formatTime(playerTimes[1]);
+            document.getElementById('player-2-timer').textContent = none ? NO_CLOCK_TEXT : formatTime(playerTimes[2]);
             
             // Highlight the active player's timer
             const p1TimerElement = document.getElementById('player-1-timer');
@@ -1901,6 +1909,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
         const startTimer = () => {
             if (window.MP && MP.active) return;         // online clocks are driven by the server's timestamps
+            if (noClock) { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } return; }   // no clock: nothing counts down
             // Clear any existing timer to prevent multiple timers running
             if (timerInterval) {
                 clearInterval(timerInterval);
@@ -1958,7 +1967,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             
             // 2. Add Time Bonus (Minutes remaining added as points)
             [1, 2].forEach(pId => {
-                const minutesLeft = Math.floor(playerTimes[pId] / 60);
+                const minutesLeft = noClock ? 0 : Math.floor(playerTimes[pId] / 60);
                 bonus[pId] = minutesLeft; // Bonus is the count of minutes remaining
                 scores[pId] += minutesLeft;
             });
@@ -4960,7 +4969,8 @@ html body.girly-mode .sq-star {
               v: 1, savedAt: Date.now(), tileBag, player1Rack, player2Rack, boardState, placedTilesInTurn, scores,
               currentPlayer, lastMoveData, playerTimes, gameStarted, gamePaused, gameEnded, consecutiveScorelessTurns,
               lastWord: window.getLastWord ? window.getLastWord() : null,
-              cpu: window.CPU && CPU.snapshot ? CPU.snapshot() : null
+              cpu: window.CPU && CPU.snapshot ? CPU.snapshot() : null,
+              clock: { s: INITIAL_TIME_SECONDS, none: noClock }
             }));
           } else clear();                                       // finished or brand-new game: nothing to continue
         } catch (_) {}
@@ -4970,6 +4980,8 @@ html body.girly-mode .sq-star {
         tileBag = d.tileBag; player1Rack = d.player1Rack; player2Rack = d.player2Rack; boardState = d.boardState;
         placedTilesInTurn = d.placedTilesInTurn || []; scores = d.scores; currentPlayer = d.currentPlayer === 2 ? 2 : 1;
         lastMoveData = d.lastMoveData || null; playerTimes = d.playerTimes;
+        if (d.clock && CLOCK_CHOICES.includes(d.clock.none ? 0 : Number(d.clock.s))) { noClock = !!d.clock.none; if (!noClock) INITIAL_TIME_SECONDS = Number(d.clock.s); }
+        else { noClock = false; INITIAL_TIME_SECONDS = 25 * 60; }   // a game saved before this option existed was a 25-minute game
         window.setLastWord && window.setLastWord(d.lastWord || null, false);
         gameStarted = !!d.gameStarted; gamePaused = !!d.gamePaused; gameEnded = false;
         consecutiveScorelessTurns = Number(d.consecutiveScorelessTurns) || 0;
@@ -5397,6 +5409,45 @@ html body.girly-mode .sq-star {
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
     })();
     </script>
+
+    <script id="clock-choice">
+    /* Tap (or click) a player's timer before the first move to choose the time for both players: 5 -> 10 -> 25 minutes -> no clock -> 5 ...
+       Offline and against the computer: either player. Online: only the host, and the guest sees it change. After the first move the timers are locked. */
+    (() => {
+      const SEQ = [300, 600, 1500, 0];
+      const online = () => !!(window.MP && MP.active);
+      const cur = () => isNoClock() ? 0 : (online() && MP.view && MP.view.clockMs ? Math.round(MP.view.clockMs / 1000) : INITIAL_TIME_SECONDS);
+      const next = () => SEQ[(Math.max(0, SEQ.indexOf(cur())) + 1) % SEQ.length];
+      const canEdit = () => online()
+        ? MP.seat === 1 && MP.status === 'playing' && !!MP.view && !MP.view.started && !MP.view.ended && MP.view.turnNo === 0 && !MP.busy
+        : !gameStarted && !gameEnded && !gamePaused && consecutiveScorelessTurns === 0 && placedTilesInTurn.length === 0;
+      const tap = (e) => {
+        if (e) e.preventDefault();
+        if (!canEdit()) return;
+        const s = next();
+        if (online()) { MP.setClock && MP.setClock(s); return; }
+        noClock = s === 0;
+        if (!noClock) INITIAL_TIME_SECONDS = s;
+        playerTimes = { 1: INITIAL_TIME_SECONDS, 2: INITIAL_TIME_SECONDS };
+        try { localStorage.setItem(CLOCK_KEY, String(s)); } catch (_) {}
+        updateTimerDisplay();
+      };
+      const start = () => {
+        ['player-1-timer', 'player-2-timer'].forEach((id) => {
+          const el = document.getElementById(id); if (!el) return;
+          el.addEventListener('click', tap);
+          el.addEventListener('pointerenter', () => { el.style.cursor = canEdit() ? 'pointer' : ''; });   // desktop only; nothing is drawn on the timer
+        });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
+    <style id="clock-choice-style">
+    /* Easy to hit on a phone without moving anything: the tap area is a little larger than the digits, and a quick double tap never zooms the page. */
+    .player-head .player-timer { position: relative; touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+    .player-head .player-timer::before { content: ''; position: absolute; top: -8px; bottom: -8px; left: -6px; right: -6px; }
+    </style>
 
     <script id="validation-toggle">
     /* Menu switch "قواعد التحقق" (word-list and spelling rules). Offline two-player: a local choice, remembered on this device.

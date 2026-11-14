@@ -263,7 +263,7 @@
   function clockTick() {
     const v = MP.view; if (!v) return;
     const t = Date.now() + MP.skew;
-    const running = v.started && !v.paused && !v.ended && v.turnStartedAt != null;
+    const running = v.started && !v.paused && !v.ended && !v.noClock && v.turnStartedAt != null;   // no clock: nothing runs, nothing can time out
     const el = running ? Math.max(0, t - v.turnStartedAt) : 0;
     const rem = (s) => Math.max(0, Math.ceil((v.clocks[s] - (running && v.current === s ? el : 0)) / 1000));
     playerTimes = { 1: rem(1), 2: rem(2) };
@@ -325,6 +325,10 @@
   };
   MP.pass = async () => { if (canAct() && !placedTilesInTurn.length) await send({ type: 'pass' }); };
   MP.togglePause = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: gamePaused ? 'resume' : 'pause' }); };
+  MP.setClock = async (ms) => {   // host only, before the first move: 5 / 10 / 25 minutes or 0 = no clock (silent: the timer itself changes)
+    if (!MP.active || MP.status !== 'playing' || !MP.view || MP.seat !== 1 || MP.view.started || MP.view.ended || MP.view.turnNo !== 0) return;
+    await send({ type: 'set_clock', ms: ms * 1000 }, true);
+  };
   MP.toggleValidation = async () => {   // word-list / spelling check on or off for the whole room (the opponent is told)
     if (!MP.active || MP.status !== 'playing' || !MP.view || gameEnded) return;
     const on = MP.view.validation === false;

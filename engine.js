@@ -65,6 +65,7 @@ export const BOARD_LAYOUT = [
 
 export const RACK_SIZE = 7;
 export const INITIAL_TIME_MS = 25 * 60 * 1000;
+export const CLOCK_CHOICES_MS = [5 * 60 * 1000, 10 * 60 * 1000, 25 * 60 * 1000, 0];   // 0 = no clock (the host picks one before the first move)
 export const SEEN_LIMIT = 60;
 export const HISTORY_LIMIT = 400;
 
@@ -247,13 +248,14 @@ export function createGame(game = 1) {
     game, board: emptyBoard(), bag, racks,
     scores: { 1: 0, 2: 0 }, current: 1, turnNo: 0,
     started: false, paused: false, ended: false, validation: true,   // validation: false = word-list/spelling check switched off for this room
+    clockMs: INITIAL_TIME_MS, noClock: false,   // starting time of each player / no clock at all (set_clock)
     clocks: { 1: INITIAL_TIME_MS, 2: INITIAL_TIME_MS }, turnStartedAt: null,
     scoreless: 0, lastMove: null, lastWord: null, undoRequest: null, result: null,
     history: [], rackRev: { 1: 0, 2: 0 }, event: null, eventNo: 0, seen: [],
   };
 }
 
-const running = (G) => G.started && !G.paused && !G.ended && G.turnStartedAt != null;
+const running = (G) => G.started && !G.paused && !G.ended && !G.noClock && G.turnStartedAt != null;   // no clock = nothing ever runs down
 export const remainingMs = (G, seat, now) =>
   seat === G.current && running(G) ? G.clocks[seat] - Math.max(0, now - G.turnStartedAt) : G.clocks[seat];
 
@@ -293,7 +295,7 @@ function endGame(G, reason, now, extra = {}) {
     G.scores[p] -= value;
   });
   [1, 2].forEach((p) => {
-    const minutes = Math.floor(Math.ceil(G.clocks[p] / 1000) / 60);
+    const minutes = G.noClock ? 0 : Math.floor(Math.ceil(G.clocks[p] / 1000) / 60);   // no time bonus without a clock
     bonus[p] = minutes;
     G.scores[p] += minutes;
   });
@@ -535,6 +537,22 @@ function actSetValidation(G, seat, a) {
   return { G, rackChanged: [] };
 }
 
+/** The host chooses 5 / 10 / 25 minutes or no clock, only before the first move of a game. Both players always get the same time. */
+function actSetClock(G, seat, a) {
+  if (seat !== 1) return err('not_host');
+  if (G.ended || G.started || G.turnNo !== 0) return err('clock_locked');
+  if (!CLOCK_CHOICES_MS.includes(a.ms)) return err('bad_action');
+  const none = a.ms === 0;
+  const ms = none ? INITIAL_TIME_MS : a.ms;
+  if (!!G.noClock === none && (G.clockMs || INITIAL_TIME_MS) === ms) return { G, rackChanged: [] };
+  G.noClock = none;
+  G.clockMs = ms;
+  G.clocks = { 1: ms, 2: ms };
+  G.eventNo += 1;
+  G.event = { no: G.eventNo, type: 'clock', seat, ms: a.ms };
+  return { G, rackChanged: [] };
+}
+
 function actSurrender(G, seat, a, now, extra = {}) {
   const loser = seat, winner = other(seat);
   const remaining = G.racks[loser].reduce((s, t) => (t ? s + (t.isBlank ? 0 : t.value || 0) : s), 0);
@@ -568,6 +586,9 @@ function actNewGame(G, seat, a, now) {
   next.turnNo = 0;
   next.seen = G.seen;
   next.validation = G.validation !== false;   // the room keeps its setting for the next game
+  next.clockMs = G.clockMs || INITIAL_TIME_MS;   // ... and its clock choice
+  next.noClock = !!G.noClock;
+  next.clocks = { 1: next.clockMs, 2: next.clockMs };
   return { G: next, rackChanged: [1, 2] };
 }
 
@@ -612,6 +633,9 @@ export function act(G, seat, a, now = Date.now(), opts = {}) {
       if (G.ended) return err('game_over');
       out = actPause(G, seat, a, now, a.type === 'pause');
       break;
+    case 'set_clock':
+      out = actSetClock(G, seat, a);
+      break;
     case 'set_validation':
       if (G.ended) return err('game_over');
       out = actSetValidation(G, seat, a);
@@ -647,7 +671,7 @@ export function publicView(G) {
   const ev = G.event ? { ...G.event } : null;
   return {
     game: G.game, turnNo: G.turnNo, current: G.current, scores: G.scores,
-    clocks: G.clocks, turnStartedAt: G.turnStartedAt,
+    clocks: G.clocks, turnStartedAt: G.turnStartedAt, clockMs: G.clockMs || INITIAL_TIME_MS, noClock: !!G.noClock,
     started: G.started, paused: G.paused, ended: G.ended, result: G.result, validation: G.validation !== false,
     board, bagCount: G.bag.length,
     rackCounts: { 1: G.racks[1].filter(Boolean).length, 2: G.racks[2].filter(Boolean).length },
