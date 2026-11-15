@@ -1,5 +1,5 @@
 /* Arabic Scrabble service worker — bump CACHE_VERSION on every deploy. */
-const CACHE_VERSION = 'v106';
+const CACHE_VERSION = 'v107';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const SCOPE = self.registration.scope; // works at the domain root or in a sub-folder
@@ -29,7 +29,7 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-const CDN_HOSTS = ['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
+const CDN_HOSTS = ['cdn.tailwindcss.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;

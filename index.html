@@ -645,51 +645,7 @@
             }
         }
     </script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global variables provided by the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let app, db, auth;
-
-        // Initialize Firebase and Authentication
-        window.initFirebase = async () => {
-            if (Object.keys(firebaseConfig).length > 0) {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('debug'); // Enable Firestore logging
-
-                try {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                        console.log("Firebase signed in with custom token.");
-                    } else {
-                        await signInAnonymously(auth);
-                        console.log("Firebase signed in anonymously.");
-                    }
-                } catch (error) {
-                    console.error("Firebase Auth error:", error);
-                }
-
-                // Get userId
-                const userId = auth.currentUser?.uid || crypto.randomUUID();
-                console.log("Current user ID:", userId);
-            } else {
-                console.warn("Firebase config not available. Running game in memory only.");
-            }
-        };
-
-        // Call initialization on load
-        window.addEventListener('load', window.initFirebase);
-    </script>
-<link rel="stylesheet" href="multiplayer.css">
+    <link rel="stylesheet" href="multiplayer.css">
 <style id="floating-layout-overrides">
 /* Independently floating play areas: the original game palette, fonts, tiles and control styling are retained. */
 html { min-height: 100%; }
@@ -863,7 +819,7 @@ body.float-layout-dragging {
     .float-move-dragging { transition: none !important; }
 }
 </style>
-<style id="iconic-controls-darkmode">
+<style id="iconic-controls">
 
 /* Minimal icon-only toolbar: icon proportions follow the resizable button box. */
 #game-controls button#submit-move,
@@ -926,35 +882,21 @@ body.float-layout-dragging {
 #game-controls button#pause-game[data-paused="true"]::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m7%204%2013%208-13%208z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m7%204%2013%208-13%208z%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#surrender-game::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2021V4%22%2F%3E%3Cpath%20d%3D%22M5%204c5-4%209%204%2014%200v11c-5%204-9-4-14%200%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2021V4%22%2F%3E%3Cpath%20d%3D%22M5%204c5-4%209%204%2014%200v11c-5%204-9-4-14%200%22%2F%3E%3C%2Fsvg%3E"); }
 #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%22%2F%3E%3C%2Fsvg%3E"); }
-body.dark-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%22%2F%3E%3C%2Fsvg%3E"); }
+
 #game-controls button:hover:not(:disabled) { filter: brightness(1.08); }
 #game-controls button:active:not(:disabled) { transform: scale(.96); }
 #game-controls button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 2px !important; }
 #game-controls button:disabled { opacity: .45 !important; }
 
-/* Army theme, dark: black-olive canvas with night camouflage, dark olive panels, sand tiles. */
-body.dark-mode {
-    --primary-color: #1b2013;
-    --board-color: #2b3220;
-    --tile-bg: #f5e6b8;
-    --text-color: #0c5a00;
-    --accent-color: #c9c28a;
-    background: radial-gradient(ellipse at 50% 38%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .55) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.176 0.141 0.231 0.094 0.188'/%3E%3CfeFuncG type='discrete' tableValues='0.2 0.122 0.263 0.11 0.22'/%3E%3CfeFuncB type='discrete' tableValues='0.133 0.09 0.161 0.067 0.141'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #20261a !important;
-    background-size: auto, 560px 560px, auto !important;
-    color: #e9e6cf !important;
-    color-scheme: dark;
-}
-body.dark-mode .sq-normal { background-color: #474f31 !important; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3) !important; }
-body.dark-mode .board { background-color: #151a0e !important; border-color: #0c0f08 !important; }
-body.dark-mode .rack-slot { background-color: #353d22 !important; }
-body.dark-mode .player-area .text-gray-300 { color: #cfc9a0 !important; }
-body.dark-mode .player-area .text-yellow-400 { color: #e8cf74 !important; }
-body.dark-mode .modal-overlay .text-gray-800,
-body.dark-mode .modal-overlay .text-gray-700 { color: #ece8cf !important; }
-body.dark-mode .modal-overlay input,
-body.dark-mode .modal-overlay select,
-body.dark-mode .modal-overlay textarea { background: #12160c !important; color: #f1eed8 !important; border-color: #6b7248 !important; }
-body.dark-mode .float-resize-handle::before { border-color: #e4dfb8 !important; background-color: #b9b585 !important; }
+
+
+
+
+
+
+
+
+
 .game-container > h1 { display: none !important; }
 
 </style>
@@ -977,16 +919,16 @@ body.dark-mode .float-resize-handle::before { border-color: #e4dfb8 !important; 
   -webkit-mask-size:contain!important; mask-size:contain!important; pointer-events:none!important;
 }
 #game-controls button#install-app-button:focus-visible { outline:2px solid #fef3c7!important; outline-offset:3px!important; }
-body.dark-mode #game-controls button#install-app-button { background:linear-gradient(145deg,#d5a84f,#9c6b20)!important; color:#101722!important; box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25)!important; }
+
 #install-help-backdrop { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; padding:18px; background:rgba(8,12,20,.74); backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
 #install-help-card { width:min(100%,420px); max-height:min(86vh,680px); overflow:auto; padding:22px; border-radius:22px; border:1px solid rgba(182,143,74,.5); background:linear-gradient(145deg,#fff8e8,#e8d3a5); color:#2b1b0f; box-shadow:0 24px 80px rgba(0,0,0,.48); font:500 16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; direction:ltr; text-align:left; }
-body.dark-mode #install-help-card { background:linear-gradient(145deg,#373a40,#232529); color:#eef4fc; border-color:rgba(212,168,79,.55); }
+
 #install-help-card h2 { margin:0 0 12px; font-size:1.25rem; font-weight:800; line-height:1.25; }
 #install-help-card ol { margin:10px 0 16px; padding-left:1.45rem; }
 #install-help-card li { margin:.45rem 0; }
 #install-help-card .install-help-note { opacity:.8; font-size:.9rem; margin-top:12px; }
 #install-help-close { display:block; width:100%; min-height:44px; margin-top:18px; border-radius:12px; border:0; background:#2b1b0f; color:#fff7e7; font-weight:750; }
-body.dark-mode #install-help-close { background:#d5a84f; color:#111827; }
+
 @media (display-mode:standalone), (display-mode:fullscreen), (display-mode:minimal-ui) { #game-controls button#install-app-button { display:none!important; } }
 
 #game-controls button#fullscreen-app-button {
@@ -1011,7 +953,7 @@ body.dark-mode #install-help-close { background:#d5a84f; color:#111827; }
   mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5'/%3E%3C/svg%3E")!important;
 }
 #game-controls button#fullscreen-app-button:focus-visible { outline:2px solid #fef3c7!important; outline-offset:3px!important; }
-body.dark-mode #game-controls button#fullscreen-app-button { background:linear-gradient(145deg,#8aa650,#556f2a)!important; color:#10170a!important; box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.25)!important; }
+
 @media (display-mode:fullscreen) { #game-controls button#fullscreen-app-button { display:none!important; } }
 </style>
 
@@ -1178,24 +1120,24 @@ body.dark-mode #game-controls button#fullscreen-app-button { background:linear-g
 #result-new-btn { background: #5f7d2e; } #result-new-btn:hover { background: #4d6824; }
 #result-close-btn { background: #6c6a48; } #result-close-btn:hover { background: #57553a; }
 /* ===== Board details: inlaid brass frame, eight-pointed star on the centre square ===== */
-body .board, body.dark-mode .board {
+body .board{
     box-shadow: 0 0 0 2px rgba(0, 0, 0, .45), 0 0 0 3.5px #c9a45a, 0 0 0 5px rgba(0, 0, 0, .3), 0 14px 34px rgba(0, 0, 0, .5) !important;
 }
 .sq-star { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%237c4a03'%3E%3Crect x='21' y='21' width='58' height='58'/%3E%3Crect x='21' y='21' width='58' height='58' transform='rotate(45 50 50)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='13' fill='%23c9a227'/%3E%3Ccircle cx='50' cy='50' r='13' fill='none' stroke='%237c4a03' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%237c4a03'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; background-size: 82%; }
 
-/* ===== ARMY THEME (shared by light and dark): military colours on bonus squares, panels, buttons and dialogs ===== */
+/* ===== ARMY THEME: military colours on bonus squares, panels, buttons and dialogs ===== */
 .sq-tl { background-color: #3f6f8f !important; }   /* triple letter: steel blue */
 .sq-dl { background-color: #6f97ae !important; }   /* double letter: faded slate blue */
 .sq-tw { background-color: #b0382c !important; }   /* triple word: brick red */
 .sq-dw { background-color: #cf7d55 !important; }   /* double word: burnt orange */
 .sq-star { background-color: #c9a227 !important; } /* centre: brass */
-.player-area, body.dark-mode .player-area {
+.player-area{
     background: linear-gradient(145deg, #323b24, #1e2415) !important;
     border: 1px solid rgba(201, 190, 120, .38) !important;
     box-shadow: 0 8px 22px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
 }
-.rack, body.dark-mode .rack { background-color: #12160c !important; border: 1px solid rgba(201, 190, 120, .16) !important; box-shadow: inset 0 3px 12px rgba(0, 0, 0, .65) !important; }
-.modal-overlay > div, body.dark-mode .modal-overlay > div {
+.rack{ background-color: #12160c !important; border: 1px solid rgba(201, 190, 120, .16) !important; box-shadow: inset 0 3px 12px rgba(0, 0, 0, .65) !important; }
+.modal-overlay > div{
     background: #232a17 !important; color: #e9e6cf !important; border: 1px solid rgba(201, 190, 120, .4) !important;
 }
 .modal-overlay .bg-green-600 { background-color: #5f7d2e !important; } .modal-overlay .bg-green-600:hover { background-color: #4d6824 !important; }
@@ -1271,7 +1213,7 @@ body:not(.dark-mode) .rack-slot { background-color: #4b5433; }
 #game-controls button#support-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;padding:0!important;min-width:calc(34px * var(--ui-scale,1))!important;min-height:calc(34px * var(--ui-scale,1))!important;font-size:0!important;line-height:1!important;border-radius:12px!important;background:linear-gradient(145deg,#d9483b,#9c1f18)!important;color:#fff!important;box-shadow:0 3px 9px rgba(90,15,10,.35),inset 0 1px 0 rgba(255,255,255,.25)!important;touch-action:none!important;overflow:hidden!important;white-space:nowrap!important;transition:filter .16s ease,transform .16s ease,box-shadow .16s ease!important}
 #game-controls button#support-button::before{content:none!important;display:none!important}
 #game-controls button#support-button svg{width:34%!important;height:34%!important;min-width:14px;min-height:14px;max-width:20px;max-height:20px;pointer-events:none}
-body.dark-mode #game-controls button#support-button{background:linear-gradient(145deg,#c23d31,#841812)!important;color:#fff!important}
+
 #game-controls button#support-button:focus-visible{outline:2px solid #fef3c7!important;outline-offset:3px!important}
 </style>
 <style id="flat-tiles">
@@ -1286,7 +1228,7 @@ body.dark-mode #game-controls button#support-button{background:linear-gradient(1
 #game-board > .square { border-color: transparent !important; }
 </style>
 <style id="girly-theme">
-/* ===== GIRLY THEME (pink and rose, hearts): third theme next to light and dark. Class: body.girly-mode ===== */
+/* ===== GIRLY THEME (pink and rose, hearts): a theme next to the light one. Class: body.girly-mode ===== */
 html body.girly-mode {
     --primary-color: #c94b7b; --board-color: #f4c2d3; --tile-bg: #f5e6b8; --text-color: #0c5a00; --accent-color: #f7b2c9;
     background: radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.10) 30%, rgba(110,20,60,.38) 100%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='560'%3E%3Cfilter id='c' color-interpolation-filters='sRGB' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0075 .0105' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='discrete' tableValues='0.953 0.800 0.918 0.690 0.867'/%3E%3CfeFuncG type='discrete' tableValues='0.659 0.349 0.769 0.227 0.478'/%3E%3CfeFuncB type='discrete' tableValues='0.753 0.502 0.831 0.400 0.624'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"), #d98aa8 !important;
@@ -1331,8 +1273,8 @@ html body.girly-mode #game-controls button#install-app-button { background: line
 html body.girly-mode #game-controls button#mp-online-button { background: linear-gradient(145deg, #b46aa8, #7f3c78) !important; color: #fff !important; }
 html body.girly-mode.mp-online #game-controls button#mp-online-button { background: linear-gradient(145deg, #7fd0a2, #3f9c6a) !important; color: #0f3a24 !important; }
 html body.girly-mode #game-controls button#support-button { background: linear-gradient(145deg, #ef4b5c, #a8182b) !important; color: #fff !important; }
-/* theme button icon shows what the next tap gives: light shows moon, dark shows heart, girly shows sun */
-html body.dark-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%27M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%27%2F%3E%3C%2Fsvg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%27M19%2014c1.49-1.46%203-3.21%203-5.5A5.5%205.5%200%200%200%2016.5%203c-1.76%200-3%20.5-4.5%202-1.5-1.5-2.74-2-4.5-2A5.5%205.5%200%200%200%202%208.5c0%202.3%201.5%204.05%203%205.5l7%207Z%27%2F%3E%3C%2Fsvg%3E") !important; }
+/* the theme button icon shows what the next tap gives */
+
 html body.girly-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%2712%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%27%2F%3E%3C%2Fsvg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2712%27%20cy%3D%2712%27%20r%3D%274%27%2F%3E%3Cpath%20d%3D%27M12%202v2m0%2016v2M4.93%204.93l1.42%201.42m11.3%2011.3%201.42%201.42M2%2012h2m16%200h2M4.93%2019.07l1.42-1.42m11.3-11.3%201.42-1.42%27%2F%3E%3C%2Fsvg%3E") !important; }
 /* dialogs: deep rose cards with light text */
 html body.girly-mode .modal-overlay { background-color: rgba(80,15,50,.62) !important; }
@@ -4501,11 +4443,10 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         'mp-online-button': 'Online multiplayer',
         'support-button': 'Support the developer'
       };
-      const THEMES = ['light', 'girly', 'horror', 'academic'];   // dark theme removed; a saved 'dark' falls back to light
+      const THEMES = ['light', 'girly', 'horror', 'academic'];   // a theme saved by an older version (the removed dark one) falls back to light
       const THEME_COLORS = { light: '#4d5233', girly: '#e0578a', horror: '#120707', academic: '#12203a' };
       const setTheme = (name) => {
         if (!THEMES.includes(name)) name = 'light';
-        document.body.classList.toggle('dark-mode', name === 'dark');
         document.body.classList.toggle('girly-mode', name === 'girly');
         document.body.classList.toggle('horror-mode', name === 'horror');
         document.body.classList.toggle('academic-mode', name === 'academic');
@@ -4540,7 +4481,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
       document.addEventListener('click', (event) => {
         const toggle = event.target instanceof Element ? event.target.closest('#theme-toggle') : null;
         if (!toggle) return;
-        const cur = document.body.classList.contains('academic-mode') ? 'academic' : document.body.classList.contains('horror-mode') ? 'horror' : document.body.classList.contains('girly-mode') ? 'girly' : document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        const cur = document.body.classList.contains('academic-mode') ? 'academic' : document.body.classList.contains('horror-mode') ? 'horror' : document.body.classList.contains('girly-mode') ? 'girly' : 'light';
         window.__hzSwitchedAt = Date.now();
         const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
         setTheme(next);
@@ -4636,14 +4577,13 @@ html body.academic-mode #mp-toast { background: rgba(18,32,58,.96) !important; c
    Mid-tone calm squares, muted bonus colours, and tiles that are the lightest thing on the board.
    A placed tile fully covers its square: no bonus colour, label or symbol shows around it. ===== */
 
-/* DARK: same family as light, a little deeper and softer so the bonuses do not glare at night */
-html body.dark-mode { --board-color: #232a18; }
-html body.dark-mode .board { background-color: #232a18 !important; }
-html body.dark-mode .sq-normal { background-color: #565f3c !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28) !important; }
-html body.dark-mode .sq-tl { background-color: #38647f !important; }
-html body.dark-mode .sq-dl { background-color: #5f869b !important; }
-html body.dark-mode .sq-tw { background-color: #9d3629 !important; }
-html body.dark-mode .sq-dw { background-color: #bb7049 !important; }
+
+
+
+
+
+
+
 
 /* GIRLY: dusty rose instead of near-white pink, so the cream tiles pop; muted raspberry / coral / plum / lavender bonuses */
 html body.girly-mode { --board-color: #b97c93; }
@@ -4678,7 +4618,7 @@ html body.academic-mode .sq-tw { background-color: #7d2230 !important; }
 html body.academic-mode .sq-dw { background-color: #bb7440 !important; }
 
 /* A tile fully covers its square in every theme (beats the per-theme bonus colours and centre symbols) */
-html body .board .square.has-tile, html body.dark-mode .board .square.has-tile, html body.girly-mode .board .square.has-tile,
+html body .board .square.has-tile, html body.girly-mode .board .square.has-tile,
 html body.horror-mode .board .square.has-tile, html body.academic-mode .board .square.has-tile {
     background-image: none !important; background-color: transparent !important; box-shadow: none !important; border: none !important;
 }
@@ -4690,7 +4630,7 @@ html body.horror-mode .board .square.has-tile, html body.academic-mode .board .s
 #horror-fx .hz-vig { animation: none !important; opacity: 1 !important; }
 
 /* ---- no outer thin line around the board in any theme (frame rings removed, soft shadow kept) ---- */
-html body .board, html body.girly-mode .board, html body.horror-mode .board, html body.academic-mode .board, html body.dark-mode .board {
+html body .board, html body.girly-mode .board, html body.horror-mode .board, html body.academic-mode .board{
     box-shadow: 0 14px 34px rgba(0,0,0,.42) !important;
 }
 html body.horror-mode .board { box-shadow: 0 0 38px rgba(170,15,25,.4), 0 14px 34px rgba(0,0,0,.65) !important; border-color: #2a0709 !important; }
@@ -5150,7 +5090,7 @@ html body.girly-mode .sq-star {
       border: 1px solid rgba(245, 230, 185, .65) !important;
       box-shadow: 0 3px 9px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .18) !important;
     }
-    html body.dark-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(34, 40, 24, .94), rgba(20, 24, 14, .94)) !important; color: #e9c873 !important; border-color: rgba(233, 200, 115, .6) !important; }
+    
     html body.girly-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(222, 100, 148, .94), rgba(178, 62, 110, .94)) !important; color: #fff !important; border-color: rgba(255, 255, 255, .75) !important; }
     html body.horror-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(74, 20, 24, .94), rgba(38, 8, 10, .94)) !important; color: #ffb3b3 !important; border-color: rgba(239, 59, 59, .55) !important; }
     html body.academic-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(44, 72, 112, .94), rgba(26, 46, 78, .94)) !important; color: #e6eefc !important; border-color: rgba(200, 215, 240, .7) !important; }
@@ -5162,7 +5102,7 @@ html body.girly-mode .sq-star {
     /* the ring: see-through, tinted by the theme, no dimming layer */
     #fab-layer { --fab-bg: rgba(63, 69, 39, .50); --fab-bg2: rgba(40, 45, 25, .94); --fab-bd: rgba(245, 230, 185, .65); --fab-ic: #f5e6b8;
       position: fixed; inset: 0; z-index: 9500; display: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
-    body.dark-mode #fab-layer { --fab-bg: rgba(27, 32, 19, .50); --fab-bg2: rgba(27, 32, 19, .94); --fab-bd: rgba(233, 200, 115, .55); --fab-ic: #e9c873; }
+    
     html body.girly-mode #fab-layer { --fab-bg: rgba(201, 75, 123, .45); --fab-bg2: rgba(178, 62, 110, .94); --fab-bd: rgba(255, 255, 255, .75); --fab-ic: #ffffff; }
     html body.horror-mode #fab-layer { --fab-bg: rgba(58, 13, 16, .55); --fab-bg2: rgba(38, 8, 10, .94); --fab-bd: rgba(239, 59, 59, .55); --fab-ic: #ffb3b3; }
     html body.academic-mode #fab-layer { --fab-bg: rgba(29, 50, 83, .50); --fab-bg2: rgba(26, 46, 78, .94); --fab-bd: rgba(200, 215, 240, .7); --fab-ic: #e6eefc; }
@@ -6194,13 +6134,12 @@ html body.academic-mode #game-controls button#bag-count-button {
   -webkit-mask-size: contain !important; mask-size: contain !important; pointer-events: none !important;
 }
 #game-controls button#vs-computer-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
-body.dark-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #8fb1c6, #3f647a) !important; color: #0f1a14 !important; }
+
 html body.girly-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #9a86dc, #5d48ac) !important; color: #fff !important; }
 html body.horror-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #3d4270, #1a1c38) !important; color: #dfe4ff !important; }
 html body.academic-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7ea5cc, #3d6591) !important; color: #06182e !important; }
 /* playing against the computer: lit green, like the online button when connected */
-body.cpu-mode #game-controls button#vs-computer-button,
-body.dark-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7fbf6a, #3f8a2f) !important; color: #0f2a0a !important; }
+body.cpu-mode #game-controls button#vs-computer-button{ background: linear-gradient(145deg, #7fbf6a, #3f8a2f) !important; color: #0f2a0a !important; }
 html body.girly-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #7fd0a2, #3f9c6a) !important; color: #0f3a24 !important; }
 html body.horror-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #5fd17a, #1e7a3c) !important; color: #03210e !important; }
 html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #5fbf8a, #2f8059) !important; color: #05261a !important; }
@@ -6230,7 +6169,7 @@ html body.academic-mode.cpu-mode #game-controls button#vs-computer-button { back
 #game-controls button#sound-toggle-button.sound-off .ss { display: inline; }
 #game-controls button#sound-toggle-button.sound-off { filter: saturate(.3) brightness(.85) !important; }
 #game-controls button#sound-toggle-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
-body.dark-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #d6b868, #8a6d2a) !important; color: #1b1405 !important; }
+
 html body.girly-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #f09ac0, #b24a80) !important; color: #fff !important; }
 html body.horror-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #7a2a2a, #3a0d10) !important; color: #ffd9d9 !important; }
 html body.academic-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #86a8d0, #3d6591) !important; color: #06182e !important; }

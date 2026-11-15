@@ -19,8 +19,8 @@
   pointer-events: none !important;
 }
 body.mp-online #game-controls button#mp-online-button { background: linear-gradient(145deg, #7fbf6a, #3f8a2f) !important; }
-body.dark-mode #game-controls button#mp-online-button { background: linear-gradient(145deg, #6fb0a4, #2c6359) !important; color: #0f1a14 !important; }
-body.dark-mode.mp-online #game-controls button#mp-online-button { background: linear-gradient(145deg, #8fcf7a, #4a9a38) !important; }
+
+
 #game-controls button#mp-online-button:focus-visible { outline: 2px solid #fef3c7 !important; outline-offset: 3px !important; }
 
 /* ---- connection chip (top centre, never over the board) ---- */
@@ -67,7 +67,7 @@ body:not(.dark-mode) #mp-card { background: linear-gradient(145deg, #f6efd2, #e3
   width: 100%; min-height: 42px; padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(120, 120, 80, .7);
   background: rgba(255, 255, 255, .9); color: #1b2013; font-size: 1rem;
 }
-body.dark-mode #mp-card input[type="text"] { background: #12160c; color: #f1eed8; border-color: #6b7248; }
+
 #mp-card input.mp-code-input { direction: ltr; text-align: center; letter-spacing: .35em; font: 700 1.3rem ui-monospace, Menlo, Consolas, monospace; text-transform: uppercase; }
 #mp-card .mp-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 #mp-card button.mp-btn {
