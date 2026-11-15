@@ -4163,6 +4163,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             }
             function handlePointerDown(event) {
                 if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+                if (document.body.classList.contains('layout-locked')) return;   // layout locked from the menu: nothing can be moved or resized
                 if (event.target instanceof Element && event.target.closest('.player-name-input')) return;   // editing a name, not dragging
                 const resizeHandle = event.target instanceof Element ? event.target.closest('.float-resize-handle') : null;
                 if (resizeHandle) {
@@ -4313,6 +4314,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     cancelGesture();
                     return;
                 }
+                if (document.body.classList.contains('layout-locked')) return;   // layout locked: no keyboard moving or resizing either
                 const resizeHandle = event.target instanceof Element ? event.target.closest('.float-resize-handle') : null;
                 if (resizeHandle && /^Arrow(Left|Right|Up|Down)$/.test(event.key)) {
                     const element = resizable.find(item => item.id === resizeHandle.dataset.resizeFor);
@@ -4350,6 +4352,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 savePositions(activeMode);
                 updateStageHeight();
             });
+
+            window.__layoutLockCancel = () => { cancelGesture(); resizeHandles.forEach(handle => handle.classList.remove('float-grip-visible')); };
 
             const start = () => {
                 layoutForCurrentMode();
@@ -4938,6 +4942,43 @@ html body.girly-mode .sq-star {
     })();
     </script>
 
+    <style id="layout-lock-style">
+    /* Layout lock (menu ring): while locked, the board, racks, status area and buttons cannot be moved or resized. */
+    #layout-lock-button { position: fixed; left: -9999px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; padding: 0; border: 0; }
+    body.layout-locked .float-resize-handle { display: none !important; }
+    html body.layout-locked #game-board, html body.layout-locked #player-1-area, html body.layout-locked #player-2-area,
+    html body.layout-locked #player-1-area > div:first-child, html body.layout-locked #player-2-area > div:first-child,
+    html body.layout-locked #player-1-area .rack, html body.layout-locked #player-2-area .rack { cursor: default !important; }
+    </style>
+    <script id="layout-lock">
+    /* "قفل الواجهة" switch inside the round menu. Locked: the floating board, racks, status area and buttons stay exactly where they are
+       (no dragging, no long-press, no resize grips, no keyboard moving). Unlocked: free to move and resize as before. The choice is remembered on this device.
+       The real button below is hidden; the menu ring shows it as a lock icon and simply presses it (like the other menu items). */
+    (() => {
+      const KEY = 'arabic-scrabble-layout-locked-v1';
+      let locked = false;
+      try { locked = localStorage.getItem(KEY) === '1'; } catch (_) {}
+      const btn = document.createElement('button');
+      btn.id = 'layout-lock-button'; btn.type = 'button'; btn.tabIndex = -1;
+      const paint = () => {
+        const txt = locked ? 'قفل الواجهة: مفعّل' : 'قفل الواجهة: متوقف';
+        btn.textContent = txt; btn.title = txt; btn.setAttribute('aria-label', txt); btn.setAttribute('aria-pressed', locked ? 'true' : 'false');
+        document.body.classList.toggle('layout-locked', locked);
+      };
+      const apply = () => {
+        paint();
+        if (locked && window.__layoutLockCancel) { try { window.__layoutLockCancel(); } catch (_) {} }   // stop any drag or resize in progress
+      };
+      btn.addEventListener('click', () => {
+        locked = !locked;
+        try { localStorage.setItem(KEY, locked ? '1' : '0'); } catch (_) {}
+        apply();
+      });
+      const start = () => { document.body.appendChild(btn); apply(); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
     <style id="fab-menu-style">
     /* The eleven menu buttons stay in the page, so all their code keeps working, but they are hidden:
        the round menu button shows them as a ring of icons around itself. */
@@ -4999,7 +5040,7 @@ html body.girly-mode .sq-star {
     (() => {
       const $ = (id) => document.getElementById(id);
       const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'],
-                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['install-app-button', 'download'], ['support-button', 'heart']];
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
@@ -5016,6 +5057,8 @@ html body.girly-mode .sq-star {
         download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
         shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
         shieldx: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/>',
+        lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+        unlock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
         heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
@@ -5054,9 +5097,10 @@ html body.girly-mode .sq-star {
         if (o.k === 'vol') return o.real.classList.contains('sound-off') ? 'volx' : 'vol';
         if (o.k === 'shield') return (window.validationOn && !window.validationOn()) ? 'shieldx' : 'shield';
         if (o.k === 'moon') return /الفاتح/.test(t) ? 'sun' : 'moon';
+        if (o.k === 'lock') return document.body.classList.contains('layout-locked') ? 'lock' : 'unlock';
         return o.k;
       };
-      const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode')) || (o.k === 'shield' && !(window.validationOn && !window.validationOn()));
+      const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode')) || (o.k === 'shield' && !(window.validationOn && !window.validationOn())) || (o.k === 'lock' && document.body.classList.contains('layout-locked'));
 
       function render() {
         const W = window.innerWidth, H = window.innerHeight, m = D / 2 + 4;
