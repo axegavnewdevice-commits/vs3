@@ -4944,12 +4944,16 @@ html body.girly-mode .sq-star {
     </script>
 
     <script id="score-popup">
-    /* Score popup: after a move is scored, "+N" appears at the centre of the board, then flies to that player's score and fades.
-       Purely visual: it never touches the game state, ignores touches, never blocks play, and any failure is swallowed.
-       Used by offline, vs-computer (submitMove) and online (multiplayer.js) games. Colours follow the active theme. */
+    /* Score popup: after a move is scored, "+N" appears at the centre of the board, holds long enough to read, flies to that
+       player's score and fades; as it lands the score counts up to its new value with a small bump.
+       The score shown on the card keeps its old value until the popup lands (a MutationObserver holds it), and ALWAYS ends on the
+       game's real value. Purely visual: it never changes game state, ignores touches, never blocks play, and any failure is
+       swallowed (a safety timer releases the hold). Used by offline, vs-computer (submitMove) and online (multiplayer.js).
+       Colours follow the active theme. */
     (() => {
-      const SHOW_MS = 1150, MAX_LIVE = 3;
+      const SHOW_MS = 2700, MAX_LIVE = 3;
       const live = [];
+      const holds = { 1: null, 2: null };
       const palette = () => {
         const b = document.body.classList;
         if (b.contains('girly-mode'))    return { c: '#fff4f6', o: '#a82255', g: 'rgba(240,120,170,.55)' };
@@ -4958,22 +4962,89 @@ html body.girly-mode .sq-star {
         if (b.contains('dark-mode'))     return { c: '#e8cf7e', o: '#0e100a', g: 'rgba(232,207,126,.4)' };
         return { c: '#f4dc8c', o: '#2b3118', g: 'rgba(244,220,140,.45)' };           // army light
       };
-      window.showScorePopup = (seat, points) => {
+      const num = (s) => { const n = parseInt(String(s).replace(/[^\d-]/g, ''), 10); return isFinite(n) ? n : NaN; };
+
+      /* Keep the score on the card at its old value until the popup lands. */
+      const startHold = (seat, target, points, applied) => {
+        try {
+          if (holds[seat]) holds[seat].release(true);                                   // a newer move: settle the older hold first
+          const cur = num(target.textContent);
+          if (!isFinite(cur)) return null;
+          const start = applied ? cur - points : cur;                                  // online: the card already shows the new value
+          if (start < 0) return null;
+          const h = { seat, target, start, latest: applied ? cur : cur + points, shown: String(start), mute: false, done: false, obs: null };
+          const write = (v) => { h.mute = true; target.textContent = v; h.mute = false; };
+          if (applied) write(h.shown);
+          h.obs = new MutationObserver(() => {
+            if (h.mute || h.done) return;
+            const t = target.textContent;
+            if (t === h.shown) return;
+            const v = num(t);
+            if (isFinite(v)) h.latest = v;                                              // the game updated the score: remember it
+            if (isFinite(v) && v < h.start) { h.release(true); return; }                // undo / new game: let the real value show now
+            write(h.shown);                                                             // ... but keep showing the old one for now
+          });
+          h.obs.observe(target, { childList: true, characterData: true, subtree: true });
+          h.write = write;
+          h.release = (instant) => {
+            if (h.done) return;
+            h.done = true;
+            try { h.obs.disconnect(); } catch (_) {}
+            if (holds[seat] === h) holds[seat] = null;
+            const final = () => { try { target.textContent = String(h.latest); } catch (_) {} };
+            if (instant || h.latest <= h.start) { final(); return; }
+            // count up from the old to the new value, always finishing on the real one
+            const from = h.start, to = h.latest, t0 = performance.now(), dur = Math.min(700, 260 + (to - from) * 12);
+            const step = (now) => {
+              const k = Math.min(1, (now - t0) / dur);
+              if (k >= 1) { final(); return; }
+              try { target.textContent = String(from + Math.round((to - from) * k)); } catch (_) {}
+              requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+            setTimeout(final, dur + 250);                                               // safety: never end on a wrong number
+          };
+          holds[seat] = h;
+          setTimeout(() => h.release(true), SHOW_MS + 1200);                            // safety net: the hold can never stay on
+          return h;
+        } catch (_) { return null; }
+      };
+
+      /* A small bump on the score as the popup lands. */
+      const bump = (target, p) => {
+        try {
+          if (!target.animate) return;
+          const prev = target.style.display;
+          if (getComputedStyle(target).display === 'inline') target.style.display = 'inline-block';
+          const a = target.animate([
+            { transform: 'scale(1)', color: '', textShadow: 'none' },
+            { transform: 'scale(1.45)', color: p.c, textShadow: '0 0 10px ' + p.g, offset: .35 },
+            { transform: 'scale(1)', color: '', textShadow: 'none' }
+          ], { duration: 650, easing: 'ease-out' });
+          const back = () => { target.style.display = prev; };
+          a.onfinish = back; a.oncancel = back;
+          setTimeout(back, 900);
+        } catch (_) {}
+      };
+
+      window.showScorePopup = (seat, points, applied) => {
         try {
           points = Math.round(Number(points));
+          seat = seat === 2 ? 2 : 1;
           if (!(points > 0) || document.hidden) return;                                  // nothing scored, or the tab is not visible
           const board = document.getElementById('game-board');
-          const target = document.getElementById('player-' + (seat === 2 ? 2 : 1) + '-score');
+          const target = document.getElementById('player-' + seat + '-score');
           if (!board || !target || !board.animate) return;
           const b = board.getBoundingClientRect(), t = target.getBoundingClientRect();
           if (!b.width || !t.width) return;                                              // hidden or not laid out
           const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
           const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
           const dx = t.left + t.width / 2 - cx, dy = t.top + t.height / 2 - cy;
-          const size = Math.max(24, Math.min(42, Math.round(b.width * 0.075)));          // small and calm, scales with the board
+          const size = Math.max(26, Math.min(44, Math.round(b.width * 0.08)));           // calm, scales with the board
           const p = palette();
           const cs = getComputedStyle(target);
 
+          const hold = startHold(seat, target, points, !!applied);                       // keep the old score showing until landing
           while (live.length >= MAX_LIVE) { const old = live.shift(); try { old.remove(); } catch (_) {} }
           const el = document.createElement('div');
           el.setAttribute('aria-hidden', 'true');
@@ -4986,18 +5057,22 @@ html body.girly-mode .sq-star {
           live.push(el);
 
           const at = (x, y, s) => 'translate(-50%,-50%) translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+          const dur = reduce ? 1800 : SHOW_MS;
           const frames = reduce
-            ? [{ opacity: 0, transform: at(0, 0, 1), offset: 0 }, { opacity: 1, transform: at(0, 0, 1), offset: .2 }, { opacity: 1, transform: at(0, 0, 1), offset: .7 }, { opacity: 0, transform: at(0, 0, 1), offset: 1 }]
+            ? [{ opacity: 0, transform: at(0, 0, 1), offset: 0 }, { opacity: 1, transform: at(0, 0, 1), offset: .15 }, { opacity: 1, transform: at(0, 0, 1), offset: .8 }, { opacity: 0, transform: at(0, 0, 1), offset: 1 }]
             : [{ opacity: 0, transform: at(0, 0, .6), offset: 0 },
-               { opacity: 1, transform: at(0, 0, 1.12), offset: .16 },
-               { opacity: 1, transform: at(0, 0, 1), offset: .26 },
-               { opacity: 1, transform: at(0, 0, 1), offset: .42 },
-               { opacity: 1, transform: at(dx * .85, dy * .85, .62), offset: .9 },
-               { opacity: 0, transform: at(dx, dy, .5), offset: 1 }];
+               { opacity: 1, transform: at(0, 0, 1.15), offset: .10 },      // pop in
+               { opacity: 1, transform: at(0, 0, 1), offset: .16 },
+               { opacity: 1, transform: at(0, 0, 1), offset: .56 },         // hold at the centre (about 1.1 s) so it can be read
+               { opacity: 1, transform: at(dx * .9, dy * .9, .7), offset: .93 },   // fly to the score (about 1 s)
+               { opacity: 0, transform: at(dx, dy, .55), offset: 1 }];
           const done = () => { const i = live.indexOf(el); if (i >= 0) live.splice(i, 1); try { el.remove(); } catch (_) {} };
-          const anim = el.animate(frames, { duration: reduce ? 800 : SHOW_MS, easing: 'ease-in-out', fill: 'forwards' });
+          const anim = el.animate(frames, { duration: dur, easing: 'ease-in-out', fill: 'forwards' });
           anim.onfinish = done; anim.oncancel = done;
-          setTimeout(done, SHOW_MS + 600);                                               // safety net: it can never stay on screen
+          setTimeout(done, dur + 600);                                                   // safety net: it can never stay on screen
+
+          // as it lands: bump the score and count it up to the new value
+          setTimeout(() => { if (hold) hold.release(false); if (!reduce) bump(target, p); }, Math.round(dur * (reduce ? 0.85 : 0.88)));
         } catch (_) {}
       };
     })();
