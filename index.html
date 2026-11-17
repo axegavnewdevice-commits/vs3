@@ -3212,6 +3212,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             const score = calculateScore();
             window.animateFormedWords && window.animateFormedWords(validationResult.words);  // blink the new word and its cross words
+            window.showScorePopup && window.showScorePopup(currentPlayer, score);            // "+N" flies from the board centre to the scorer
             const tilesUsedCount = placedTilesInTurn.length;
             const formerPlayer = currentPlayer;
             const rack = formerPlayer === 1 ? player1Rack : player2Rack;
@@ -4937,6 +4938,66 @@ html body.girly-mode .sq-star {
           if (!count) return;
           document.body.appendChild(layer);
           setTimeout(() => layer.remove(), (end + 1.3) * 1000);
+        } catch (_) {}
+      };
+    })();
+    </script>
+
+    <script id="score-popup">
+    /* Score popup: after a move is scored, "+N" appears at the centre of the board, then flies to that player's score and fades.
+       Purely visual: it never touches the game state, ignores touches, never blocks play, and any failure is swallowed.
+       Used by offline, vs-computer (submitMove) and online (multiplayer.js) games. Colours follow the active theme. */
+    (() => {
+      const SHOW_MS = 1150, MAX_LIVE = 3;
+      const live = [];
+      const palette = () => {
+        const b = document.body.classList;
+        if (b.contains('girly-mode'))    return { c: '#fff4f6', o: '#a82255', g: 'rgba(240,120,170,.55)' };
+        if (b.contains('horror-mode'))   return { c: '#ff6a4a', o: '#120807', g: 'rgba(200,30,30,.55)' };
+        if (b.contains('academic-mode')) return { c: '#f7efd9', o: '#12264a', g: 'rgba(90,150,220,.5)' };
+        if (b.contains('dark-mode'))     return { c: '#e8cf7e', o: '#0e100a', g: 'rgba(232,207,126,.4)' };
+        return { c: '#f4dc8c', o: '#2b3118', g: 'rgba(244,220,140,.45)' };           // army light
+      };
+      window.showScorePopup = (seat, points) => {
+        try {
+          points = Math.round(Number(points));
+          if (!(points > 0) || document.hidden) return;                                  // nothing scored, or the tab is not visible
+          const board = document.getElementById('game-board');
+          const target = document.getElementById('player-' + (seat === 2 ? 2 : 1) + '-score');
+          if (!board || !target || !board.animate) return;
+          const b = board.getBoundingClientRect(), t = target.getBoundingClientRect();
+          if (!b.width || !t.width) return;                                              // hidden or not laid out
+          const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+          const dx = t.left + t.width / 2 - cx, dy = t.top + t.height / 2 - cy;
+          const size = Math.max(24, Math.min(42, Math.round(b.width * 0.075)));          // small and calm, scales with the board
+          const p = palette();
+          const cs = getComputedStyle(target);
+
+          while (live.length >= MAX_LIVE) { const old = live.shift(); try { old.remove(); } catch (_) {} }
+          const el = document.createElement('div');
+          el.setAttribute('aria-hidden', 'true');
+          el.textContent = '+' + points;
+          el.style.cssText = 'position:fixed;left:' + cx + 'px;top:' + cy + 'px;z-index:99991;pointer-events:none;margin:0;padding:0;' +
+            'white-space:nowrap;direction:ltr;unicode-bidi:isolate;font-weight:700;line-height:1;opacity:0;will-change:transform,opacity;' +
+            'font-family:' + (cs.fontFamily || 'serif') + ';font-size:' + size + 'px;color:' + p.c + ';' +
+            'text-shadow:0 0 2px ' + p.o + ',0 1px 0 ' + p.o + ',0 -1px 0 ' + p.o + ',1px 0 0 ' + p.o + ',-1px 0 0 ' + p.o + ',0 0 14px ' + p.g + ';';
+          document.body.appendChild(el);
+          live.push(el);
+
+          const at = (x, y, s) => 'translate(-50%,-50%) translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+          const frames = reduce
+            ? [{ opacity: 0, transform: at(0, 0, 1), offset: 0 }, { opacity: 1, transform: at(0, 0, 1), offset: .2 }, { opacity: 1, transform: at(0, 0, 1), offset: .7 }, { opacity: 0, transform: at(0, 0, 1), offset: 1 }]
+            : [{ opacity: 0, transform: at(0, 0, .6), offset: 0 },
+               { opacity: 1, transform: at(0, 0, 1.12), offset: .16 },
+               { opacity: 1, transform: at(0, 0, 1), offset: .26 },
+               { opacity: 1, transform: at(0, 0, 1), offset: .42 },
+               { opacity: 1, transform: at(dx * .85, dy * .85, .62), offset: .9 },
+               { opacity: 0, transform: at(dx, dy, .5), offset: 1 }];
+          const done = () => { const i = live.indexOf(el); if (i >= 0) live.splice(i, 1); try { el.remove(); } catch (_) {} };
+          const anim = el.animate(frames, { duration: reduce ? 800 : SHOW_MS, easing: 'ease-in-out', fill: 'forwards' });
+          anim.onfinish = done; anim.oncancel = done;
+          setTimeout(done, SHOW_MS + 600);                                               // safety net: it can never stay on screen
         } catch (_) {}
       };
     })();
