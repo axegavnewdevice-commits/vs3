@@ -3212,7 +3212,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             const score = calculateScore();
             window.animateFormedWords && window.animateFormedWords(validationResult.words);  // blink the new word and its cross words
-            window.showScorePopup && window.showScorePopup(currentPlayer, score);            // "+N" flies from the board centre to the scorer
+            window.showScorePopup && window.showScorePopup(currentPlayer, score, false, validationResult.words, placedTilesInTurn.length);   // "+N" flies from the centre of the new word to the scorer
             const tilesUsedCount = placedTilesInTurn.length;
             const formerPlayer = currentPlayer;
             const rack = formerPlayer === 1 ? player1Rack : player2Rack;
@@ -5027,7 +5027,7 @@ html body.girly-mode .sq-star {
         } catch (_) {}
       };
 
-      window.showScorePopup = (seat, points, applied) => {
+      window.showScorePopup = (seat, points, applied, words, placedCount) => {
         try {
           points = Math.round(Number(points));
           seat = seat === 2 ? 2 : 1;
@@ -5038,7 +5038,30 @@ html body.girly-mode .sq-star {
           const b = board.getBoundingClientRect(), t = target.getBoundingClientRect();
           if (!b.width || !t.width) return;                                              // hidden or not laid out
           const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-          const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+          // start at the centre of the word just played (the same main word the green outline marks); fall back to the board centre
+          let cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+          try {
+            if (Array.isArray(words) && words.length) {
+              let pick = words[0];
+              if (placedCount <= 1) {
+                pick = words.reduce((best, w) => {
+                  if (!best || w.length > best.length) return w;
+                  if (w.length === best.length && w.length > 1 && w[0].r === w[1].r && !(best[0].r === best[1].r)) return w;
+                  return best;
+                }, null);
+              }
+              let l = Infinity, tp = Infinity, rr = -Infinity, bt = -Infinity;
+              (pick || []).forEach((q) => {
+                const sq = board.querySelector('.square[data-r="' + q.r + '"][data-c="' + q.c + '"]');
+                const r = sq && sq.getBoundingClientRect();
+                if (r && r.width) { l = Math.min(l, r.left); tp = Math.min(tp, r.top); rr = Math.max(rr, r.right); bt = Math.max(bt, r.bottom); }
+              });
+              if (isFinite(l) && isFinite(tp)) {
+                cx = Math.min(b.right, Math.max(b.left, (l + rr) / 2));
+                cy = Math.min(b.bottom, Math.max(b.top, (tp + bt) / 2));
+              }
+            }
+          } catch (_) {}
           const dx = t.left + t.width / 2 - cx, dy = t.top + t.height / 2 - cy;
           const size = Math.max(26, Math.min(44, Math.round(b.width * 0.08)));           // calm, scales with the board
           const p = palette();
