@@ -1511,6 +1511,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="validation-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="true" title="قواعد التحقق من الكلمات">
                 قواعد التحقق: مفعّلة
             </button>
+            <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="سجل الكلمات" title="سجل الكلمات" style="display:none">سجل الكلمات</button>
             <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="القائمة" title="القائمة" aria-haspopup="true" aria-expanded="false">
                 <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -3435,6 +3436,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             catch (e) { notify('تعذر تحميل قائمة الكلمات. تحقق من الاتصال ثم حاول مجدداً.', true); return false; }
             const texts = words.map(w => w.map(x => x.tile.letter).join(''));
             const unknown = wl.invalidWords(texts);
+            try { if (window.WordLog) window.WordLog.local(texts, unknown); } catch (_) {}   // owner-only word log (does nothing unless unlocked)
             if (unknown.length) return false;   // refused silently: no pop-up, the tiles just stay on the board
             return true;
         };
@@ -5192,6 +5194,189 @@ html body.girly-mode .sq-star {
       background: var(--fab-bg2); color: var(--fab-ic); border: 1px solid var(--fab-bd); transform: translate(-50%, -50%); }
     @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item, #fab-layer .fab-item.fab-enter { transition: none; } }
     </style>
+    <style id="word-log-style">
+    /* Owner-only word log: its real button stays hidden like the other menu buttons, and is only "displayed" (so the round menu lists it) after the 7-tap unlock. */
+    html body #game-controls button#word-log-button {
+      visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
+      width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
+      padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
+    }
+    #wl-overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, .55); }
+    #wl-panel { width: 100%; max-width: 460px; max-height: 92vh; display: flex; flex-direction: column; direction: rtl; border-radius: 16px; background: #1d2315; color: #f5e6b8;
+      border: 1px solid rgba(245, 230, 185, .55); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); overflow: hidden; }
+    #wl-panel header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(245, 230, 185, .25); font-weight: 700; font-size: 17px; }
+    #wl-panel .wl-body { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
+    #wl-panel h3 { margin: 0; padding: 12px 14px 4px; font-size: 13px; font-weight: 600; opacity: .8; }
+    #wl-panel .wl-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; }
+    #wl-panel .wl-word { flex: 1; font-size: 20px; font-weight: 700; }
+    #wl-panel .wl-src { font-size: 11px; opacity: .65; }
+    #wl-panel .wl-empty { padding: 6px 14px 10px; font-size: 13px; opacity: .6; }
+    #wl-panel button { font: inherit; color: inherit; cursor: pointer; border: 1px solid rgba(245, 230, 185, .55); background: rgba(245, 230, 185, .08); border-radius: 10px; padding: 6px 12px; min-height: 34px; }
+    #wl-panel button.wl-on-ok { background: rgba(80, 160, 90, .45); border-color: #8fd19a; }
+    #wl-panel button.wl-on-no { background: rgba(190, 70, 70, .5); border-color: #f0a0a0; }
+    #wl-panel button.wl-x { padding: 4px 9px; min-height: 30px; opacity: .8; }
+    #wl-panel footer { padding: 10px 14px 12px; border-top: 1px solid rgba(245, 230, 185, .25); background: rgba(0, 0, 0, .18); }
+    #wl-out { margin: 0 0 8px; min-height: 44px; white-space: pre-wrap; direction: rtl; font: inherit; font-size: 16px; line-height: 1.9; user-select: text; -webkit-user-select: text; }
+    #wl-panel .wl-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    #wl-panel .wl-actions button { flex: 1 1 auto; }
+    #wl-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100001; direction: rtl; padding: 8px 16px; border-radius: 999px; font-size: 14px;
+      background: rgba(29, 35, 21, .96); color: #f5e6b8; border: 1px solid rgba(245, 230, 185, .6); max-width: 92vw; text-align: center; }
+    </style>
+
+    <script id="word-log">
+    /* Owner-only word log. Unlock: 7 quick taps (no long press) on the tile-bag counter; the choice is remembered on this device only.
+       Once unlocked, every word formed in a move is saved on this device (offline, against the computer, online): words the game refused and words it accepted.
+       The round menu then shows one extra circle (the real button #word-log-button is hidden until unlocked). Nothing here changes any game rule or is sent anywhere. */
+    (() => {
+      const K_ON = 'arabicScrabble.wordlog.on.v1', K_DATA = 'arabicScrabble.wordlog.v1', K_SEEN = 'arabicScrabble.wordlog.seen.v1';
+      const $ = (id) => document.getElementById(id);
+      const ls = {
+        get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
+        set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
+        del: (k) => { try { localStorage.removeItem(k); } catch (_) {} }
+      };
+      const parse = (k, d) => { try { const v = JSON.parse(ls.get(k) || ''); return v == null ? d : v; } catch (_) { return d; } };
+      let on = ls.get(K_ON) === '1';
+      let data = parse(K_DATA, {});
+      let seen = parse(K_SEEN, []);
+      if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
+      if (!Array.isArray(seen)) seen = [];
+      const MAX = 1500;
+      const SRC = { offline: 'بدون اتصال', cpu: 'ضد الكمبيوتر', online: 'أونلاين' };
+      const cpu = () => !!(window.CPU && window.CPU.active);
+
+      const save = () => {
+        const ks = Object.keys(data);
+        if (ks.length > MAX) ks.sort((a, b) => ((data[a].m ? 1 : 0) - (data[b].m ? 1 : 0)) || (data[a].t - data[b].t)).slice(0, ks.length - MAX).forEach((k) => { delete data[k]; });
+        ls.set(K_DATA, JSON.stringify(data));
+      };
+      function paint() {
+        const b = $('word-log-button'); if (!b) return;
+        b.style.setProperty('display', on ? 'inline-flex' : 'none', 'important');
+        const n = Object.keys(data).filter((w) => data[w].k === 'no' && !data[w].m).length;
+        b.textContent = 'سجل الكلمات' + (n ? ' (' + n + ')' : '');
+      }
+      function toast(msg) {
+        const old = $('wl-toast'); if (old) old.remove();
+        const t = document.createElement('div'); t.id = 'wl-toast'; t.textContent = msg; document.body.appendChild(t);
+        setTimeout(() => { if (t.parentNode) t.remove(); }, 2600);
+      }
+
+      /* kind: 'ok' = the game accepted the word, 'no' = the game refused it */
+      function record(words, kind, src) {
+        if (!on || !Array.isArray(words)) return;
+        const now = Date.now(); let changed = false;
+        words.forEach((w) => {
+          if (typeof w !== 'string' || w.length < 2) return;
+          const cur = data[w];
+          if (!cur) data[w] = { k: kind, s: src, m: 0, t: now };
+          else { if (cur.k !== kind) { cur.k = kind; cur.m = 0; } cur.s = src; cur.t = now; }
+          changed = true;
+        });
+        if (changed) { save(); paint(); if (overlay) render(); }
+      }
+      function local(texts, unknown) {
+        if (!on) return;
+        const bad = new Set(unknown || []), src = cpu() ? 'cpu' : 'offline';
+        record(texts.filter((t) => !bad.has(t)), 'ok', src);
+        record(texts.filter((t) => bad.has(t)), 'no', src);
+      }
+      function fromHistory(v) {
+        if (!on || !v || !Array.isArray(v.history)) return;
+        let fresh = false;
+        v.history.forEach((h) => {
+          if (!h || h.type !== 'move' || !Array.isArray(h.words)) return;
+          const key = (v.game || '') + ':' + h.n;
+          if (seen.indexOf(key) >= 0) return;
+          seen.push(key); fresh = true;
+          record(h.words, 'ok', 'online');
+        });
+        if (fresh) { if (seen.length > 400) seen = seen.slice(-400); ls.set(K_SEEN, JSON.stringify(seen)); }
+      }
+
+      function outText() {
+        const v = [], i = [];
+        Object.keys(data).forEach((w) => { if (data[w].m === 1) v.push(w); else if (data[w].m === -1) i.push(w); });
+        const parts = [];
+        if (v.length) parts.push('valid: ' + v.join(' ، '));
+        if (i.length) parts.push('invalid: ' + i.join(' ، '));
+        return parts.join('\n');
+      }
+
+      let overlay = null;
+      function row(w, d, kind) {
+        const r = document.createElement('div'); r.className = 'wl-row';
+        const word = document.createElement('span'); word.className = 'wl-word'; word.textContent = w;
+        const src = document.createElement('span'); src.className = 'wl-src'; src.textContent = SRC[d.s] || '';
+        const want = kind === 'no' ? 1 : -1;
+        const mk = document.createElement('button'); mk.type = 'button'; mk.textContent = kind === 'no' ? 'صحيحة' : 'خاطئة';
+        if (d.m === want) mk.className = kind === 'no' ? 'wl-on-ok' : 'wl-on-no';
+        mk.addEventListener('click', () => { d.m = d.m === want ? 0 : want; save(); paint(); render(); });
+        const x = document.createElement('button'); x.type = 'button'; x.className = 'wl-x'; x.textContent = '×'; x.setAttribute('aria-label', 'إزالة من السجل');
+        x.addEventListener('click', () => { delete data[w]; save(); paint(); render(); });
+        r.appendChild(word); r.appendChild(src); r.appendChild(mk); r.appendChild(x);
+        return r;
+      }
+      function render() {
+        if (!overlay) return;
+        const body = overlay.querySelector('.wl-body'), keep = body.scrollTop;
+        body.textContent = '';
+        const keys = Object.keys(data).sort((a, b) => data[b].t - data[a].t);
+        [['no', 'رفضتها اللعبة، هل هي صحيحة؟'], ['ok', 'قبلتها اللعبة، هل هي خاطئة؟']].forEach(([kind, title]) => {
+          const list = keys.filter((w) => data[w].k === kind);
+          const h = document.createElement('h3'); h.textContent = title + ' (' + list.length + ')'; body.appendChild(h);
+          if (!list.length) { const e = document.createElement('div'); e.className = 'wl-empty'; e.textContent = 'لا توجد كلمات بعد.'; body.appendChild(e); }
+          list.forEach((w) => body.appendChild(row(w, data[w], kind)));
+        });
+        body.scrollTop = keep;
+        overlay.querySelector('#wl-out').textContent = outText() || 'اضغط «صحيحة» أو «خاطئة» على أي كلمة.';
+      }
+      function close() { if (overlay) { overlay.remove(); overlay = null; } }
+      function open() {
+        if (!on) return;
+        if (overlay) { render(); return; }
+        overlay = document.createElement('div'); overlay.id = 'wl-overlay';
+        overlay.innerHTML = '<div id="wl-panel" role="dialog" aria-modal="true" aria-label="سجل الكلمات"><header><span>سجل الكلمات</span><button type="button" id="wl-close" aria-label="إغلاق">×</button></header>'
+          + '<div class="wl-body"></div><footer><pre id="wl-out"></pre><div class="wl-actions"><button type="button" id="wl-copy">نسخ القائمة</button>'
+          + '<button type="button" id="wl-clear-marked">حذف المعلّمة</button><button type="button" id="wl-clear-all">مسح الكل</button><button type="button" id="wl-lock">قفل السجل</button></div></footer></div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        $('wl-close').addEventListener('click', close);
+        $('wl-copy').addEventListener('click', async () => {
+          const t = outText(); if (!t) { toast('لا توجد كلمات معلّمة بعد'); return; }
+          let ok = false;
+          try { await navigator.clipboard.writeText(t); ok = true; } catch (_) {}
+          if (!ok) { try { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove(); } catch (_) {} }
+          toast(ok ? 'تم نسخ القائمة' : 'تعذّر النسخ، انسخ النص يدوياً');
+        });
+        $('wl-clear-marked').addEventListener('click', () => { Object.keys(data).forEach((w) => { if (data[w].m) delete data[w]; }); save(); paint(); render(); });
+        $('wl-clear-all').addEventListener('click', () => { if (confirm('مسح كل الكلمات من السجل؟')) { data = {}; save(); paint(); render(); } });
+        $('wl-lock').addEventListener('click', () => { if (confirm('قفل السجل وإخفاء زره من القائمة؟')) { on = false; ls.del(K_ON); close(); paint(); toast('تم قفل السجل'); } });
+        render();
+      }
+
+      /* the unlock: 7 quick taps (each within 0.8 s of the one before) on the tile-bag counter. Unlocked already: the same 7 taps open the log. */
+      let taps = 0, lastTap = 0;
+      function onTap() {
+        const now = Date.now();
+        taps = (now - lastTap > 800) ? 1 : taps + 1; lastTap = now;
+        if (taps < 7) return;
+        taps = 0;
+        if (!on) { on = true; ls.set(K_ON, '1'); paint(); toast('تم فتح سجل الكلمات، ستجده في القائمة الدائرية'); }
+        else open();
+      }
+
+      window.WordLog = { record, local, fromHistory, _out: outText };
+      const start = () => {
+        const bag = $('bag-count-button'); if (bag) bag.addEventListener('click', onTap);
+        const real = $('word-log-button'); if (real) real.addEventListener('click', open);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay) close(); });
+        paint();
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
     <script id="fab-menu">
     /* One round menu button (floating and resizable like the others). Tapping it spreads the eleven less-used buttons as a ring of
        see-through icon circles around it, on the side with room, avoiding the board and racks where it can. Five show at a time;
@@ -5199,7 +5384,7 @@ html body.girly-mode .sq-star {
     (() => {
       const $ = (id) => document.getElementById(id);
       const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'],
-                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart']];
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart'], ['word-log-button', 'book']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
@@ -5218,7 +5403,8 @@ html body.girly-mode .sq-star {
         shieldx: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/>',
         lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
         unlock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
-        heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>'
+        heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+        book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
       const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

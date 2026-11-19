@@ -211,6 +211,7 @@
 
       MP.seat = resp.seat || MP.seat; MP.view = v; MP.version = resp.version; MP.status = resp.status; MP.names = resp.names || MP.names;
       MP.seated = resp.seated; MP.skew = resp.serverNow - Date.now();
+      try { if (window.WordLog) window.WordLog.fromHistory(v); } catch (_) {}   // owner-only word log (does nothing unless unlocked)
 
       const board = Array.from({ length: 15 }, () => Array(15).fill(null));
       v.board.forEach((c) => { board[c.r][c.c] = { id: c.id, letter: c.letter, value: c.value, isBlank: c.isBlank }; });
@@ -289,6 +290,7 @@
     } catch (e) {
       if (e.data && e.data.view) apply(e.data);                    // the server sends its current state with each refusal
       if (e.status === 410) { sessionLost(e); return false; }
+      if (action && action.type === 'move' && e.data && e.data.error === 'invalid_word') { try { if (window.WordLog) window.WordLog.record(e.data.words || [], 'no', 'online'); } catch (_) {} }   // owner-only word log
       if (action && action.type === 'move' && e.data && (e.data.error === 'invalid_word' || e.data.error === 'invalid_placement')) recallTiles();   // refused move: tiles back to my rack
       // a refused word / illegal placement is silent (the tiles just stay on the board); real problems still show a message
       if (!silent && !(e.data && (e.data.error === 'invalid_word' || e.data.error === 'invalid_placement'))) toast(errText(e));
