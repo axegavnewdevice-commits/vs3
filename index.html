@@ -1512,6 +1512,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
                 قواعد التحقق: مفعّلة
             </button>
             <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="سجل الكلمات" title="سجل الكلمات" style="display:none">سجل الكلمات</button>
+            <button id="copyright-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="copyright" title="copyright">copyright</button>
             <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="القائمة" title="القائمة" aria-haspopup="true" aria-expanded="false">
                 <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -5377,6 +5378,64 @@ html body.girly-mode .sq-star {
     })();
     </script>
 
+    <style id="copyright-style">
+    /* Copyright circle in the round menu: its real button is hidden like the other menu buttons; the card below takes the same colours as the ring in every theme. */
+    html body #game-controls button#copyright-button {
+      visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
+      width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
+      padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
+    }
+    #cr-overlay { --cr-bg: rgba(63, 69, 39, .50); --cr-bg2: rgba(40, 45, 25, .94); --cr-bd: rgba(245, 230, 185, .65); --cr-ic: #f5e6b8;
+      position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, .35); }
+    html body.girly-mode #cr-overlay { --cr-bg: rgba(201, 75, 123, .45); --cr-bg2: rgba(178, 62, 110, .94); --cr-bd: rgba(255, 255, 255, .75); --cr-ic: #ffffff; }
+    html body.horror-mode #cr-overlay { --cr-bg: rgba(58, 13, 16, .55); --cr-bg2: rgba(38, 8, 10, .94); --cr-bd: rgba(239, 59, 59, .55); --cr-ic: #ffb3b3; }
+    html body.academic-mode #cr-overlay { --cr-bg: rgba(29, 50, 83, .50); --cr-bg2: rgba(26, 46, 78, .94); --cr-bd: rgba(200, 215, 240, .7); --cr-ic: #e6eefc; }
+    #cr-panel { width: 100%; max-width: 360px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box; padding: 14px; border-radius: 14px; direction: ltr; text-align: center;
+      background: var(--cr-bg2); color: var(--cr-ic); border: 1px solid var(--cr-bd); box-shadow: 0 10px 30px rgba(0, 0, 0, .45); font-family: inherit; }
+    #cr-panel .cr-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    #cr-panel .cr-main { font-size: 14px; font-weight: 600; line-height: 1.7; }
+    #cr-panel .cr-line { font-size: 13px; line-height: 1.7; }
+    #cr-panel .cr-dim { opacity: .85; }
+    #cr-panel .cr-rule { border: 0; border-top: 1px solid var(--cr-bd); margin: 10px 0 8px; }
+    #cr-panel .cr-small { font-size: 12px; opacity: .7; margin-bottom: 4px; }
+    #cr-panel .cr-credit { font-size: 12.5px; line-height: 1.6; margin-bottom: 6px; }
+    #cr-panel #cr-close { margin-top: 6px; font: inherit; font-size: 13px; color: inherit; cursor: pointer; padding: 6px 20px; min-height: 34px; border-radius: 10px; border: 1px solid var(--cr-bd); background: var(--cr-bg); }
+    </style>
+
+    <script id="copyright-card">
+    /* The copyright card: opened by the "copyright" circle in the round menu (the circle presses the hidden real button #copyright-button). All text lowercase on purpose. */
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      let overlay = null;
+      const close = () => { if (overlay) { overlay.remove(); overlay = null; } };
+      const open = () => {
+        if (overlay) return;
+        overlay = document.createElement('div'); overlay.id = 'cr-overlay';
+        overlay.innerHTML = '<div id="cr-panel" role="dialog" aria-modal="true" aria-label="copyright">'
+          + '<div class="cr-title">copyright</div>'
+          + '<div class="cr-main">© 2026 ahmad</div>'
+          + '<div class="cr-line">arabic scrabble</div>'
+          + '<div class="cr-line cr-dim">all rights reserved.</div>'
+          + '<hr class="cr-rule">'
+          + '<div class="cr-small">credits</div>'
+          + '<div class="cr-credit">word list: ayaspell arabic dictionary by taha zerrouki and mohamed kebdani (gpl / lgpl / mpl).</div>'
+          + '<div class="cr-credit">with thanks to my teachers and my students.</div>'
+          + '<div class="cr-credit">built with the help of claude ai.</div>'
+          + '<button type="button" id="cr-close">close</button></div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+        $('cr-close').addEventListener('click', close);
+        try { $('cr-close').focus(); } catch (_) {}
+      };
+      const start = () => {
+        const real = $('copyright-button');
+        if (real) { real.style.setProperty('display', 'inline-flex', 'important'); real.addEventListener('click', open); }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay) close(); });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
     <script id="fab-menu">
     /* One round menu button (floating and resizable like the others). Tapping it spreads the eleven less-used buttons as a ring of
        see-through icon circles around it, on the side with room, avoiding the board and racks where it can. Five show at a time;
@@ -5384,7 +5443,7 @@ html body.girly-mode .sq-star {
     (() => {
       const $ = (id) => document.getElementById(id);
       const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'],
-                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart'], ['word-log-button', 'book']];
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart'], ['copyright-button', 'copy'], ['word-log-button', 'book']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
@@ -5404,7 +5463,8 @@ html body.girly-mode .sq-star {
         lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
         unlock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
         heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
-        book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'
+        book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+        copy: '<circle cx="12" cy="12" r="10"/><path d="M15 9.5a4 4 0 1 0 0 5"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
       const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
