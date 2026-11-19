@@ -48,7 +48,7 @@
     // ALLOWLIST: words the owner declared valid even if the dictionary does not know them (game spelling, any length). A blocked word is never allowed. An allowed word of 3+ letters is also accepted with ال in front.
     var ALLOWED = ' طئ سقاف ';
     // ALLOWED_EXACT: words the owner declared valid EXACTLY as written (no ال form is accepted through this list). Blocked words still win.
-    var ALLOWED_EXACT = ' مات لؤي مؤتة احك اخط فز فو ';
+    var ALLOWED_EXACT = ' مات لؤي مؤتة احك اخط فز فو وا ';
     // HAMZA SPELLING GUARD (قاعدة كتابة الهمزة). The word list has no vowels, and the seat of the hamza (ء on the line, ؤ on waw, ئ on the nabra) depends on the vowels,
     // so the list's own spelling is trusted (checked: all 7,000+ hamza words of 3-5 letters in the list obey rules 1-3 below). On top of that:
     //  1) a hamza seat (ء ؤ ئ) never starts a word (the hamza of the first letter sits on alif, and this game has no أ tile; ال + word is judged on the word);
