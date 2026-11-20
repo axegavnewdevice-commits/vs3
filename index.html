@@ -1692,7 +1692,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             { letter: 'ذ', value: 3, count: 1 },
             { letter: 'ظ', value: 5, count: 1 },
             { letter: 'ث', value: 3, count: 1 },
-            { letter: ' ', value: 2, count: 2, isBlank: true } // Blank Tile
+            { letter: ' ', value: 0, count: 2, isBlank: true } // Blank Tile: always worth 0 points
         ];
 
         // Board Multipliers (15x15)
@@ -1966,7 +1966,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             for (const { r, c, tile } of wordTiles) {
                 // Blank tiles have a value of 0, regular tiles use their letter value
-                let letterScore = tile.value; 
+                const tv = tile.isBlank ? 0 : tile.value;   // a blank tile is always worth 0, whatever value it carries
+                let letterScore = tv; 
                 const coord = `${r},${c}`;
                 const isNewTile = placedCoords.includes(coord);
 
@@ -1975,9 +1976,9 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     
                     // Apply Letter Multiplier (DL/TL) - only affects the tile value
                     if (multiplier === 1) { // DL (x2 Letter)
-                        letterScore = tile.value * 2; 
+                        letterScore = tv * 2; 
                     } else if (multiplier === 2) { // TL (x3 Letter)
-                        letterScore = tile.value * 3;
+                        letterScore = tv * 3;
                     }
 
                     // Capture Word Multiplier (DW/TW/Star) - multiplies the final word score
@@ -6628,7 +6629,7 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
       g[r] = [];
       for (let c = 0; c < 15; c++) {
         const t = boardState[r][c];
-        g[r][c] = t ? { l: t.letter, v: t.value } : null;
+        g[r][c] = t ? { l: t.letter, v: (t.isBlank ? 0 : t.value) } : null;
         if (t) tilesOnBoard++;
       }
     }
@@ -6642,7 +6643,7 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
     rack.forEach((t, i) => {
       if (!t) return;
       rackCount++;
-      if (t.isBlank) { hasBlank = true; types.push({ blank: true, idxs: [i], left: 1, value: t.value }); return; }
+      if (t.isBlank) { hasBlank = true; types.push({ blank: true, idxs: [i], left: 1, value: 0 }); return; }
       let ty = byLetter.get(t.letter);
       if (!ty) { ty = { blank: false, letter: t.letter, value: t.value, idxs: [], left: 0 }; byLetter.set(t.letter, ty); types.push(ty); }
       ty.idxs.push(i); ty.left++;

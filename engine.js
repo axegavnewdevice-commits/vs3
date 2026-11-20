@@ -42,7 +42,7 @@ export const ARABIC_TILES = [
   { letter: 'ذ', value: 3, count: 1 },
   { letter: 'ظ', value: 5, count: 1 },
   { letter: 'ث', value: 3, count: 1 },
-  { letter: ' ', value: 2, count: 2, isBlank: true }, // blank tile (same table row as the original)
+  { letter: ' ', value: 0, count: 2, isBlank: true }, // blank tile: always worth 0 points
 ];
 
 export const BOARD_LAYOUT = [
@@ -91,12 +91,13 @@ export function scoreWord(wordTiles, placedCoords) {
   let score = 0;
   let wordMultiplier = 1;
   for (const { r, c, tile } of wordTiles) {
-    let letterScore = tile.value;
+    const tv = tile.isBlank ? 0 : tile.value;   // a blank tile is always worth 0, whatever value it carries
+    let letterScore = tv;
     const isNewTile = placedCoords.includes(`${r},${c}`);
     if (isNewTile) {
       const multiplier = BOARD_LAYOUT[r][c];
-      if (multiplier === 1) letterScore = tile.value * 2;
-      else if (multiplier === 2) letterScore = tile.value * 3;
+      if (multiplier === 1) letterScore = tv * 2;
+      else if (multiplier === 2) letterScore = tv * 3;
       if (multiplier === 3 || multiplier === 5) wordMultiplier *= 2;
       else if (multiplier === 4) wordMultiplier *= 3;
     }
