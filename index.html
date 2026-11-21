@@ -3371,6 +3371,12 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             boardPlacements.forEach(placement => {
                 const { r, c, originalTile } = placement;
                 
+                // a blank tile goes back to the rack as a normal blank (the letter the player chose is forgotten), like when a move is cleared
+                if (originalTile.isBlank) {
+                    originalTile.letter = ' ';
+                    originalTile.value = 0;
+                }
+                
                 // Remove from board
                 if (boardState[r][c] && boardState[r][c].id === originalTile.id) {
                     boardState[r][c] = null;
