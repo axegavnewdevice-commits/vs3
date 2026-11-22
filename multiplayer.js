@@ -16,34 +16,34 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   const T = {
-    title: 'اللعب عبر الإنترنت', yourName: 'اسمك', create: 'إنشاء غرفة', join: 'انضمام', code: 'رمز الغرفة', copy: 'نسخ الرمز', copied: 'تم نسخ الرمز',
-    share: 'مشاركة', leave: 'مغادرة الغرفة', confirmLeave: 'تأكيد المغادرة', player: 'اللاعب', you: 'أنت', moves: 'سجل الحركات',
-    waiting: 'بانتظار انضمام الخصم…', oppOn: 'الخصم متصل', oppOff: 'الخصم غير متصل', oppBack: 'عاد الخصم', oppGone: 'انقطع اتصال الخصم',
-    oppRecon: 'الخصم غير متصل – بانتظار عودته', oppLong: 'الخصم غير متصل منذ فترة', reconnecting: 'جارٍ إعادة الاتصال…', offline: 'لا يوجد اتصال بالإنترنت',
-    connecting: 'جارٍ الاتصال بالغرفة…', closed: 'تم إغلاق الغرفة', oppLeft: 'غادر الخصم الغرفة', joined: 'انضم الخصم – ابدؤوا اللعب!',
-    undoAsk: 'يطلب الخصم إلغاء حركتك الأخيرة. هل توافق؟', yes: 'موافقة', no: 'رفض', undoSent: 'تم إرسال طلب إلغاء الحركة', undoDeclined: 'رفض الخصم إلغاء الحركة',
-    paused: 'تم إيقاف اللعبة مؤقتاً', resumed: 'تم استئناف اللعبة',
-    valOn: 'تم تفعيل قواعد التحقق من الكلمات', valOff: 'تم إيقاف قواعد التحقق من الكلمات', oppValOn: 'الخصم فعّل قواعد التحقق من الكلمات', oppValOff: 'الخصم أوقف قواعد التحقق من الكلمات', synced: 'تم تحديث اللعبة',
-    pass: 'مرّر', swap: 'بدّل', undone: 'ألغى حركته', ended: 'انتهت اللعبة', surrender: 'استسلم', timeout: 'انتهى الوقت',
+    title: 'play online', yourName: 'your name', create: 'create a room', join: 'join', code: 'room code', copy: 'copy code', copied: 'code copied',
+    share: 'share', leave: 'leave room', confirmLeave: 'tap again to leave', player: 'player', you: 'you', moves: 'move history',
+    waiting: 'waiting for the opponent to join…', oppOn: 'opponent online', oppOff: 'opponent offline', oppBack: 'opponent is back', oppGone: 'opponent disconnected',
+    oppRecon: 'opponent offline – waiting for them to return', oppLong: 'opponent has been offline for a while', reconnecting: 'reconnecting…', offline: 'no internet connection',
+    connecting: 'connecting to the room…', closed: 'the room was closed', oppLeft: 'the opponent left the room', joined: 'the opponent joined – start playing!',
+    undoAsk: 'your opponent asks to undo your last move. do you agree?', yes: 'agree', no: 'decline', undoSent: 'undo request sent', undoDeclined: 'the opponent declined the undo',
+    paused: 'the game is paused', resumed: 'the game has resumed',
+    valOn: 'word checking is on', valOff: 'word checking is off', oppValOn: 'the opponent turned word checking on', oppValOff: 'the opponent turned word checking off', synced: 'the game was updated',
+    pass: 'pass', swap: 'swap', undone: 'undid the move', ended: 'game over', surrender: 'surrendered', timeout: 'time is up',
   };
   const ERR = {
-    room_not_found: 'رمز الغرفة غير صحيح', room_expired: 'انتهت صلاحية الغرفة', room_closed: 'تم إغلاق الغرفة', room_full: 'الغرفة ممتلئة (لاعبان فقط)',
-    invalid_code: 'أدخل رمزاً من 6 خانات', network: 'تعذر الاتصال بالخادم، حاول مجدداً', unauthorized: 'تعذر تسجيل الدخول', server_not_configured: 'الخادم غير مُهيّأ بعد',
-    not_your_turn: 'ليس دورك', stale: 'تغيّرت اللعبة، تم تحديثها', paused: 'اللعبة متوقفة مؤقتاً', game_over: 'انتهت اللعبة', game_not_over: 'لا يمكن بدء لعبة جديدة قبل نهاية الحالية',
-    bag_too_small: 'لا توجد قطع كافية في الكيس للتبديل', waiting_for_opponent: 'بانتظار انضمام الخصم', nothing_to_undo: 'لا توجد حركة لإلغائها', invalid_word: 'الكلمة غير موجودة في قائمة الكلمات', quran_locked: 'وضع القرآن يُغيَّر قبل أول حركة فقط', wordlist_unavailable: 'تعذر تحميل قائمة الكلمات على الخادم', not_a_member: 'لا تملك مقعداً في هذه الغرفة',
-    api_missing: 'ملفات الخادم (مجلد api) غير منشورة أو غير مفعّلة على Vercel', server_error: 'حدث خطأ في الخادم',
-    supabase_lib: 'تعذر تحميل مكتبة Supabase من الإنترنت', anonymous_disabled: 'فعّل Anonymous sign-ins في إعدادات Supabase (Authentication)',
-    supabase_unreachable: 'تعذر الوصول إلى Supabase: تحقق من SUPABASE_URL وأن المشروع غير متوقف', auth_failed: 'رفض Supabase تسجيل الدخول: تحقق من SUPABASE_ANON_KEY',
-    db_not_ready: 'قاعدة البيانات غير جاهزة: شغّل ملف SQL في Supabase (SQL Editor)', database_error: 'خطأ في قاعدة البيانات',
-    tile_not_in_rack: 'قطعة غير موجودة في رفّك', square_taken: 'المربع مشغول', blank_letter_required: 'اختر حرفاً للقطعة الفارغة',
+    room_not_found: 'room code is not correct', room_expired: 'the room has expired', room_closed: 'the room was closed', room_full: 'the room is full (two players only)',
+    invalid_code: 'enter a 6-character code', network: 'could not reach the server, try again', unauthorized: 'could not sign in', server_not_configured: 'the server is not set up yet',
+    not_your_turn: 'it is not your turn', stale: 'the game changed and was refreshed', paused: 'the game is paused', game_over: 'the game is over', game_not_over: 'you cannot start a new game before the current one ends',
+    bag_too_small: 'not enough tiles in the bag to swap', waiting_for_opponent: 'waiting for the opponent to join', nothing_to_undo: 'there is no move to undo', invalid_word: 'the word is not in the word list', quran_locked: 'quran mode can only be changed before the first move', wordlist_unavailable: 'could not load the word list on the server', not_a_member: 'you do not have a seat in this room',
+    api_missing: 'the server files (api folder) are not published or not enabled on vercel', server_error: 'a server error occurred',
+    supabase_lib: 'could not load the supabase library from the internet', anonymous_disabled: 'turn on anonymous sign-ins in the supabase settings (authentication)',
+    supabase_unreachable: 'could not reach supabase: check supabase_url and that the project is not paused', auth_failed: 'supabase refused the sign-in: check supabase_anon_key',
+    db_not_ready: 'the database is not ready: run the sql file in supabase (sql editor)', database_error: 'database error',
+    tile_not_in_rack: 'that tile is not in your rack', square_taken: 'that square is taken', blank_letter_required: 'choose a letter for the blank tile',
   };
   const DB_MISSING = ['PGRST202', 'PGRST205', '42883', '42P01'];   // function / table not found: the SQL migration has not been run
   const errText = (e) => {
     const d = (e && e.data) || {};
     if (d.message) return d.message;
     if (d.error === 'database_error' && DB_MISSING.includes(d.code)) return ERR.db_not_ready;
-    const base = ERR[d.error || (e && e.message)] || 'تعذر تنفيذ الطلب';
-    return d.error === 'server_not_configured' && Array.isArray(d.missing) && d.missing.length ? `${base}: ${d.missing.join('، ')}` : base;
+    const base = ERR[d.error || (e && e.message)] || 'could not complete the request';
+    return d.error === 'server_not_configured' && Array.isArray(d.missing) && d.missing.length ? `${base}: ${d.missing.join(', ')}` : base;
   };
   const fail = (code, detail, data = {}) => Object.assign(new Error(code), { data: { ...data, error: code }, detail, final: true });
   const diagOf = (e) => (e && (e.detail || (e.status ? 'HTTP ' + e.status : e.message))) || '';
@@ -247,7 +247,7 @@
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'new_game') closeResult();
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
-      if (ev.type === 'quran' && ev.seat !== MP.seat) toast(ev.on ? 'الخصم فعّل وضع القرآن: كلمات القرآن فقط' : 'الخصم أوقف وضع القرآن');
+      if (ev.type === 'quran' && ev.seat !== MP.seat) toast(ev.on ? 'the opponent turned quran mode on: quran words only' : 'the opponent turned quran mode off');
       }
     }
     if (prev && prev.status !== 'playing' && resp.status === 'playing' && MP.seat === 1) toast(T.joined);
@@ -567,7 +567,7 @@
     $('mp-modal').addEventListener('click', (e) => { if (e.target.id === 'mp-modal') closeModal(); });
     $('mp-chip').onclick = openModal;
     const card = $('mp-undo-card');
-    card.style.cssText = 'width:min(100%,360px);padding:18px;border-radius:16px;background:#2b3220;color:#f1eed8;border:1px solid rgba(232,197,108,.5);direction:rtl;text-align:center;font-family:system-ui,sans-serif';
+    card.style.cssText = 'width:min(100%,360px);padding:18px;border-radius:16px;background:#2b3220;color:#f1eed8;border:1px solid rgba(232,197,108,.5);direction:ltr;text-align:center;font-family:system-ui,sans-serif;text-transform:lowercase';
     card.innerHTML = `<p style="margin:0 0 12px;font-weight:700">${T.undoAsk}</p><div class="mp-row" id="mp-undo-row" style="display:flex;gap:8px"></div>`;
     const mk = (txt, accept, color) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = `flex:1;min-height:44px;border:0;border-radius:11px;font-weight:800;color:#fff;background:${color};cursor:pointer`; b.onclick = () => { $('mp-undo-modal').classList.remove('mp-open'); send({ type: 'undo_respond', accept }); }; return b; };
     $('mp-undo-row').append(mk(T.yes, true, '#5b7a2c'), mk(T.no, false, '#a33a2f'));
@@ -593,8 +593,8 @@
   }
   function shareCode() {
     const url = location.origin + location.pathname + '?room=' + MP.code;
-    const text = 'انضم إلى لعبة سكرابل عربية – رمز الغرفة: ' + MP.code;
-    if (navigator.share) navigator.share({ title: 'Arabic Scrabble', text, url }).catch(() => {});
+    const text = 'join my arabic scrabble game – room code: ' + MP.code;
+    if (navigator.share) navigator.share({ title: 'arabic scrabble', text, url }).catch(() => {});
     else { try { navigator.clipboard.writeText(text + '\n' + url); toast(T.copied); } catch (_) {} }
   }
 
@@ -644,7 +644,7 @@
     ((MP.view && MP.view.history) || []).slice(-25).reverse().forEach((h) => {
       const li = document.createElement('li');
       const who = MP.names[h.seat] || '';
-      li.textContent = h.type === 'move' ? `${who}: ${(h.words || []).join('، ')} (+${h.score})` : h.type === 'pass' ? `${who}: ${T.pass}` : h.type === 'swap' ? `${who}: ${T.swap} ${h.count}` : h.type === 'undo' ? `${who}: ${T.undone}` : T.ended;
+      li.textContent = h.type === 'move' ? `${who}: ${(h.words || []).join(', ')} (+${h.score})` : h.type === 'pass' ? `${who}: ${T.pass}` : h.type === 'swap' ? `${who}: ${T.swap} ${h.count}` : h.type === 'undo' ? `${who}: ${T.undone}` : T.ended;
       hist.appendChild(li);
     });
   }

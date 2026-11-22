@@ -57,7 +57,7 @@ body.mp-seat-1 #player-1-area .player-id, body.mp-seat-2 #player-2-area .player-
 #mp-card {
   width: min(100%, 420px); max-height: min(90vh, 640px); overflow: auto; padding: 20px; border-radius: 18px;
   background: linear-gradient(145deg, #3a4228, #232a17); color: #f1eed8; border: 1px solid rgba(232, 197, 108, .5);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, .5); font-family: system-ui, "Segoe UI", Tahoma, sans-serif; direction: rtl; text-align: right;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .5); font-family: system-ui, "Segoe UI", Tahoma, sans-serif; direction: ltr; text-align: left; text-transform: lowercase;
 }
 body:not(.dark-mode) #mp-card { background: linear-gradient(145deg, #f6efd2, #e3d8a8); color: #26301a; border-color: rgba(110, 90, 40, .55); }
 #mp-card h2 { margin: 0 0 12px; font-size: 1.2rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
@@ -68,7 +68,7 @@ body:not(.dark-mode) #mp-card { background: linear-gradient(145deg, #f6efd2, #e3
   background: rgba(255, 255, 255, .9); color: #1b2013; font-size: 1rem;
 }
 
-#mp-card input.mp-code-input { direction: ltr; text-align: center; letter-spacing: .35em; font: 700 1.3rem ui-monospace, Menlo, Consolas, monospace; text-transform: uppercase; }
+#mp-card input.mp-code-input { direction: ltr; text-align: center; letter-spacing: .35em; font: 700 1.3rem ui-monospace, Menlo, Consolas, monospace; text-transform: lowercase; }
 #mp-card .mp-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 #mp-card button.mp-btn {
   flex: 1 1 0; min-height: 44px; padding: 6px 12px; border: 0; border-radius: 11px; font-weight: 800; font-size: .95rem;
@@ -92,7 +92,7 @@ body:not(.dark-mode) #mp-card .mp-code-display { background: rgba(0, 0, 0, .08);
 #mp-card .mp-players li[data-on="0"] .mp-dot { background: #d9534f; }
 #mp-card .mp-players li[data-on="w"] .mp-dot { background: #e0a93b; }
 #mp-card .mp-status { margin: 8px 0 0; font-size: .9rem; opacity: .9; }
-#mp-card ol.mp-history { margin: 4px 0 0; padding: 0 18px 0 0; font-size: .82rem; max-height: 140px; overflow: auto; }
+#mp-card ol.mp-history { margin: 4px 0 0; padding: 0 0 0 18px; font-size: .82rem; max-height: 140px; overflow: auto; }
 #mp-card details summary { cursor: pointer; font-size: .9rem; font-weight: 700; margin-top: 12px; }
 .mp-hidden { display: none !important; }
 
@@ -110,3 +110,8 @@ body:not(.dark-mode) #mp-card .mp-code-display { background: rgba(0, 0, 0, .08);
 #mp-undo-modal.mp-open { display: flex; }
 #mp-card .mp-diag { margin-top: 4px; font: 11px/1.4 ui-monospace, Menlo, Consolas, monospace; opacity: .7; word-break: break-all; user-select: all; }
 
+
+/* English, all lowercase: the connection chip and the online box (names and the room code are shown lowercase too; the real values are unchanged). */
+#mp-chip, #mp-modal, #mp-modal *, #mp-undo-modal, #mp-undo-modal * { text-transform: lowercase !important; }
+#mp-chip { direction: ltr; }
+#mp-code-show { text-transform: lowercase !important; }

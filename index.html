@@ -1107,6 +1107,7 @@ body.float-layout-dragging {
 @media (prefers-reduced-motion: reduce) { .wb { animation-name: wordBlinkSimple; } @keyframes wordBlinkSimple { 0%, 100% { opacity: 0; } 30%, 60% { opacity: 1; } } }
 /* ===== Game-over result card (self-contained styling) ===== */
 #result-modal.hidden { display: none; }
+#result-modal, #result-modal * { text-transform: lowercase; }
 #result-modal > div {
     background: #232a17; color: #e9e6cf; padding: 1.4rem; border-radius: .9rem; text-align: center;
     width: min(92%, 20rem); border: 1px solid rgba(201, 190, 120, .4); box-shadow: 0 20px 50px rgba(0, 0, 0, .55);
@@ -1574,15 +1575,15 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     </div>
 
     <!-- Game-over result notice (small) -->
-    <div id="result-modal" class="modal-overlay hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div id="result-modal" class="modal-overlay hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="result-title" dir="ltr">
         <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-xs w-11/12 transform transition-all duration-300 scale-95">
-            <h2 id="result-title" class="text-xl font-bold text-yellow-300 mb-2 text-center">انتهت اللعبة</h2>
+            <h2 id="result-title" class="text-xl font-bold text-yellow-300 mb-2 text-center">game over</h2>
             <p id="result-winner" class="text-lg font-bold text-green-400 text-center mb-1"></p>
             <p id="result-scores" class="text-base text-gray-200 text-center mb-1"></p>
             <p id="result-reason" class="text-sm text-gray-400 text-center mb-3"></p>
             <div class="flex justify-between gap-3">
-                <button id="result-new-btn" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">لعبة جديدة</button>
-                <button id="result-close-btn" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">إغلاق</button>
+                <button id="result-new-btn" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">new game</button>
+                <button id="result-close-btn" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">close</button>
             </div>
         </div>
     </div>
@@ -6019,10 +6020,10 @@ html body.girly-mode .sq-star {
         const emptyRack = [1, 2].find(n => (n === 1 ? player1Rack : player2Rack).every(t => !t));
         const outOfTime = [1, 2].find(n => playerTimes[n] <= 0);
         switch (info.reason) {
-          case 'rack_empty':   return emptyRack ? 'أنهى ' + playerName(emptyRack) + ' جميع حروفه' : 'نفدت الحروف';
-          case 'time_expired': return outOfTime ? 'انتهى وقت ' + playerName(outOfTime) : 'انتهى الوقت';
-          case 'passes':       return 'ست أدوار متتالية دون تسجيل نقاط';
-          case 'surrender':    return 'استسلم ' + playerName(info.loser || 1);
+          case 'rack_empty':   return emptyRack ? playerName(emptyRack) + ' used all their tiles' : 'the tiles ran out';
+          case 'time_expired': return outOfTime ? playerName(outOfTime) + ' ran out of time' : 'time is up';
+          case 'passes':       return 'six turns in a row without a score';
+          case 'surrender':    return playerName(info.loser || 1) + ' surrendered';
           default:             return '';
         }
       };
@@ -6033,7 +6034,7 @@ html body.girly-mode .sq-star {
           const m = el('result-modal');
           if (!m || !gameEnded) return;                                       // a new game already started
           const w = scores[1] > scores[2] ? 1 : scores[2] > scores[1] ? 2 : 0;
-          el('result-winner').textContent = w ? '\u0627\u0644\u0641\u0627\u0626\u0632: ' + playerName(w) : '\u062a\u0639\u0627\u062f\u0644!';
+          el('result-winner').textContent = w ? 'winner: ' + playerName(w) : "it's a draw!";
           el('result-scores').textContent = playerName(1) + ': ' + scores[1] + '  \u2014  ' + playerName(2) + ': ' + scores[2];
           el('result-reason').textContent = reasonText(info || {});
           const card = m.querySelector('.shadow-2xl');
