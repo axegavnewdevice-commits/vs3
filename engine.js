@@ -364,7 +364,7 @@ function actMove(G, seat, a, now, isValidWord, isQuranWord) {
 
   // Dictionary check: a move that forms a word (main or crossing) that is not in the word list is refused and nothing changes.
   const wordText = validation.words.map((w) => w.map(({ tile }) => tile.letter).join(''));
-  if (G.validation !== false || G.quran) {            // both players can switch the check off (set_validation); a room made before this option existed has it on. Quran mode keeps the word rules on
+  if (G.validation !== false && !G.quran) {           // AyaSpell check: both players can switch it off (set_validation); a room made before this option existed has it on. In Quran mode the Quran whitelist below is the only word check
     if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
     const unknown = wordText.filter((w) => !isValidWord(w));
     if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };

@@ -3421,7 +3421,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 if (!window.WordCheck) {
                     await new Promise((resolve, reject) => {
                         const sc = document.createElement('script');
-                        sc.src = 'wordcheck.js'; sc.onload = resolve; sc.onerror = () => reject(new Error('wordcheck.js'));
+                        sc.src = 'wordcheck.js?v=q2'; sc.onload = resolve; sc.onerror = () => reject(new Error('wordcheck.js'));
                         document.head.appendChild(sc);
                     });
                 }
@@ -3441,7 +3441,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         /** Dictionary check before a move is accepted (local game; online the server does the same). Moves are final once accepted. */
         let submitting = false;
         const wordsAreValid = async (words) => {
-            const quran = !!(window.quranOn && window.quranOn());   // Quran mode keeps the word rules on and adds: only words of the Quran
+            const quran = !!(window.quranOn && window.quranOn());   // Quran mode: only words of the Quran whitelist (checked by wordcheck.js, not by the AyaSpell list)
             if (!quran && window.validationOn && !window.validationOn()) return true;   // the menu switch: word validation is off (never against the computer; online the server decides)
             let wl;
             try { wl = await loadWordList(); }
@@ -6683,9 +6683,10 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
     cacheOk();
     const quranOnly = !!(window.quranOn && window.quranOn());   // Quran mode: the computer plays only words of the Quran too
     const valid = (s) => {
-      let v = validCache.get(s);
-      if (v === undefined) { v = !!wl.isValid(s) && trusted(wl, s); validCache.set(s, v); }
-      return v && (!quranOnly || wl.isQuranic(s));
+      const key = quranOnly ? 'q:' + s : s;   // Quran mode and AyaSpell mode never share cached answers
+      let v = validCache.get(key);
+      if (v === undefined) { v = quranOnly ? !!wl.isQuranic(s) : (!!wl.isValid(s) && trusted(wl, s)); validCache.set(key, v); }   // Quran mode: the Quran whitelist only (no AyaSpell, no AyaSpell heuristics)
+      return v;
     };
     const budget = opts.budget != null ? opts.budget : cfg.budget;
     const startedAt = now();
