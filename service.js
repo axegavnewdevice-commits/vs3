@@ -14,7 +14,7 @@
  */
 import { randomInt, randomUUID } from 'node:crypto';
 import { createGame, act as engineAct, publicView, rackView } from './engine.js';
-import { isValidWord as defaultIsValidWord } from './wordlist.js';
+import { isValidWord as defaultIsValidWord, isQuranWord as defaultIsQuranWord } from './wordlist.js';
 
 export class HttpError extends Error {
   constructor(status, code, extra = {}) {
@@ -43,7 +43,7 @@ export function cleanName(name, seat) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export function createService(backend, { now = () => Date.now(), isValidWord = defaultIsValidWord } = {}) {
+export function createService(backend, { now = () => Date.now(), isValidWord = defaultIsValidWord, isQuranWord = defaultIsQuranWord } = {}) {
   const seatOf = (loaded, userId) => {
     const p = loaded.players.find((x) => x.user_id === userId);
     return p ? p.seat : 0;
@@ -144,7 +144,7 @@ export function createService(backend, { now = () => Date.now(), isValidWord = d
       }
 
       const at = now();
-      const out = engineAct(G, seat, action, at, { isValidWord });
+      const out = engineAct(G, seat, action, at, { isValidWord, isQuranWord });
 
       if (out.duplicate) return respond(loaded, G, seat, { duplicate: true });
 

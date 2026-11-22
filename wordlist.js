@@ -24,3 +24,6 @@ function load() {
 
 /** true when `word` is accepted by the word list (exact word, or ال + word). */
 export const isValidWord = (word) => load().isValid(word);
+
+/** true when `word` is a word of the Quran (used by rooms in Quran mode, together with isValidWord). */
+export const isQuranWord = (word) => load().isQuranic(word);

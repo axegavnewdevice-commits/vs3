@@ -30,7 +30,7 @@
     room_not_found: 'رمز الغرفة غير صحيح', room_expired: 'انتهت صلاحية الغرفة', room_closed: 'تم إغلاق الغرفة', room_full: 'الغرفة ممتلئة (لاعبان فقط)',
     invalid_code: 'أدخل رمزاً من 6 خانات', network: 'تعذر الاتصال بالخادم، حاول مجدداً', unauthorized: 'تعذر تسجيل الدخول', server_not_configured: 'الخادم غير مُهيّأ بعد',
     not_your_turn: 'ليس دورك', stale: 'تغيّرت اللعبة، تم تحديثها', paused: 'اللعبة متوقفة مؤقتاً', game_over: 'انتهت اللعبة', game_not_over: 'لا يمكن بدء لعبة جديدة قبل نهاية الحالية',
-    bag_too_small: 'لا توجد قطع كافية في الكيس للتبديل', waiting_for_opponent: 'بانتظار انضمام الخصم', nothing_to_undo: 'لا توجد حركة لإلغائها', invalid_word: 'الكلمة غير موجودة في قائمة الكلمات', wordlist_unavailable: 'تعذر تحميل قائمة الكلمات على الخادم', not_a_member: 'لا تملك مقعداً في هذه الغرفة',
+    bag_too_small: 'لا توجد قطع كافية في الكيس للتبديل', waiting_for_opponent: 'بانتظار انضمام الخصم', nothing_to_undo: 'لا توجد حركة لإلغائها', invalid_word: 'الكلمة غير موجودة في قائمة الكلمات', quran_locked: 'وضع القرآن يُغيَّر قبل أول حركة فقط', wordlist_unavailable: 'تعذر تحميل قائمة الكلمات على الخادم', not_a_member: 'لا تملك مقعداً في هذه الغرفة',
     api_missing: 'ملفات الخادم (مجلد api) غير منشورة أو غير مفعّلة على Vercel', server_error: 'حدث خطأ في الخادم',
     supabase_lib: 'تعذر تحميل مكتبة Supabase من الإنترنت', anonymous_disabled: 'فعّل Anonymous sign-ins في إعدادات Supabase (Authentication)',
     supabase_unreachable: 'تعذر الوصول إلى Supabase: تحقق من SUPABASE_URL وأن المشروع غير متوقف', auth_failed: 'رفض Supabase تسجيل الدخول: تحقق من SUPABASE_ANON_KEY',
@@ -247,6 +247,7 @@
         if (ev.type === 'undo_declined' && ev.seat !== MP.seat) toast(T.undoDeclined);
         if (ev.type === 'new_game') closeResult();
         if (ev.type === 'undo_request' && ev.seat !== MP.seat) { /* the dialog below handles it */ }
+      if (ev.type === 'quran' && ev.seat !== MP.seat) toast(ev.on ? 'الخصم فعّل وضع القرآن: كلمات القرآن فقط' : 'الخصم أوقف وضع القرآن');
       }
     }
     if (prev && prev.status !== 'playing' && resp.status === 'playing' && MP.seat === 1) toast(T.joined);
@@ -336,6 +337,10 @@
     if (!MP.active || MP.status !== 'playing' || !MP.view || gameEnded) return;
     const on = MP.view.validation === false;
     await send({ type: 'set_validation', on });   // silent: the red dot on the menu button shows the state
+  };
+  MP.toggleQuran = async () => {   // Quran mode (only words of the Quran) on or off for the whole room, only before the first move (the opponent is told)
+    if (!MP.active || MP.status !== 'playing' || !MP.view || gameEnded || MP.view.started || MP.view.ended || MP.view.turnNo !== 0) return;
+    await send({ type: 'set_quran', on: !MP.view.quran });
   };
   MP.surrender = async () => { if (MP.active && MP.status === 'playing' && !gameEnded) await send({ type: 'surrender' }); };
   MP.newGame = async () => {

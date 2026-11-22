@@ -248,7 +248,7 @@ export function createGame(game = 1) {
   return {
     game, board: emptyBoard(), bag, racks,
     scores: { 1: 0, 2: 0 }, current: 1, turnNo: 0,
-    started: false, paused: false, ended: false, validation: true,   // validation: false = word-list/spelling check switched off for this room
+    started: false, paused: false, ended: false, quran: false, validation: true,   // quran: only words of the Quran are accepted (set_quran, before the first move) / validation: false = word-list/spelling check switched off for this room
     clockMs: INITIAL_TIME_MS, noClock: false,   // starting time of each player / no clock at all (set_clock)
     clocks: { 1: INITIAL_TIME_MS, 2: INITIAL_TIME_MS }, turnStartedAt: null,
     scoreless: 0, lastMove: null, lastWord: null, undoRequest: null, result: null,
@@ -334,7 +334,7 @@ export function settle(G, now) {
 const err = (code) => ({ error: code });
 const isInt = (n, lo, hi) => Number.isInteger(n) && n >= lo && n <= hi;
 
-function actMove(G, seat, a, now, isValidWord) {
+function actMove(G, seat, a, now, isValidWord, isQuranWord) {
   const list = a.placements;
   if (!Array.isArray(list) || list.length < 1 || list.length > RACK_SIZE) return err('bad_move');
   const rack = G.racks[seat];
@@ -364,10 +364,15 @@ function actMove(G, seat, a, now, isValidWord) {
 
   // Dictionary check: a move that forms a word (main or crossing) that is not in the word list is refused and nothing changes.
   const wordText = validation.words.map((w) => w.map(({ tile }) => tile.letter).join(''));
-  if (G.validation !== false) {                       // both players can switch the check off (set_validation); a room made before this option existed has it on
+  if (G.validation !== false || G.quran) {            // both players can switch the check off (set_validation); a room made before this option existed has it on. Quran mode keeps the word rules on
     if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
     const unknown = wordText.filter((w) => !isValidWord(w));
     if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };
+  }
+  if (G.quran) {                                       // Quran mode: every word formed must also be a word of the Quran
+    if (typeof isQuranWord !== 'function') return err('wordlist_unavailable');
+    const notQuran = wordText.filter((w) => !isQuranWord(w));
+    if (notQuran.length) return { error: 'invalid_word', words: notQuran, message: `${notQuran.length > 1 ? 'الكلمات ليست' : 'الكلمة ليست'} من كلمات القرآن: ${notQuran.join('، ')}` };
   }
 
   const score = scoreMove(work, placed);
@@ -528,6 +533,17 @@ function actPause(G, seat, a, now, pause) {
   return { G, rackChanged: [] };
 }
 
+/** Quran mode for the whole room: only words of the Quran are accepted. Either player may switch it, only before the first move of a game (so nobody can change the rules in the middle of it). */
+function actSetQuran(G, seat, a) {
+  if (typeof a.on !== 'boolean') return err('bad_action');
+  if (!!G.quran === a.on) return { G, rackChanged: [] };
+  if (G.ended || G.started || G.turnNo !== 0) return err('quran_locked');
+  G.quran = a.on;
+  G.eventNo += 1;
+  G.event = { no: G.eventNo, type: 'quran', seat, on: a.on };
+  return { G, rackChanged: [] };
+}
+
 /** Switches the word-list check on or off for the whole room (both players see the change). Does not touch the turn, clocks or history. */
 function actSetValidation(G, seat, a) {
   if (typeof a.on !== 'boolean') return err('bad_action');
@@ -587,6 +603,7 @@ function actNewGame(G, seat, a, now) {
   next.turnNo = 0;
   next.seen = G.seen;
   next.validation = G.validation !== false;   // the room keeps its setting for the next game
+  next.quran = !!G.quran;   // ... and Quran mode
   next.clockMs = G.clockMs || INITIAL_TIME_MS;   // ... and its clock choice
   next.noClock = !!G.noClock;
   next.clocks = { 1: next.clockMs, 2: next.clockMs };
@@ -599,6 +616,7 @@ const NEEDS_TURNNO = new Set(['move', 'swap', 'pass', 'undo', 'undo_request', 'u
  * Applies one action by `seat`. Returns { G, rackChanged } or { error, message? }.
  * `a.game` / `a.turnNo` guard against replayed or stale requests; `a.actionId` makes retries idempotent.
  * `opts.isValidWord(word) -> boolean` is the dictionary every `move` is checked against (injected so this file stays pure).
+ * `opts.isQuranWord(word) -> boolean` is the list of Quran words used when the room is in Quran mode.
  * On `error`, G may only have been touched by the clock-expiry settle (see `settled`).
  */
 export function act(G, seat, a, now = Date.now(), opts = {}) {
@@ -621,7 +639,7 @@ export function act(G, seat, a, now = Date.now(), opts = {}) {
       if (G.ended) return err('game_over');
       if (G.paused) return err('paused');
       if (G.current !== seat) return err('not_your_turn');
-      out = a.type === 'move' ? actMove(G, seat, a, now, opts.isValidWord) : a.type === 'swap' ? actSwap(G, seat, a, now) : actPass(G, seat, a, now);
+      out = a.type === 'move' ? actMove(G, seat, a, now, opts.isValidWord, opts.isQuranWord) : a.type === 'swap' ? actSwap(G, seat, a, now) : actPass(G, seat, a, now);
       break;
     }
     case 'undo': case 'undo_request': case 'undo_respond': {
@@ -640,6 +658,10 @@ export function act(G, seat, a, now = Date.now(), opts = {}) {
     case 'set_validation':
       if (G.ended) return err('game_over');
       out = actSetValidation(G, seat, a);
+      break;
+    case 'set_quran':
+      if (G.ended) return err('game_over');
+      out = actSetQuran(G, seat, a);
       break;
     case 'surrender':
       if (G.ended) return err('game_over');
@@ -673,7 +695,7 @@ export function publicView(G) {
   return {
     game: G.game, turnNo: G.turnNo, current: G.current, scores: G.scores,
     clocks: G.clocks, turnStartedAt: G.turnStartedAt, clockMs: G.clockMs || INITIAL_TIME_MS, noClock: !!G.noClock,
-    started: G.started, paused: G.paused, ended: G.ended, result: G.result, validation: G.validation !== false,
+    started: G.started, paused: G.paused, ended: G.ended, result: G.result, validation: G.validation !== false, quran: !!G.quran,
     board, bagCount: G.bag.length,
     rackCounts: { 1: G.racks[1].filter(Boolean).length, 2: G.racks[2].filter(Boolean).length },
     scoreless: G.scoreless,
