@@ -3421,7 +3421,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 if (!window.WordCheck) {
                     await new Promise((resolve, reject) => {
                         const sc = document.createElement('script');
-                        sc.src = 'wordcheck.js?v=q4'; sc.onload = resolve; sc.onerror = () => reject(new Error('wordcheck.js'));
+                        sc.src = 'wordcheck.js?v=q6'; sc.onload = resolve; sc.onerror = () => reject(new Error('wordcheck.js'));
                         document.head.appendChild(sc);
                     });
                 }
