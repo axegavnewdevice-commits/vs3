@@ -671,7 +671,7 @@ html.ios-standalone #mp-modal,
 html.ios-standalone #mp-undo-modal { bottom: calc(-1 * var(--ios-extra)); padding-bottom: calc(var(--ios-extra) + 12px); }
 html.ios-standalone #welcome-splash { padding-bottom: var(--ios-extra); box-sizing: border-box; }
 /* While the welcome screen shows, the page canvas behind it is the splash colour too, so no game background peeks out at launch. */
-html.ios-splash { background-color: #04060a; }
+html.ios-splash, html.ios-splash body, html.ios-splash body[class] { background: #04060a !important; }
 html.ios-standalone .ws-frame { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
 html.ios-standalone .ws-c3, html.ios-standalone .ws-c4 { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
 .game-container {
