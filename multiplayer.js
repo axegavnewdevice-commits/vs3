@@ -544,7 +544,7 @@
           <input id="mp-name" type="text" maxlength="14" autocomplete="off" spellcheck="false" dir="auto">
           <div class="mp-row"><button id="mp-create" class="mp-btn" type="button">${T.create}</button></div>
           <h3>${T.code}</h3>
-          <input id="mp-code" class="mp-code-input" type="text" maxlength="7" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="••••••" aria-label="${T.code}">
+          <input id="mp-code" class="mp-code-input" type="text" maxlength="12" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="••••••" aria-label="${T.code}">
           <div class="mp-row"><button id="mp-join" class="mp-btn mp-alt" type="button">${T.join}</button></div>
         </div>
         <div id="mp-room" class="mp-hidden">
@@ -572,9 +572,20 @@
     const mk = (txt, accept, color) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = `flex:1;min-height:44px;border:0;border-radius:11px;font-weight:800;color:#fff;background:${color};cursor:pointer`; b.onclick = () => { $('mp-undo-modal').classList.remove('mp-open'); send({ type: 'undo_respond', accept }); }; return b; };
     $('mp-undo-row').append(mk(T.yes, true, '#5b7a2c'), mk(T.no, false, '#a33a2f'));
     $('mp-create').onclick = createRoom;
-    $('mp-join').onclick = () => joinRoom($('mp-code').value);
-    $('mp-code').addEventListener('input', (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); });
-    $('mp-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom($('mp-code').value); });
+    // Room code field. Android keyboards (Gboard, Tecno/Transsion keyboards ...) type through a "composing" word; rewriting the field on
+    // every key while a word is composing makes them drop or repeat letters, so the code could not be finished. The field is only
+    // cleaned when no word is being composed (and again when composing ends / the field loses focus); the code is also cleaned before it is sent.
+    const codeIn = $('mp-code');
+    const cleanCode = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    const fixCode = () => {
+      const v = codeIn.value, c = cleanCode(v);
+      if (v !== c) { codeIn.value = c; try { codeIn.setSelectionRange(c.length, c.length); } catch (_) {} }
+    };
+    $('mp-join').onclick = () => joinRoom(cleanCode(codeIn.value));
+    codeIn.addEventListener('input', (e) => { if (e.isComposing) return; fixCode(); });
+    codeIn.addEventListener('compositionend', () => setTimeout(fixCode, 0));
+    codeIn.addEventListener('blur', fixCode);
+    codeIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(cleanCode(codeIn.value)); });
     $('mp-copy').onclick = copyCode;
     $('mp-share').onclick = shareCode;
     let armed = null;
