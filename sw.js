@@ -1,5 +1,5 @@
 /* Arabic Scrabble service worker — bump CACHE_VERSION on every deploy. */
-const CACHE_VERSION = 'v152';
+const CACHE_VERSION = 'v153';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const SCOPE = self.registration.scope; // works at the domain root or in a sub-folder
@@ -42,21 +42,19 @@ self.addEventListener('fetch', (event) => {
   // Live Firebase API traffic is never cached.
   if (/(firestore|identitytoolkit|securetoken)\.googleapis\.com$/.test(url.hostname)) return;
 
-  // Page loads: network first; offline -> the page itself or the cached app shell.
+  // Page loads: show the saved page at once (no blank screen while the network answers), refresh it in the background.
+  // First ever visit (nothing saved yet) or no saved copy: network, then offline fallback.
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
-      try {
-        const response = await fetch(request);
-        if (response.ok) {
-          const cache = await caches.open(SHELL_CACHE);
-          cache.put(new URL('./', SCOPE).href, response.clone());
-        }
-        return response;
-      } catch (_) {
-        return (await caches.match(request, { ignoreSearch: true })) ||
-               (await caches.match(new URL('./', SCOPE).href)) ||
-               new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
-      }
+      const shell = await caches.open(SHELL_CACHE);
+      const key = new URL('./', SCOPE).href;
+      const saved = (await shell.match(key)) || (await caches.match(request, { ignoreSearch: true }));
+      const refresh = fetch(request)
+        .then((response) => { if (response && response.ok) shell.put(key, response.clone()); return response; })
+        .catch(() => null);
+      if (saved) { event.waitUntil(refresh); return saved; }
+      const response = await refresh;
+      return response || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
     })());
     return;
   }
