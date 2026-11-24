@@ -1428,6 +1428,12 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
   html body.horror-mode .player-timer.hb-low { animation: none; }
 }
 </style>
+<style id="dialogs-english-lowercase">
+/* every dialog window: English, lowercase, left-to-right (letters on the blank-tile picker stay Arabic, they are tiles) */
+.modal-overlay, #install-help-backdrop, #wl-overlay, #cr-overlay, #vs-computer-modal { direction: ltr; text-transform: lowercase; }
+.modal-overlay > div, #install-help-card, #cr-panel { text-align: center; }
+#install-help-card { text-align: left; }
+</style>
 </head>
 <body>
 <div id="welcome-splash" role="img" aria-label="arabic scrabble by axegav">
@@ -1603,16 +1609,16 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     <!-- Confirmation Modal Structure (NEW) -->
     <div id="confirm-modal" class="modal-overlay hidden opacity-0">
         <div class="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95">
-            <h2 class="text-2xl font-bold text-red-400 mb-4 text-center">تأكيد بدء لعبة جديدة</h2>
+            <h2 class="text-2xl font-bold text-red-400 mb-4 text-center">start a new game?</h2>
             <p class="text-lg text-gray-200 mb-6 text-center">
-                هل أنت متأكد من أنك تريد إنهاء اللعبة الحالية وبدء لعبة جديدة؟ سيتم فقدان كل التقدم.
+                this ends the current game and you will lose all progress.
             </p>
             <div class="flex justify-between gap-4">
                 <button id="cancel-new-game-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">
-                    إلغاء 
+                    cancel 
                 </button>
                 <button id="confirm-new-game-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition duration-300">
-                    نعم، إبدأ لعبة جديدة
+                    yes, start new game
                 </button>
             </div>
         </div>
@@ -1635,12 +1641,12 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     <!-- Resume modal: continue the last game or start a new one -->
     <div id="resume-modal" class="modal-overlay hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="resume-title">
         <div class="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95">
-            <h2 id="resume-title" class="text-2xl font-bold text-green-400 mb-3 text-center">لعبة غير مكتملة</h2>
-            <p class="text-lg text-gray-200 mb-2 text-center">لديك لعبة سابقة لم تنتهِ بعد. هل تريد متابعتها أم بدء لعبة جديدة؟</p>
+            <h2 id="resume-title" class="text-2xl font-bold text-green-400 mb-3 text-center">unfinished game</h2>
+            <p class="text-lg text-gray-200 mb-2 text-center">you have a game that was not finished. continue it or start a new one?</p>
             <p id="resume-info" class="text-base text-gray-400 mb-6 text-center"></p>
             <div class="flex justify-between gap-4">
-                <button id="resume-new-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">لعبة جديدة</button>
-                <button id="resume-continue-btn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">متابعة اللعبة</button>
+                <button id="resume-new-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">new game</button>
+                <button id="resume-continue-btn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">continue game</button>
             </div>
         </div>
     </div>
@@ -1648,16 +1654,16 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     <!-- NEW: Confirmation Modal for Undo Last Move -->
     <div id="confirm-undo-modal" class="modal-overlay hidden opacity-0">
         <div class="bg-gray-800 p-8 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95">
-            <h2 class="text-2xl font-bold text-yellow-400 mb-4 text-center">تأكيد إلغاء الحركة الأخيرة</h2>
+            <h2 class="text-2xl font-bold text-yellow-400 mb-4 text-center">undo the last move?</h2>
             <p class="text-lg text-gray-200 mb-6 text-center">
-                هل أنت متأكد من أنك تريد إلغاء آخر حركة؟ لا يمكن التراجع بعد التأكيد.
+                are you sure you want to undo the last move? this cannot be taken back.
             </p>
             <div class="flex justify-between gap-4">
                 <button id="cancel-undo-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">
-                    إلغاء 
+                    cancel 
                 </button>
                 <button id="confirm-undo-btn" class="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg shadow-md transition duration-300">
-                    نعم، إلغاء الحركة الأخيرة
+                    yes, undo last move
                 </button>
             </div>
         </div>
@@ -1667,11 +1673,11 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     <!-- NEW: Blank tile letter selection modal -->
     <div id="blank-select-modal" class="modal-overlay hidden opacity-0">
         <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-11/12 transform transition-all duration-300 scale-95">
-            <h2 class="text-2xl font-bold text-yellow-300 mb-2 text-center">اختر حرفاً للقطعة الفارغة</h2>
-            <p class="text-gray-200 mb-4 text-center">القطعة الفارغة تختار حرفاً وتمثلها (القيمة تظل 0).</p>
+            <h2 class="text-2xl font-bold text-yellow-300 mb-2 text-center">choose a letter for the blank tile</h2>
+            <p class="text-gray-200 mb-4 text-center">the blank tile stands for the letter you choose (its value stays 0).</p>
             <div id="blank-options" class="grid grid-cols-6 gap-2 max-h-64 overflow-auto mb-4"></div>
             <div class="flex justify-end gap-2">
-                <button id="cancel-blank-btn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">إلغاء</button>
+                <button id="cancel-blank-btn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg">cancel</button>
             </div>
         </div>
     </div>
@@ -2274,16 +2280,16 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             // Restore the New Game confirmation content (always)
             modalContent.innerHTML = `
-                <h2 class="text-2xl font-bold text-red-400 mb-4 text-center">تأكيد بدء لعبة جديدة</h2>
+                <h2 class="text-2xl font-bold text-red-400 mb-4 text-center">start a new game?</h2>
                 <p class="text-lg text-gray-200 mb-6 text-center">
-                    هل أنت متأكد من أنك تريد إنهاء اللعبة الحالية وبدء لعبة جديدة؟ سيتم فقدان كل التقدم.
+                    this ends the current game and you will lose all progress.
                 </p>
                 <div class="flex justify-between gap-4">
                     <button id="cancel-new-game-btn" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">
-                        إلغاء 
+                        cancel 
                     </button>
                     <button id="confirm-new-game-btn" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition duration-300">
-                        نعم، إبدأ لعبة جديدة
+                        yes, start new game
                     </button>
                 </div>
             `;
@@ -3579,11 +3585,11 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const modalContent = modal.querySelector('.shadow-2xl');
 
             modalContent.innerHTML = `
-                <h2 class="text-2xl font-bold text-red-400 mb-2 text-center">تأكيد الاستسلام</h2>
-                <p class="text-gray-200 mb-4 text-center">هل تريد حقاً الاستسلام؟ سيفوز ${playerName((window.MP && MP.active ? MP.seat : (window.CPU && CPU.active ? 1 : currentPlayer)) === 1 ? 2 : 1)} باللعبة.</p>
+                <h2 class="text-2xl font-bold text-red-400 mb-2 text-center">surrender?</h2>
+                <p class="text-gray-200 mb-4 text-center">do you really want to surrender? ${playerName((window.MP && MP.active ? MP.seat : (window.CPU && CPU.active ? 1 : currentPlayer)) === 1 ? 2 : 1)} will win the game.</p>
                 <div class="flex justify-center gap-4">
-                    <button id="confirm-surrender-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">نعم، استسلم</button>
-                    <button id="cancel-surrender-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">إلغاء</button>
+                    <button id="confirm-surrender-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">yes, surrender</button>
+                    <button id="cancel-surrender-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">cancel</button>
                 </div>
             `;
 
@@ -4773,7 +4779,7 @@ html body.girly-mode .sq-star {
         'Choose “Install app” or “Install and create shortcut”, then confirm “Install”.',
         'Open Arabic Scrabble from your app drawer or Home Screen.'
       ];
-      note = 'If tapping “Install” only creates a shortcut, Chrome could not finish building the app on this device. Update Google Play services, the Play Store and Chrome, or try Firefox (⋮ → Install). Meanwhile, the “ملء الشاشة” button hides the browser bars.';
+      note = 'If tapping “Install” only creates a shortcut, Chrome could not finish building the app on this device. Update Google Play services, the Play Store and Chrome, or try Firefox (⋮ → Install). Meanwhile, the “full screen” button hides the browser bars.';
     } else {
       steps = [
         'In Chrome, select the install icon in the address bar if shown.',
@@ -5302,7 +5308,7 @@ html body.girly-mode .sq-star {
       padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
     }
     #wl-overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, .55); }
-    #wl-panel { width: 100%; max-width: 460px; max-height: 92vh; display: flex; flex-direction: column; direction: rtl; border-radius: 16px; background: #1d2315; color: #f5e6b8;
+    #wl-panel { width: 100%; max-width: 460px; max-height: 92vh; display: flex; flex-direction: column; direction: ltr; text-transform: lowercase; border-radius: 16px; background: #1d2315; color: #f5e6b8;
       border: 1px solid rgba(245, 230, 185, .55); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); overflow: hidden; }
     #wl-panel header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(245, 230, 185, .25); font-weight: 700; font-size: 17px; }
     #wl-panel .wl-body { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
@@ -5342,7 +5348,7 @@ html body.girly-mode .sq-star {
       if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
       if (!Array.isArray(seen)) seen = [];
       const MAX = 1500;
-      const SRC = { offline: 'بدون اتصال', cpu: 'ضد الكمبيوتر', online: 'أونلاين' };
+      const SRC = { offline: 'offline', cpu: 'vs computer', online: 'online' };
       const cpu = () => !!(window.CPU && window.CPU.active);
 
       const save = () => {
@@ -5354,7 +5360,7 @@ html body.girly-mode .sq-star {
         const b = $('word-log-button'); if (!b) return;
         b.style.setProperty('display', on ? 'inline-flex' : 'none', 'important');
         const n = Object.keys(data).filter((w) => data[w].k === 'no' && !data[w].m).length;
-        b.textContent = 'سجل الكلمات' + (n ? ' (' + n + ')' : '');
+        b.textContent = 'word log' + (n ? ' (' + n + ')' : '');
       }
       function toast(msg) {
         const old = $('wl-toast'); if (old) old.remove();
@@ -5409,10 +5415,10 @@ html body.girly-mode .sq-star {
         const word = document.createElement('span'); word.className = 'wl-word'; word.textContent = w;
         const src = document.createElement('span'); src.className = 'wl-src'; src.textContent = SRC[d.s] || '';
         const want = kind === 'no' ? 1 : -1;
-        const mk = document.createElement('button'); mk.type = 'button'; mk.textContent = kind === 'no' ? 'صحيحة' : 'خاطئة';
+        const mk = document.createElement('button'); mk.type = 'button'; mk.textContent = kind === 'no' ? 'valid' : 'invalid';
         if (d.m === want) mk.className = kind === 'no' ? 'wl-on-ok' : 'wl-on-no';
         mk.addEventListener('click', () => { d.m = d.m === want ? 0 : want; save(); paint(); render(); });
-        const x = document.createElement('button'); x.type = 'button'; x.className = 'wl-x'; x.textContent = '×'; x.setAttribute('aria-label', 'إزالة من السجل');
+        const x = document.createElement('button'); x.type = 'button'; x.className = 'wl-x'; x.textContent = '×'; x.setAttribute('aria-label', 'remove from log');
         x.addEventListener('click', () => { delete data[w]; save(); paint(); render(); });
         r.appendChild(word); r.appendChild(src); r.appendChild(mk); r.appendChild(x);
         return r;
@@ -5422,36 +5428,36 @@ html body.girly-mode .sq-star {
         const body = overlay.querySelector('.wl-body'), keep = body.scrollTop;
         body.textContent = '';
         const keys = Object.keys(data).sort((a, b) => data[b].t - data[a].t);
-        [['no', 'رفضتها اللعبة، هل هي صحيحة؟'], ['ok', 'قبلتها اللعبة، هل هي خاطئة؟']].forEach(([kind, title]) => {
+        [['no', 'rejected by the game – is it valid?'], ['ok', 'accepted by the game – is it invalid?']].forEach(([kind, title]) => {
           const list = keys.filter((w) => data[w].k === kind);
           const h = document.createElement('h3'); h.textContent = title + ' (' + list.length + ')'; body.appendChild(h);
-          if (!list.length) { const e = document.createElement('div'); e.className = 'wl-empty'; e.textContent = 'لا توجد كلمات بعد.'; body.appendChild(e); }
+          if (!list.length) { const e = document.createElement('div'); e.className = 'wl-empty'; e.textContent = 'no words yet.'; body.appendChild(e); }
           list.forEach((w) => body.appendChild(row(w, data[w], kind)));
         });
         body.scrollTop = keep;
-        overlay.querySelector('#wl-out').textContent = outText() || 'اضغط «صحيحة» أو «خاطئة» على أي كلمة.';
+        overlay.querySelector('#wl-out').textContent = outText() || 'tap valid or invalid on any word.';
       }
       function close() { if (overlay) { overlay.remove(); overlay = null; } }
       function open() {
         if (!on) return;
         if (overlay) { render(); return; }
         overlay = document.createElement('div'); overlay.id = 'wl-overlay';
-        overlay.innerHTML = '<div id="wl-panel" role="dialog" aria-modal="true" aria-label="سجل الكلمات"><header><span>سجل الكلمات</span><button type="button" id="wl-close" aria-label="إغلاق">×</button></header>'
-          + '<div class="wl-body"></div><footer><pre id="wl-out"></pre><div class="wl-actions"><button type="button" id="wl-copy">نسخ القائمة</button>'
-          + '<button type="button" id="wl-clear-marked">حذف المعلّمة</button><button type="button" id="wl-clear-all">مسح الكل</button><button type="button" id="wl-lock">قفل السجل</button></div></footer></div>';
+        overlay.innerHTML = '<div id="wl-panel" role="dialog" aria-modal="true" aria-label="word log"><header><span>word log</span><button type="button" id="wl-close" aria-label="close">×</button></header>'
+          + '<div class="wl-body"></div><footer><pre id="wl-out"></pre><div class="wl-actions"><button type="button" id="wl-copy">copy list</button>'
+          + '<button type="button" id="wl-clear-marked">delete marked</button><button type="button" id="wl-clear-all">clear all</button><button type="button" id="wl-lock">lock log</button></div></footer></div>';
         document.body.appendChild(overlay);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
         $('wl-close').addEventListener('click', close);
         $('wl-copy').addEventListener('click', async () => {
-          const t = outText(); if (!t) { toast('لا توجد كلمات معلّمة بعد'); return; }
+          const t = outText(); if (!t) { toast('no marked words yet'); return; }
           let ok = false;
           try { await navigator.clipboard.writeText(t); ok = true; } catch (_) {}
           if (!ok) { try { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove(); } catch (_) {} }
-          toast(ok ? 'تم نسخ القائمة' : 'تعذّر النسخ، انسخ النص يدوياً');
+          toast(ok ? 'list copied' : 'copy failed, copy the text by hand');
         });
         $('wl-clear-marked').addEventListener('click', () => { Object.keys(data).forEach((w) => { if (data[w].m) delete data[w]; }); save(); paint(); render(); });
-        $('wl-clear-all').addEventListener('click', () => { if (confirm('مسح كل الكلمات من السجل؟')) { data = {}; save(); paint(); render(); } });
-        $('wl-lock').addEventListener('click', () => { if (confirm('قفل السجل وإخفاء زره من القائمة؟')) { on = false; ls.del(K_ON); close(); paint(); toast('تم قفل السجل'); } });
+        $('wl-clear-all').addEventListener('click', () => { if (confirm('clear all words from the log?')) { data = {}; save(); paint(); render(); } });
+        $('wl-lock').addEventListener('click', () => { if (confirm('lock the log and hide its button from the menu?')) { on = false; ls.del(K_ON); close(); paint(); toast('log locked'); } });
         render();
       }
 
@@ -5462,7 +5468,7 @@ html body.girly-mode .sq-star {
         taps = (now - lastTap > 800) ? 1 : taps + 1; lastTap = now;
         if (taps < 7) return;
         taps = 0;
-        if (!on) { on = true; ls.set(K_ON, '1'); paint(); toast('تم فتح سجل الكلمات، ستجده في القائمة الدائرية'); }
+        if (!on) { on = true; ls.set(K_ON, '1'); paint(); toast('word log unlocked, find it in the round menu'); }
         else open();
       }
 
@@ -5891,14 +5897,14 @@ html body.girly-mode .sq-star {
         const b = $('quran-toggle-button'); if (!b) return;
         b.addEventListener('click', () => {
           if (online()) {
-            if (!canToggleOnline()) { toast('وضع القرآن يُغيَّر قبل أول حركة فقط'); return; }
+            if (!canToggleOnline()) { toast('quran mode can only be changed before the first move'); return; }
             if (MP.toggleQuran) MP.toggleQuran();
             return;
           }
           local = !local;
           try { localStorage.setItem(KEY, local ? 'on' : 'off'); } catch (_) {}
           window.paintQuran();
-          toast(local ? 'وضع القرآن مفعّل: كلمات القرآن فقط' : 'تم إيقاف وضع القرآن');
+          toast(local ? 'quran mode on: quran words only' : 'quran mode off');
         });
         if (window.MutationObserver) new MutationObserver(() => window.paintQuran()).observe(document.body, { attributes: true, attributeFilter: ['class'] });
         window.paintQuran();
@@ -5997,7 +6003,7 @@ html body.girly-mode .sq-star {
         const b = document.getElementById('sound-toggle-button'); if (!b) return;
         b.classList.toggle('sound-off', !enabled);
         b.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-        const label = enabled ? 'الصوت: مفعّل' : 'الصوت: متوقف';
+        const label = enabled ? 'sound: on' : 'sound: off';
         b.setAttribute('aria-label', label); b.title = label;
       };
       const start = () => {
@@ -7115,10 +7121,10 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
         tilesToSwapIndices = swapIdx.slice();
         isSwappingMode = false;
         performSwap();
-        toast('الكمبيوتر بدّل ' + swapIdx.length + ' قطع');
+        toast('computer swapped ' + swapIdx.length + ' tiles');
       } else {
         passTurn();
-        toast('الكمبيوتر مرّر دوره');
+        toast('computer passed its turn');
       }
     } finally { CPU.acting = false; }
   }
@@ -7185,7 +7191,7 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
   }
 
   function start(level) {
-    if (mp()) { toast('غادر الغرفة الأونلاين أولاً'); return; }
+    if (mp()) { toast('leave the online room first'); return; }
     if (!LEVELS[level]) level = 'medium';
     CPU.active = true; CPU.level = level;
     try { localStorage.setItem(LS_LEVEL, level); } catch (_) {}
@@ -7207,18 +7213,18 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
     dlg.className = 'modal-overlay hidden opacity-0';
     dlg.setAttribute('role', 'dialog'); dlg.setAttribute('aria-modal', 'true'); dlg.setAttribute('aria-labelledby', 'vsc-title');
     dlg.innerHTML =
-      '<div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95" dir="rtl">' +
-        '<h2 id="vsc-title" class="text-2xl font-bold text-yellow-300 mb-1 text-center">اللعب ضد الكمبيوتر</h2>' +
-        '<p class="text-sm text-gray-400 mb-3 text-center" dir="ltr">Play vs computer · works offline · you move first</p>' +
-        '<p id="vsc-warn" class="text-base text-gray-200 mb-3 text-center" style="display:none">ستبدأ لعبة جديدة وتُفقد اللعبة الحالية.</p>' +
+      '<div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm w-11/12 transform transition-all duration-300 scale-95" dir="ltr">' +
+        '<h2 id="vsc-title" class="text-2xl font-bold text-yellow-300 mb-1 text-center">play vs computer</h2>' +
+        '<p class="text-sm text-gray-400 mb-3 text-center" dir="ltr">works offline · you move first</p>' +
+        '<p id="vsc-warn" class="text-base text-gray-200 mb-3 text-center" style="display:none">this starts a new game and the current game will be lost.</p>' +
         '<div class="vsc-levels">' +
-          '<button type="button" data-level="easy" class="vsc-level px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">سهل <span class="vsc-en">Easy</span></button>' +
-          '<button type="button" data-level="medium" class="vsc-level px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg shadow-md transition duration-300">متوسط <span class="vsc-en">Medium</span></button>' +
-          '<button type="button" data-level="hard" class="vsc-level px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition duration-300">صعب <span class="vsc-en">Hard</span></button>' +
+          '<button type="button" data-level="easy" class="vsc-level px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition duration-300">easy</button>' +
+          '<button type="button" data-level="medium" class="vsc-level px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg shadow-md transition duration-300">medium</button>' +
+          '<button type="button" data-level="hard" class="vsc-level px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition duration-300">hard</button>' +
         '</div>' +
         '<div class="vsc-actions">' +
-          '<button type="button" id="vsc-two" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">لاعبان بدون كمبيوتر</button>' +
-          '<button type="button" id="vsc-cancel" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">إلغاء</button>' +
+          '<button type="button" id="vsc-two" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">two players, no computer</button>' +
+          '<button type="button" id="vsc-cancel" class="flex-1 px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition duration-300">cancel</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(dlg);
@@ -7230,7 +7236,7 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
     return dlg;
   }
   function openDialog() {
-    if (mp()) { toast('غادر الغرفة الأونلاين أولاً'); return; }
+    if (mp()) { toast('leave the online room first'); return; }
     const m = buildDialog();
     const inGame = gameStarted && !gameEnded;
     m.querySelector('#vsc-warn').style.display = inGame ? '' : 'none';

@@ -367,12 +367,12 @@ function actMove(G, seat, a, now, isValidWord, isQuranWord) {
   if (G.validation !== false && !G.quran) {           // AyaSpell check: both players can switch it off (set_validation); a room made before this option existed has it on. In Quran mode the Quran whitelist below is the only word check
     if (typeof isValidWord !== 'function') return err('wordlist_unavailable');
     const unknown = wordText.filter((w) => !isValidWord(w));
-    if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'الكلمات غير موجودة' : 'الكلمة غير موجودة'} في قائمة الكلمات: ${unknown.join('، ')}` };
+    if (unknown.length) return { error: 'invalid_word', words: unknown, message: `${unknown.length > 1 ? 'these words are' : 'this word is'} not in the word list: ${unknown.join(', ')}` };
   }
   if (G.quran) {                                       // Quran mode: every word formed must also be a word of the Quran
     if (typeof isQuranWord !== 'function') return err('wordlist_unavailable');
     const notQuran = wordText.filter((w) => !isQuranWord(w));
-    if (notQuran.length) return { error: 'invalid_word', words: notQuran, message: `${notQuran.length > 1 ? 'الكلمات ليست' : 'الكلمة ليست'} من كلمات القرآن: ${notQuran.join('، ')}` };
+    if (notQuran.length) return { error: 'invalid_word', words: notQuran, message: `${notQuran.length > 1 ? 'these words are' : 'this word is'} not words of the quran: ${notQuran.join(', ')}` };
   }
 
   const score = scoreMove(work, placed);
