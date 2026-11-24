@@ -2598,7 +2598,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 <div class="tile" draggable="true" data-tile-id="${tile.id}" data-letter="${tile.letter}" data-value="${displayValue}" data-is-blank="${tile.isBlank}">
                     <div class="tile-content">
                         <span class="${letterClass}">${displayLetter}</span>
-                        <span class="tile-score">${toArabicDigits(displayValue)}</span>
+                        <span class="tile-score">${String(displayValue)}</span>
                     </div>
                 </div>
             `;
