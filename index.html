@@ -4955,8 +4955,10 @@ html body.girly-mode .sq-star {
     </script>
 
     <script id="player-names">
-    /* Editable player names: double-tap (or double-click) a name on a rack card, then type. Works before or during a game.
-       Names are remembered on the device and used in the game's texts. */
+    /* Editable player names: double-tap (or double-click) a name on a rack card. A small dialog opens and the name is typed there.
+       Why a dialog: iPhone only opens the keyboard when the person taps a normal text field themselves; opening it from a script
+       after a double-tap is refused. In the dialog the field is tapped directly, so the keyboard always opens, and the dialog sits
+       near the top so the keyboard never covers it. Names are remembered on the device and used in the game's texts. */
     (() => {
       const KEY = 'arabicScrabble.names.v1';
       const DEF = { 1: 'Player 1', 2: 'Player 2' };
@@ -4975,6 +4977,80 @@ html body.girly-mode .sq-star {
       // Locked names: online both names come from the room; against the computer player 2 is the computer.
       const locked = (k) => !!((window.MP && MP.active) || (k === 2 && window.CPU && CPU.active));
       const DBL_MS = 380, DBL_DIST = 30;                     // two taps within 380 ms and 30 px
+      const GUARD_MS = 500;                                  // the touch that opened the dialog must not click inside it
+
+      // ---------- the dialog (built the first time it is needed) ----------
+      let ui = null, editing = 0, openedAt = 0;
+      const build = () => {
+        if (ui) return ui;
+        const css = document.createElement('style');
+        css.textContent = [
+          '#name-edit-modal{position:fixed;inset:0;z-index:100100;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 14px 14px;background:rgba(8,12,6,.72);direction:ltr;text-transform:lowercase;overflow-y:auto;-webkit-overflow-scrolling:touch}',
+          '#name-edit-modal.ne-open{display:flex}',
+          '#name-edit-modal .ne-card{width:min(100%,22rem);box-sizing:border-box;background:#1f2937;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:16px;box-shadow:0 20px 50px rgba(0,0,0,.5)}',
+          '#name-edit-modal .ne-title{font-weight:700;font-size:1.05rem;margin-bottom:10px;text-align:center}',
+          '#name-edit-modal .ne-input{width:100%;box-sizing:border-box;font-size:20px;padding:10px 12px;border-radius:10px;border:2px solid #facc15;background:#0f172a;color:#fff;text-align:center;outline:none;text-transform:none;-webkit-appearance:none;appearance:none;-webkit-user-select:text!important;user-select:text!important}',
+          '#name-edit-modal .ne-row{display:flex;gap:10px;margin-top:12px}',
+          '#name-edit-modal .ne-row button{flex:1;min-height:44px;border-radius:10px;border:0;font-weight:700;font-size:1rem;cursor:pointer;touch-action:manipulation;text-transform:lowercase}',
+          '#name-edit-modal .ne-save{background:#facc15;color:#1a1a1a}',
+          '#name-edit-modal .ne-cancel{background:#374151;color:#fff}'
+        ].join('\n');
+        document.head.appendChild(css);
+
+        const back = document.createElement('div'); back.id = 'name-edit-modal';
+        back.setAttribute('role', 'dialog'); back.setAttribute('aria-modal', 'true'); back.setAttribute('aria-label', 'change player name');
+        const card = document.createElement('div'); card.className = 'ne-card';
+        const title = document.createElement('div'); title.className = 'ne-title'; title.textContent = 'player name';
+        const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'ne-input'; inp.maxLength = 14;
+        [['dir', 'auto'], ['autocomplete', 'off'], ['autocorrect', 'off'], ['autocapitalize', 'words'], ['spellcheck', 'false'], ['enterkeyhint', 'done'], ['aria-label', 'player name']]
+          .forEach(([a, v]) => inp.setAttribute(a, v));
+        const row = document.createElement('div'); row.className = 'ne-row';
+        const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'ne-cancel'; cancel.textContent = 'cancel';
+        const save = document.createElement('button'); save.type = 'button'; save.className = 'ne-save'; save.textContent = 'save';
+        row.appendChild(cancel); row.appendChild(save);
+        card.appendChild(title); card.appendChild(inp); card.appendChild(row);
+        back.appendChild(card); document.body.appendChild(back);
+
+        const late = () => performance.now() - openedAt > GUARD_MS;
+        cancel.addEventListener('click', () => { if (late()) close(); });
+        save.addEventListener('click', () => { if (late()) commit(); });
+        back.addEventListener('click', (e) => { if (e.target === back && late()) close(); });
+        inp.addEventListener('keydown', (e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          else if (e.key === 'Escape') { e.preventDefault(); close(); }
+        });
+        ui = { back, inp };
+        return ui;
+      };
+      const close = () => {
+        editing = 0;
+        if (!ui) return;
+        ui.back.classList.remove('ne-open');
+        try { ui.inp.blur(); } catch (_) {}
+      };
+      const commit = () => {
+        const k = editing;
+        if (!k || locked(k)) { close(); return; }
+        const v = ui.inp.value.trim().slice(0, 14);
+        names[k] = v || DEF[k];
+        const main = document.getElementById('player-' + k + '-name');
+        if (main) { main.value = names[k]; main.setAttribute('aria-label', 'Player name: ' + names[k]); }
+        store();
+        close();
+      };
+      const openEditor = (k) => {
+        if (locked(k)) return;                               // the single gate: touch, mouse, pen and keyboard all end up here
+        build();
+        editing = k; openedAt = performance.now();
+        ui.inp.value = names[k];
+        ui.back.classList.add('ne-open');
+        // Android and desktop open the keyboard from here; on iPhone the person taps the field once.
+        try { ui.inp.focus({ preventScroll: true }); ui.inp.setSelectionRange(0, ui.inp.value.length); } catch (_) {}
+        setTimeout(() => { if (editing === k) { try { ui.inp.focus({ preventScroll: true }); } catch (_) {} } }, 80);
+      };
+
+      // ---------- the name boxes on the rack cards (never typed into directly) ----------
       const wire = () => {
         [1, 2].forEach(k => {
           const input = document.getElementById('player-' + k + '-name');
@@ -4991,54 +5067,31 @@ html body.girly-mode .sq-star {
             return l;
           };
           ['pointerenter', 'mouseover', 'focus', 'touchstart'].forEach(ev => input.addEventListener(ev, syncLock, { passive: true }));
-          const beginEdit = () => {
-            if (!input.readOnly) return;
-            if (syncLock()) return;                            // the single gate: touch, mouse, pen and keyboard all end up here
-            input.readOnly = false; input.classList.add('name-editing');
-            // No haptic tick here: on iPhone it clicks a hidden switch, which steals the focus and the keyboard never opens.
-            try { input.focus({ preventScroll: true }); } catch (_) {}
-            try { input.setSelectionRange(0, input.value.length); } catch (_) { try { input.select(); } catch (__) {} }   // select() is unreliable on iPhone
-          };
-          const finish = () => {
-            if (input.readOnly) return;                        // not editing: a plain focus/blur must never overwrite the saved name
-            const v = input.value.trim().slice(0, 14);
-            names[k] = v || DEF[k]; input.value = names[k];
-            input.setAttribute('aria-label', 'Player name: ' + names[k]);
-            input.readOnly = true; input.classList.remove('name-editing');
-            store();
-          };
+          const begin = () => { if (syncLock()) return; openEditor(k); };
 
           let last = { t: 0, x: 0, y: 0 };
-          // Double-tap detection. iPhone only opens the keyboard when focus() runs inside a real touch/click event, so touch uses
-          // 'touchend' (a pointer event is not accepted there). Mouse and pen keep using pointerup. Each tap is counted once.
-          const tap = (x, y) => {
+          const tap = (x, y) => {                            // every tap is counted once
             const now = performance.now();
-            if (now - last.t < DBL_MS && Math.hypot(x - last.x, y - last.y) < DBL_DIST) { last.t = 0; beginEdit(); }
-            else last = { t: now, x, y };
+            if (now - last.t < DBL_MS && Math.hypot(x - last.x, y - last.y) < DBL_DIST) { last.t = 0; begin(); return true; }
+            last = { t: now, x, y };
+            return false;
           };
-          input.addEventListener('pointerup', (e) => {
-            if (!input.readOnly) return;                       // already editing: let the cursor move normally
-            if (e.pointerType === 'touch') return;             // touch is handled by touchend below
+          input.addEventListener('pointerup', (e) => {       // mouse and pen
+            if (e.pointerType === 'touch') return;           // touch is handled by touchend below
             if (e.pointerType === 'mouse' && e.button !== 0) return;
             tap(e.clientX, e.clientY);
           });
           input.addEventListener('touchend', (e) => {
-            if (!input.readOnly || locked(k)) return;
+            if (locked(k)) return;
             const t = e.changedTouches && e.changedTouches[0];
             if (!t) return;
-            const now = performance.now();
-            const isSecond = now - last.t < DBL_MS && Math.hypot(t.clientX - last.x, t.clientY - last.y) < DBL_DIST;
-            tap(t.clientX, t.clientY);
-            if (isSecond && e.cancelable) e.preventDefault();  // no zoom / extra click after the second tap; the keyboard is already opening
+            if (tap(t.clientX, t.clientY) && e.cancelable) e.preventDefault();   // no zoom and no ghost click on the new dialog
           }, { passive: false });
-          input.addEventListener('dblclick', (e) => { if (input.readOnly) { e.preventDefault(); beginEdit(); } });
-          input.addEventListener('contextmenu', (e) => { if (input.readOnly) e.preventDefault(); });
-          input.addEventListener('input', () => { if (input.readOnly || locked(k)) return; names[k] = input.value.slice(0, 14); store(); });
-          input.addEventListener('blur', finish);
+          input.addEventListener('dblclick', (e) => { e.preventDefault(); begin(); });
+          input.addEventListener('contextmenu', (e) => e.preventDefault());
           input.addEventListener('keydown', (e) => {
             e.stopPropagation();
-            if (input.readOnly) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); beginEdit(); } return; }   // keyboard users
-            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); }   // keyboard users
           });
         });
       };
