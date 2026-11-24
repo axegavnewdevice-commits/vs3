@@ -8,7 +8,7 @@
    theme background can reach the real bottom (CSS below). Only iOS standalone is touched. */
 (function(){try{var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 var sa=navigator.standalone===true||(window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches));
-if(ios&&sa)document.documentElement.classList.add('ios-standalone');}catch(e){}})();
+if(ios&&sa)document.documentElement.classList.add('ios-standalone','ios-splash');}catch(e){}})();
 </script>
     <meta name="theme-color" content="#232a17">
     <meta name="mobile-web-app-capable" content="yes">
@@ -670,6 +670,8 @@ html.ios-standalone #cr-overlay,
 html.ios-standalone #mp-modal,
 html.ios-standalone #mp-undo-modal { bottom: calc(-1 * var(--ios-extra)); padding-bottom: calc(var(--ios-extra) + 12px); }
 html.ios-standalone #welcome-splash { padding-bottom: var(--ios-extra); box-sizing: border-box; }
+/* While the welcome screen shows, the page canvas behind it is the splash colour too, so no game background peeks out at launch. */
+html.ios-splash { background-color: #04060a; }
 html.ios-standalone .ws-frame { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
 html.ios-standalone .ws-c3, html.ios-standalone .ws-c4 { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
 .game-container {
@@ -1428,7 +1430,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
 <script>
 (() => {
     const root = document.getElementById('welcome-splash');
-    if (!root) return;
+    if (!root) { document.documentElement.classList.remove('ios-splash'); return; }
     const split = (el) => {                                   // one span per letter, text stays exactly as written
         const text = el.textContent; el.textContent = '';
         [...text].forEach((ch, i) => {
@@ -1441,7 +1443,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
     const leave = () => {
         if (left) return; left = true;
         root.classList.add('ws-out');
-        setTimeout(() => root.remove(), 800);
+        setTimeout(() => { root.remove(); document.documentElement.classList.remove('ios-splash'); }, 800);
     };
     // Fit: pick the largest font size at which the title fits the screen (88% of the width, 62% of the height)
     const fit = () => {
