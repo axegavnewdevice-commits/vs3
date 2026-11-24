@@ -272,7 +272,8 @@ if(ios&&sa)document.documentElement.classList.add('ios-standalone','ios-splash')
             touch-action: manipulation; -webkit-touch-callout: none;
             transition: border-color 0.2s ease, background-color 0.2s ease;
         }
-        .player-name-input[readonly] { cursor: default; caret-color: transparent; -webkit-user-select: none !important; user-select: none !important; }
+        .player-name-input[readonly] { cursor: default; caret-color: transparent; -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: none; }   /* user-select must stay on, or iPhone never shows the keyboard */
+        .player-name-input[readonly]::selection { background: transparent; }
         .player-name-input.name-editing { cursor: text; -webkit-user-select: text !important; user-select: text !important; border-bottom: 1px solid #facc15; background-color: rgba(255, 255, 255, 0.08); }
         @media (hover: hover) { .player-name-input[readonly]:hover { border-bottom: 1px dashed rgba(255, 255, 255, 0.4); } }
         /* Player Area Styling */
@@ -4983,7 +4984,8 @@ html body.girly-mode .sq-star {
             if (!input.readOnly) return;
             input.readOnly = false; input.classList.add('name-editing');
             window.gameHaptic && window.gameHaptic();
-            try { input.focus({ preventScroll: true }); input.select(); } catch (_) {}
+            try { input.focus({ preventScroll: true }); } catch (_) {}
+            try { input.setSelectionRange(0, input.value.length); } catch (_) { try { input.select(); } catch (__) {} }   // select() is unreliable on iPhone
           };
           const finish = () => {
             const v = input.value.trim().slice(0, 14);
@@ -4994,13 +4996,28 @@ html body.girly-mode .sq-star {
           };
 
           let last = { t: 0, x: 0, y: 0 };
+          // Double-tap detection. iPhone only opens the keyboard when focus() runs inside a real touch/click event, so touch uses
+          // 'touchend' (a pointer event is not accepted there). Mouse and pen keep using pointerup. Each tap is counted once.
+          const tap = (x, y) => {
+            const now = performance.now();
+            if (now - last.t < DBL_MS && Math.hypot(x - last.x, y - last.y) < DBL_DIST) { last.t = 0; beginEdit(); }
+            else last = { t: now, x, y };
+          };
           input.addEventListener('pointerup', (e) => {
             if (!input.readOnly) return;                       // already editing: let the cursor move normally
+            if (e.pointerType === 'touch') return;             // touch is handled by touchend below
             if (e.pointerType === 'mouse' && e.button !== 0) return;
-            const now = performance.now();
-            if (now - last.t < DBL_MS && Math.hypot(e.clientX - last.x, e.clientY - last.y) < DBL_DIST) { last.t = 0; beginEdit(); }
-            else last = { t: now, x: e.clientX, y: e.clientY };
+            tap(e.clientX, e.clientY);
           });
+          input.addEventListener('touchend', (e) => {
+            if (!input.readOnly) return;
+            const t = e.changedTouches && e.changedTouches[0];
+            if (!t) return;
+            const now = performance.now();
+            const isSecond = now - last.t < DBL_MS && Math.hypot(t.clientX - last.x, t.clientY - last.y) < DBL_DIST;
+            tap(t.clientX, t.clientY);
+            if (isSecond && e.cancelable) e.preventDefault();  // no zoom / extra click after the second tap; the keyboard is already opening
+          }, { passive: false });
           input.addEventListener('dblclick', (e) => { if (input.readOnly) { e.preventDefault(); beginEdit(); } });
           input.addEventListener('contextmenu', (e) => { if (input.readOnly) e.preventDefault(); });
           input.addEventListener('input', () => { names[k] = input.value.slice(0, 14); store(); });
@@ -7319,5 +7336,29 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
 })();
 </script>
 
+<script>
+/* iPhone: the keyboard slides over the page without resizing it, so the centred online dialog ended up behind it.
+   The dialog now takes the size and position of the VISIBLE area (above the keyboard) and the focused field is scrolled into view. */
+(() => {
+  const vv = window.visualViewport;
+  const modal = () => document.getElementById('mp-modal');
+  const fit = () => {
+    const m = modal(); if (!m || !vv) return;
+    m.style.setProperty('--vvh', vv.height + 'px');
+    m.style.setProperty('--vvt', vv.offsetTop + 'px');
+  };
+  const reveal = (el) => {
+    fit();
+    setTimeout(() => { fit(); try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} }, 300);
+  };
+  if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+  document.addEventListener('focusin', (e) => {
+    const t = e.target;
+    if (t && t.closest && t.closest('#mp-modal') && /^(INPUT|TEXTAREA)$/.test(t.tagName)) reveal(t);
+  });
+  document.addEventListener('focusout', () => setTimeout(fit, 150));
+  fit();
+})();
+</script>
 </body>
 </html>

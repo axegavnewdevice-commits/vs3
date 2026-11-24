@@ -52,7 +52,10 @@ body.mp-seat-1 #player-1-area .player-id, body.mp-seat-2 #player-2-area .player-
 .square.mp-draft .tile { opacity: .8; outline: 2px dashed rgba(232, 197, 108, .95); outline-offset: -2px; }
 
 /* ---- room dialog ---- */
-#mp-modal { position: fixed; inset: 0; z-index: 9500; display: none; align-items: center; justify-content: center; padding: 14px; background: rgba(8, 12, 6, .72); }
+#mp-modal { position: fixed; inset: 0; z-index: 9500; display: none; align-items: flex-start; justify-content: center; padding: 14px; background: rgba(8, 12, 6, .72); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* the size and position follow the visible area above the iPhone keyboard (set by a small script in index.html) */
+#mp-modal.mp-open { top: var(--vvt, 0px); bottom: auto; height: var(--vvh, 100%); box-sizing: border-box; }
+#mp-modal > #mp-card { margin: auto; max-height: min(calc(var(--vvh, 100vh) - 28px), 640px); }   /* centred when there is room, scrolls from the top when there is not */
 #mp-modal.mp-open { display: flex; }
 #mp-card {
   width: min(100%, 420px); max-height: min(90vh, 640px); overflow: auto; padding: 20px; border-radius: 18px;
