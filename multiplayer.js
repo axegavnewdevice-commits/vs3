@@ -674,7 +674,7 @@
     const origName = window.playerName;
     window.playerName = (n) => (MP.active ? MP.names[n === 2 ? 2 : 1] : origName(n));
     const cont = $('player-racks-container');
-    if (cont) ['pointerup', 'dblclick', 'keydown', 'contextmenu'].forEach((t) => cont.addEventListener(t, (e) => { if (MP.active && e.target.closest && e.target.closest('.player-name-input')) e.stopPropagation(); }, true));
+    if (cont) ['pointerup', 'dblclick', 'keydown', 'contextmenu', 'touchend'].forEach((t) => cont.addEventListener(t, (e) => { if (MP.active && e.target.closest && e.target.closest('.player-name-input')) e.stopPropagation(); }, true));
 
     const link = new URLSearchParams(location.search).get('room');
     if (link) {
