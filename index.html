@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+/* iPhone/iPad installed app: the page box can end short of the physical bottom edge. Mark it so overlays and the
+   theme background can reach the real bottom (CSS below). Only iOS standalone is touched. */
+(function(){try{var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+var sa=navigator.standalone===true||(window.matchMedia&&(matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches));
+if(ios&&sa)document.documentElement.classList.add('ios-standalone');}catch(e){}})();
+</script>
     <meta name="theme-color" content="#232a17">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -652,6 +659,19 @@ html { height: 100%; min-height: 100vh; overflow: hidden; overscroll-behavior: n
 /* The game always fits the screen: the page never rolls up or down. The body stays in normal flow (not position:fixed)
    so its theme background keeps painting all the way to the bottom edge on iPhones, home bar included. */
 body { height: 100%; min-height: 100vh; overflow: hidden; overscroll-behavior: none; }
+
+/* iOS installed app only: extend the page and every full-screen overlay below the layout viewport so no base-colour strip shows at the bottom. */
+html.ios-standalone { --ios-extra: 160px; height: calc(100% + var(--ios-extra)); min-height: calc(100vh + var(--ios-extra)); }
+html.ios-standalone body { height: calc(100% - 0px); min-height: calc(100vh + var(--ios-extra)); }
+html.ios-standalone #welcome-splash,
+html.ios-standalone #install-help-backdrop,
+html.ios-standalone #wl-overlay,
+html.ios-standalone #cr-overlay,
+html.ios-standalone #mp-modal,
+html.ios-standalone #mp-undo-modal { bottom: calc(-1 * var(--ios-extra)); padding-bottom: calc(var(--ios-extra) + 12px); }
+html.ios-standalone #welcome-splash { padding-bottom: var(--ios-extra); box-sizing: border-box; }
+html.ios-standalone .ws-frame { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
+html.ios-standalone .ws-c3, html.ios-standalone .ws-c4 { bottom: calc(clamp(10px, 2.4vmin, 26px) + var(--ios-extra)); }
 .game-container {
     position: relative !important;
     display: block !important;
