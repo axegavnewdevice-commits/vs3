@@ -648,8 +648,9 @@
     <link rel="stylesheet" href="multiplayer.css">
 <style id="floating-layout-overrides">
 /* Independently floating play areas: the original game palette, fonts, tiles and control styling are retained. */
-html { min-height: 100%; }
-body { overflow-x: hidden; }
+html { height: 100%; overflow: hidden; overscroll-behavior: none; }
+/* The game always fits the screen: the page is fixed and never rolls up or down. */
+body { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
 .game-container {
     position: relative !important;
     display: block !important;
@@ -3727,6 +3728,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const movable = [board, ...players, ...controls.filter(button => controlIds.has(button.id)), status].filter(Boolean);
             if (!board || players.some(player => !player) || !status) return;
             const MIN_BOARD_SIZE = 225;
+            let fitK = 1;   // shrink-to-fit factor so the whole game always fits the screen without page scrolling
             const resizable = [board, ...players, ...controls.filter(button => controlIds.has(button.id) && !UNIFORM_IDS.includes(button.id))].filter(Boolean);
             const resizeHandles = new Map();
             [board, ...players, status].forEach(element => { if (!element.hasAttribute('tabindex')) element.tabIndex = 0; });
@@ -3867,6 +3869,15 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
 
             function updateStageHeight() {
                 syncBoardTileMetrics();
+                // Nothing may sit below the bottom edge of the screen: the page does not scroll any more.
+                const availH = stageAvailHeight();
+                const topLimit = (title?.offsetHeight || 0) + 7;
+                movable.forEach(element => {
+                    if (element === status) return;
+                    const h = rectHeight(element);
+                    const maxY = Math.max(topLimit, availH - h);
+                    if (getPosition(element).y > maxY) element.style.top = px(maxY);
+                });
                 let bottom = (title?.offsetHeight || 0) + 12;
                 movable.forEach(element => {
                     const p = getPosition(element);
@@ -3883,9 +3894,9 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             }
             function applyUiScale() {
                 const scale = uiScale();
-                document.documentElement.style.setProperty('--ui-scale', scale.toFixed(3));
+                document.documentElement.style.setProperty('--ui-scale', (scale * fitK).toFixed(3));
                 document.documentElement.style.fontSize = scale > 1.04 ? (16 * scale).toFixed(2) + 'px' : '';
-                return scale;
+                return scale * fitK;
             }
 
             function applyResponsiveGeometry() {
@@ -3899,7 +3910,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 const titleHeight = title ? Math.max(title.offsetHeight, 0) : 0;
                 const contentTop = titleHeight + 10;
                 const horizontalGap = 12;
-                const sideBySide = orientation === 'landscape' ? width >= 700 : width >= 960;
+                const sideBySide = orientation === 'landscape' ? width >= 540 : width >= 960;
                 let boardSize;
                 if (sideBySide) {
                     const heightCap = orientation === 'landscape'
@@ -3913,7 +3924,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     boardSize = Math.min(750 * S, width * 0.95);
                 }
                 const availableBoardWidth = Math.max(165, container.clientWidth - 8);
-                boardSize = clamp(Math.round(boardSize), Math.min(MIN_BOARD_SIZE, availableBoardWidth), availableBoardWidth);
+                boardSize *= fitK;
+                boardSize = clamp(Math.round(boardSize), Math.min(MIN_BOARD_SIZE * Math.min(1, fitK), availableBoardWidth), availableBoardWidth);
                 board.style.removeProperty('--float-board-size');
                 board.style.removeProperty('width');
                 board.style.removeProperty('height');
@@ -3923,7 +3935,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 if (sideBySide) {
                     playerWidth = Math.min(320 * S, Math.max(178, (width - boardSize - horizontalGap * 4) / 2));
                 } else {
-                    playerWidth = Math.min(490 * S, width * (width < 400 ? 0.88 : 0.96));
+                    playerWidth = Math.max(140, Math.min(490 * S, width * (width < 400 ? 0.88 : 0.96) * fitK));
                 }
                 container.style.setProperty('--float-player-width', `${playerWidth}px`);
                 players.forEach(player => {
@@ -3937,7 +3949,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 const columns = 4;   // 4 per row keeps phones compact (11 buttons = 3 rows)
                 const outerMargin = width < 400 ? 2 : 8;
                 const buttonGap = width < 400 ? 5 : 8;
-                const buttonWidth = Math.max(44, Math.min(58 * S, Math.floor((width - outerMargin * 2 - buttonGap * (columns - 1)) / columns)));
+                const buttonWidth = Math.max(30, 44 * Math.min(1, fitK), Math.min(58 * S, Math.floor((width - outerMargin * 2 - buttonGap * (columns - 1)) / columns)));
                 container.style.setProperty('--float-button-width', `${buttonWidth}px`);
                 buttonList.forEach(button => {
                     button.style.removeProperty('--float-button-width');
@@ -4129,9 +4141,38 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 setPosition(fab, p.x + (slot - w) / 2, p.y);
             }
 
+            /** Usable stage height = window height minus the body padding (safe areas included). */
+            function stageAvailHeight() {
+                const cs = getComputedStyle(document.body);
+                const padV = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                return Math.max(260, (window.innerHeight || 700) - padV);
+            }
+            function measureStageBottom() {
+                let bottom = (title?.offsetHeight || 0) + 12;
+                movable.forEach(element => {
+                    if (element === status) return;
+                    bottom = Math.max(bottom, getPosition(element).y + rectHeight(element));
+                });
+                return bottom;
+            }
+            /** Lay the game out so that everything is visible at once: shrink the board, cards and buttons together
+             *  (never the other way round) until nothing sticks out below the screen. The page itself never scrolls. */
+            function fitGeometry() {
+                const typing = /^(input|textarea)$/i.test((document.activeElement && document.activeElement.tagName) || '');
+                if (typing) { applyResponsiveGeometry(); return; }   // on-screen keyboard open: keep the current fit
+                fitK = 1;
+                const avail = stageAvailHeight() - 4;
+                for (let i = 0; i < 9; i++) {
+                    applyResponsiveGeometry();
+                    const need = measureStageBottom();
+                    if (need <= avail || fitK <= 0.42) break;
+                    fitK = Math.max(0.42, fitK * Math.max(0.5, Math.min(0.985, avail / need)));
+                }
+            }
+
             function layoutForCurrentMode() {
                 activeMode = mode();
-                applyResponsiveGeometry();
+                fitGeometry();
                 tuneMenuButton();
                 applySavedSizes(activeMode);
                 syncUniformButtons();
@@ -4376,7 +4417,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 layoutForCurrentMode();
                 // Let font and Tailwind styles settle, then measure once more for accurate rack/button heights.
                 requestAnimationFrame(() => {
-                    applyResponsiveGeometry();
+                    fitGeometry();
                     tuneMenuButton();
                     applySavedSizes(activeMode);
                     syncUniformButtons();
