@@ -648,9 +648,10 @@
     <link rel="stylesheet" href="multiplayer.css">
 <style id="floating-layout-overrides">
 /* Independently floating play areas: the original game palette, fonts, tiles and control styling are retained. */
-html { height: 100%; overflow: hidden; overscroll-behavior: none; }
-/* The game always fits the screen: the page is fixed and never rolls up or down. */
-body { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
+html { height: 100%; min-height: 100vh; overflow: hidden; overscroll-behavior: none; }
+/* The game always fits the screen: the page never rolls up or down. The body stays in normal flow (not position:fixed)
+   so its theme background keeps painting all the way to the bottom edge on iPhones, home bar included. */
+body { height: 100%; min-height: 100vh; overflow: hidden; overscroll-behavior: none; }
 .game-container {
     position: relative !important;
     display: block !important;
@@ -4411,6 +4412,8 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 updateStageHeight();
             });
 
+            // The page must never be left scrolled (e.g. after the on-screen keyboard closes on iOS).
+            window.addEventListener('scroll', () => { if (window.scrollX || window.scrollY) window.scrollTo(0, 0); }, { passive: true });
             window.__layoutLockCancel = () => { cancelGesture(); resizeHandles.forEach(handle => handle.classList.remove('float-grip-visible')); };
 
             const start = () => {
