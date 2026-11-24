@@ -5296,7 +5296,7 @@ html body.girly-mode .sq-star {
     #fab-layer .fab-item:disabled { opacity: .35 !important; cursor: default; }
     #fab-layer .fab-item.fab-on { box-shadow: 0 0 0 2px var(--fab-ic), 0 2px 8px rgba(0, 0, 0, .25); }
     #fab-layer .fab-item:focus-visible { outline: 2px solid var(--fab-ic); outline-offset: 3px; }
-    #fab-layer .fab-tip { position: absolute; z-index: 2; padding: 5px 12px; border-radius: 999px; font-size: 14px; line-height: 1.2; white-space: nowrap; pointer-events: none;
+    #fab-layer .fab-tip { text-transform: lowercase; position: absolute; z-index: 2; padding: 5px 12px; border-radius: 999px; font-size: 14px; line-height: 1.2; white-space: nowrap; pointer-events: none;
       background: var(--fab-bg2); color: var(--fab-ic); border: 1px solid var(--fab-bd); transform: translate(-50%, -50%); }
     @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item, #fab-layer .fab-item.fab-enter { transition: none; } }
     </style>
@@ -5602,7 +5602,19 @@ html body.girly-mode .sq-star {
       let justClosed = 0, dragEnd = 0, drag = null, tipTimer = 0, tipEl = null, tipShown = false, wheelAt = 0, anim = 0, openW = 0, openH = 0, openScroll = 0;
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-      const labelOf = (real) => ((real.textContent || '').replace(/\s+/g, ' ').trim()) || real.getAttribute('aria-label') || real.title || '';
+      /* the name shown when a circle is long-pressed (and its screen-reader name): English, lowercase, follows the button's state */
+      const labelOf = (o) => {
+        const real = o.real, t = (real.textContent || '');
+        const NAME = { 'undo-last-move': 'undo last move', 'surrender-game': 'surrender', 'new-game': 'new game', 'mp-online-button': 'play online', 'vs-computer-button': 'play vs computer',
+          'quran-toggle-button': 'quran mode', 'theme-toggle': 'change theme', 'fullscreen-app-button': 'full screen', 'install-app-button': 'install app',
+          'support-button': 'support the developer', 'copyright-button': 'copyright', 'word-log-button': 'word log' };
+        if (o.id === 'pause-game') return /استئناف|متابعة/.test(t) ? 'resume game' : 'pause game';
+        if (o.id === 'sound-toggle-button') return real.classList.contains('sound-off') ? 'sound: off' : 'sound: on';
+        if (o.id === 'validation-toggle-button') return (window.validationOn && !window.validationOn()) ? 'word check: off' : 'word check: on';
+        if (o.id === 'quran-toggle-button') return 'quran mode: ' + ((window.quranOn && window.quranOn()) ? 'on' : 'off');
+        if (o.id === 'layout-lock-button') return document.body.classList.contains('layout-locked') ? 'unlock layout' : 'lock layout';
+        return NAME[o.id] || ((t.replace(/\s+/g, ' ').trim()) || real.getAttribute('aria-label') || real.title || '');
+      };
       const iconOf = (o) => {
         const t = (o.real.textContent || '');
         if (o.k === 'pause') return /استئناف|متابعة/.test(t) ? 'play' : 'pause';
@@ -5738,7 +5750,7 @@ html body.girly-mode .sq-star {
         items = list.map((o, i) => {
           const b = document.createElement('button'); b.type = 'button'; b.className = 'fab-item'; b.dataset.i = String(i);
           b.style.width = b.style.height = D + 'px'; b.innerHTML = svg(iconOf(o));
-          const label = labelOf(o.real); b.setAttribute('aria-label', label); b.title = label;
+          const label = labelOf(o); b.setAttribute('aria-label', label); b.title = label;
           if (o.real.disabled) b.disabled = true;
           if (isOn(o)) b.classList.add('fab-on');
           layer.appendChild(b); return b;
