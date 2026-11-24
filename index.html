@@ -1556,18 +1556,18 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
             <button id="vs-computer-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="Play vs computer (offline)" title="Play vs computer (offline)" aria-pressed="false">
                 ضد الكمبيوتر
             </button>
-            <button id="sound-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="الصوت: مفعّل" title="الصوت: مفعّل" aria-pressed="true">
+            <button id="sound-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-amber-700 hover:bg-amber-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-label="sound: on" title="sound: on" aria-pressed="true">
                 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path class="sw" d="M15.5 8.5a5 5 0 0 1 0 7M18.2 5.8a8.8 8.8 0 0 1 0 12.4"/><path class="ss" d="M4 4l16 16"/></svg>
             </button>
-            <button id="validation-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="true" title="قواعد التحقق من الكلمات">
+            <button id="validation-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-sky-700 hover:bg-sky-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="true" title="word rules">
                 قواعد التحقق: مفعّلة
             </button>
-            <button id="quran-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="false" title="وضع القرآن">
+            <button id="quran-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="false" title="quran mode">
                 وضع القرآن: متوقف
             </button>
-            <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="سجل الكلمات" title="سجل الكلمات" style="display:none">سجل الكلمات</button>
+            <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="word log" title="word log" style="display:none">سجل الكلمات</button>
             <button id="copyright-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="copyright" title="copyright">copyright</button>
-            <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="القائمة" title="القائمة" aria-haspopup="true" aria-expanded="false">
+            <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="menu" title="menu" aria-haspopup="true" aria-expanded="false">
                 <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
@@ -5699,7 +5699,7 @@ html body.girly-mode .sq-star {
       }
       function ensureLayer() {
         if (layer) return;
-        layer = document.createElement('div'); layer.id = 'fab-layer'; layer.setAttribute('role', 'group'); layer.setAttribute('aria-label', 'القائمة');
+        layer = document.createElement('div'); layer.id = 'fab-layer'; layer.setAttribute('role', 'group'); layer.setAttribute('aria-label', 'menu');
         document.body.appendChild(layer);
         layer.addEventListener('pointerdown', onDown); layer.addEventListener('pointermove', onMove);
         layer.addEventListener('pointerup', onUp); layer.addEventListener('pointercancel', onUp);
