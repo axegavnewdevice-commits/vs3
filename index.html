@@ -274,6 +274,7 @@ if(ios&&sa)document.documentElement.classList.add('ios-standalone','ios-splash')
         }
         .player-name-input[readonly] { cursor: default; caret-color: transparent; -webkit-user-select: text !important; user-select: text !important; -webkit-touch-callout: none; }   /* user-select must stay on, or iPhone never shows the keyboard */
         .player-name-input[readonly]::selection { background: transparent; }
+        .player-name-input { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         @media (hover: hover) { .player-name-input[readonly].name-locked:hover { border-bottom-color: transparent !important; } }
         .player-name-input.name-editing { cursor: text; -webkit-user-select: text !important; user-select: text !important; border-bottom: 1px solid #facc15; background-color: rgba(255, 255, 255, 0.08); }
         @media (hover: hover) { .player-name-input[readonly]:hover { border-bottom: 1px dashed rgba(255, 255, 255, 0.4); } }
@@ -4976,6 +4977,7 @@ html body.girly-mode .sq-star {
 
       // Locked names: online both names come from the room; against the computer player 2 is the computer.
       const locked = (k) => !!((window.MP && MP.active) || (k === 2 && window.CPU && CPU.active));
+      const IOS = /iP(hone|ad|od)/.test(navigator.userAgent || '') || ((navigator.platform || '') === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
       const DBL_MS = 380, DBL_DIST = 30;                     // two taps within 380 ms and 30 px
       const GUARD_MS = 500;                                  // the touch that opened the dialog must not click inside it
 
@@ -4985,7 +4987,7 @@ html body.girly-mode .sq-star {
         if (ui) return ui;
         const css = document.createElement('style');
         css.textContent = [
-          '#name-edit-modal{position:fixed;inset:0;z-index:100100;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 14px 14px;background:rgba(8,12,6,.72);direction:ltr;text-transform:lowercase;overflow-y:auto;-webkit-overflow-scrolling:touch}',
+          '#name-edit-modal{position:fixed;inset:0;z-index:100100;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 14px 14px;background:rgba(8,12,6,.72);direction:ltr;text-transform:lowercase;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:manipulation}',
           '#name-edit-modal.ne-open{display:flex}',
           '#name-edit-modal .ne-card{width:min(100%,22rem);box-sizing:border-box;background:#1f2937;color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:16px;box-shadow:0 20px 50px rgba(0,0,0,.5)}',
           '#name-edit-modal .ne-title{font-weight:700;font-size:1.05rem;margin-bottom:10px;text-align:center}',
@@ -5045,9 +5047,12 @@ html body.girly-mode .sq-star {
         editing = k; openedAt = performance.now();
         ui.inp.value = names[k];
         ui.back.classList.add('ne-open');
-        // Android and desktop open the keyboard from here; on iPhone the person taps the field once.
-        try { ui.inp.focus({ preventScroll: true }); ui.inp.setSelectionRange(0, ui.inp.value.length); } catch (_) {}
-        setTimeout(() => { if (editing === k) { try { ui.inp.focus({ preventScroll: true }); } catch (_) {} } }, 80);
+        // Android and desktop open the keyboard from here. iPhone refuses a focus() that comes from a script and the attempt only
+        // makes the screen jump, so there the field is left alone and the person taps it once.
+        if (!IOS) {
+          try { ui.inp.focus({ preventScroll: true }); ui.inp.setSelectionRange(0, ui.inp.value.length); } catch (_) {}
+          setTimeout(() => { if (editing === k) { try { ui.inp.focus({ preventScroll: true }); } catch (_) {} } }, 80);
+        }
       };
 
       // ---------- the name boxes on the rack cards (never typed into directly) ----------
@@ -5082,10 +5087,10 @@ html body.girly-mode .sq-star {
             tap(e.clientX, e.clientY);
           });
           input.addEventListener('touchend', (e) => {
+            if (e.cancelable) e.preventDefault();            // every tap: no focus (so no scroll jump), no zoom, no ghost click on the dialog
             if (locked(k)) return;
             const t = e.changedTouches && e.changedTouches[0];
-            if (!t) return;
-            if (tap(t.clientX, t.clientY) && e.cancelable) e.preventDefault();   // no zoom and no ghost click on the new dialog
+            if (t) tap(t.clientX, t.clientY);
           }, { passive: false });
           input.addEventListener('dblclick', (e) => { e.preventDefault(); begin(); });
           input.addEventListener('contextmenu', (e) => e.preventDefault());
