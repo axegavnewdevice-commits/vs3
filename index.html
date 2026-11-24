@@ -6253,19 +6253,48 @@ html body.girly-mode .sq-star {
        metrics at small sizes is accounted for. Offsets are stored in em and refreshed when sizes change. */
     (() => {
       const SIZE = 200;
-      const ctx = document.createElement('canvas').getContext('2d');
+      const cv = document.createElement('canvas');
+      cv.width = 560; cv.height = 560;
+      const ctx = cv.getContext('2d', { willReadFrequently: true }) || cv.getContext('2d');
       const inkCache = new Map();
       let mo = null, retry = false;
+      const PADX = 140, BASE = 330;                       // glyph is drawn at (PADX, BASE): room for wide letters and deep descenders
+      /* The glyph's REAL ink box, found by scanning the pixels the browser draws (same font, same shaping as the tile).
+         measureText() boxes are unreliable for Arabic on iOS/WebKit, so they are only a fallback. */
       const ink = (cs, text) => {
         const font = `${cs.fontStyle} ${cs.fontWeight} ${SIZE}px ${cs.fontFamily}`;
         const key = font + '|' + text;
         if (inkCache.has(key)) return inkCache.get(key);
-        ctx.font = font; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.direction = 'rtl';
-        const m = ctx.measureText(text);
-        const r = (m.actualBoundingBoxAscent || m.actualBoundingBoxDescent) ? {
-          dx: (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2) / SIZE,   // em
-          mid: (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / SIZE                // em above baseline
-        } : null;
+        let r = null;
+        try {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, cv.width, cv.height);
+          ctx.font = font; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#000';
+          try { ctx.direction = 'rtl'; } catch (_) {}
+          ctx.fillText(text, PADX, BASE);
+          const m = ctx.measureText(text);
+          const d = ctx.getImageData(0, 0, cv.width, cv.height).data, W = cv.width, H = cv.height;
+          let x0 = W, x1 = -1, y0 = H, y1 = -1;
+          for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            if (d[(y * W + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+          }
+          if (x1 >= 0) r = {
+            cx: ((x0 + x1 + 1) / 2 - PADX) / SIZE,         // ink centre, em from the start of the text
+            mid: (BASE - (y0 + y1 + 1) / 2) / SIZE,        // ink centre, em above the baseline
+            w: m.width / SIZE
+          };
+        } catch (_) {}
+        if (!r) {
+          try {
+            ctx.font = font; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+            const m = ctx.measureText(text);
+            if (m.actualBoundingBoxAscent || m.actualBoundingBoxDescent) r = {
+              cx: (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2 / SIZE + (m.actualBoundingBoxLeft ? -m.actualBoundingBoxLeft / SIZE : 0),
+              mid: (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2 / SIZE,
+              w: m.width / SIZE
+            };
+          } catch (_) {}
+        }
         inkCache.set(key, r); return r;
       };
       const apply = (el) => {
@@ -6280,12 +6309,15 @@ html body.girly-mode .sq-star {
         el.appendChild(probe);
         const box = el.getBoundingClientRect(), base = probe.getBoundingClientRect().bottom - box.top;
         el.removeChild(probe);
-        if (!box.height) return;
-        const lh = parseFloat(cs.lineHeight);                         // the letter box's real (untransformed) height
-        if (lh && Math.abs(box.height / lh - 1) > 0.03) { retry = true; return; }   // tile is being flipped/scaled: measure later
-        const inkCentre = base - i.mid * fontPx;                    // px from top of the letter box
-        el.style.setProperty('--lx', i.dx.toFixed(4));
-        el.style.setProperty('--ly', ((box.height / 2 - inkCentre) / fontPx).toFixed(4));
+        if (!box.height || !box.width) return;
+        /* Skip only while the tile is being flipped/scaled (drawn size differs from layout size).
+           A line box taller than 1em (fallback fonts on iPhone) is fine: the real box is used below. */
+        const ow = el.offsetWidth, oh = el.offsetHeight;
+        if (ow && oh && (Math.abs(box.width - ow) > 1.5 || Math.abs(box.height - oh) > 1.5)) { retry = true; return; }
+        const inkCentreY = base - i.mid * fontPx;                   // px from top of the letter box
+        const inkCentreX = i.cx * fontPx;                           // px from the start of the letter box
+        el.style.setProperty('--lx', ((box.width / 2 - inkCentreX) / fontPx).toFixed(4));
+        el.style.setProperty('--ly', ((box.height / 2 - inkCentreY) / fontPx).toFixed(4));
         if (mo) mo.takeRecords();                                   // ignore our own probe mutations
       };
       const sweep = (root) => { (root || document).querySelectorAll('.tile-letter').forEach(apply); if (mo) mo.takeRecords(); if (retry) { retry = false; setTimeout(later, 450); } };
