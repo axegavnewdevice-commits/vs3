@@ -73,7 +73,7 @@
     var heads = lvl === 3 ? [{ d: 1, f: .5 }, { d: -1, f: .5 }] : [{ d: 1, f: 1 }];
     var LAP = lvl === 3 ? 1.5 : lvl === 2 ? 2.1 : 2.2;
     var rate = [150, 200, 170][lvl - 1], big = [1, 1.2, 1.35][lvl - 1], sparkRate = [22, 38, 34][lvl - 1];
-    var TAIL = 1.3;
+    var FADE_AT = LAP * .88, FADE_LEN = .85;   // everything dissolves together, then the canvas is removed
     var parts = [], acc = [0, 0], sacc = [0, 0];
     var last = performance.now(), t0 = last;
 
@@ -155,13 +155,13 @@
           return;
         }
 
+        var mm = t < FADE_AT ? 1 : Math.max(0, 1 - (t - FADE_AT) / FADE_LEN), master = mm * mm * (3 - 2 * mm);   // smooth master fade
         var u = Math.min(1, t / LAP), e = ease(u), ep = ease(Math.max(0, Math.min(1, (t - dt) / LAP)));
         heads.forEach(function (h, i) {
           var len = P * h.f, s = len * e;
           var tp = u < .75 ? 1 : Math.pow(Math.max(0, 1 - (u - .75) / .25), 1.5);
           if (u < 1 && tp > 0) emit(h, i, len * ep, s, tp);
-          var al = t < LAP * .92 ? 1 : Math.max(0, 1 - (t - LAP * .92) / .75);
-          if (al > 0) heat(h, s, al);
+          if (master > 0) heat(h, s, master);
         });
 
         parts = parts.filter(function (p) { return p.age < p.life; });
@@ -183,18 +183,18 @@
           var env = (a < .12 ? a / .12 : 1) * Math.pow(1 - a, 1.2) * (p.k === 1 ? .5 : .9);
           var f = Math.min(a * 2, 1.999), i = Math.floor(f), w = f - i;
           var sz = p.sz * (p.k === 1 ? 1 : (.7 + .5 * Math.sin(Math.PI * Math.min(1, a * 1.4))) * (1 - a * .35));
-          ctx.globalAlpha = env * (1 - w); ctx.drawImage(SP[i], p.x - sz / 2, p.y - sz / 2, sz, sz);
-          ctx.globalAlpha = env * w; ctx.drawImage(SP[Math.min(2, i + 1)], p.x - sz / 2, p.y - sz / 2, sz, sz);
+          ctx.globalAlpha = master * env * (1 - w); ctx.drawImage(SP[i], p.x - sz / 2, p.y - sz / 2, sz, sz);
+          ctx.globalAlpha = master * env * w; ctx.drawImage(SP[Math.min(2, i + 1)], p.x - sz / 2, p.y - sz / 2, sz, sz);
         });
         ctx.globalCompositeOperation = 'lighter';
         parts.forEach(function (p) {
           var a = p.age / p.life;
-          if (p.k === 0 && a < .4) { var sz = p.sz * .5; ctx.globalAlpha = (1 - a / .4) * .55; ctx.drawImage(SP[0], p.x - sz / 2, p.y - sz / 2, sz, sz); }
-          if (p.k === 2) { var s2 = p.sz * (1 - a * .6); ctx.globalAlpha = (1 - a) * .95; ctx.drawImage(SP[0], p.x - s2 / 2, p.y - s2 / 2, s2, s2); }
+          if (p.k === 0 && a < .4) { var sz = p.sz * .5; ctx.globalAlpha = master * (1 - a / .4) * .55; ctx.drawImage(SP[0], p.x - sz / 2, p.y - sz / 2, sz, sz); }
+          if (p.k === 2) { var s2 = p.sz * (1 - a * .6); ctx.globalAlpha = master * (1 - a) * .95; ctx.drawImage(SP[0], p.x - s2 / 2, p.y - s2 / 2, s2, s2); }
         });
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
 
-        if (t < LAP + TAIL) raf = requestAnimationFrame(frame); else stop();
+        if (master > 0) raf = requestAnimationFrame(frame); else stop();
       } catch (_) { stop(); }
     }
     raf = requestAnimationFrame(frame);
