@@ -6707,7 +6707,8 @@ html body.girly-mode .sq-star {
     return rack;
   };
 
-  const redraw = () => { try { updateUI(true); } catch (_) {} };
+  /* A shuffle only changes the order of one rack, so only that rack is redrawn (the old full redraw rebuilt the whole board too). */
+  const redrawRack = (who) => { try { renderRack(who); window.syncRackVisibility && window.syncRackVisibility(); } catch (_) {} };
 
   /* ---- shuffle (with a calm glide: each tile lifts, arcs to its new slot and settles, one after another) ---- */
   const reducedMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) { return false; } };
@@ -6738,7 +6739,7 @@ html body.girly-mode .sq-star {
       rackEl.classList.remove('rs-animating');
       rackEl.querySelectorAll('.tile').forEach((t) => { t.style.zIndex = ''; });
       gliding = false;
-      try { window.recenterTileLetters && window.recenterTileLetters(); } catch (_) {}
+      try { window.recenterTileLettersNow && window.recenterTileLettersNow(rackEl); } catch (_) {}   // this rack only, never the board
     }, DURATION + tiles.length * STAGGER + 80);
   };
 
@@ -6761,7 +6762,7 @@ html body.girly-mode .sq-star {
     remember(rack);
     window.gameHaptic && window.gameHaptic();
     window.gameSound && window.gameSound('shuffle');
-    redraw();
+    redrawRack(who);   // only this rack is redrawn: the board and its tiles are never rebuilt by a shuffle
     try { window.recenterTileLettersNow && window.recenterTileLettersNow(document.getElementById('rack-' + who)); } catch (_) {}   // letters centred before the tiles start to move
     if (!reducedMotion()) glide(document.getElementById('rack-' + who), before);
   };
