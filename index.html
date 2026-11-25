@@ -1514,6 +1514,15 @@ html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academi
 
 @keyframes wordBlink { 0%, 100% { opacity: 0; transform: none; } 14%, 46% { opacity: 1; transform: none; } 30% { opacity: .1; transform: none; } }
 </style>
+<style id="board-flip-steady">
+/* Board tiles turning face-down (pause) / face-up (resume): the face change must be instant while the tile is edge-on.
+   Before, the board face had "transition: all .2s", so on slower tablets the back drawing (border, ornament, shadow) kept growing and
+   settling AFTER the flip, which looked like the picture re-centering. The racks already work this way. */
+#game-board > .square.has-tile > .tile > .tile-content { transition: transform .12s ease !important; }
+#game-board > .square.has-tile > .tile > .tile-content > * { transition: none !important; }
+/* one steady layer per board tile (as the rack tiles have): the tile and its letter are not re-drawn / nudged when the flip ends */
+#game-board > .square.has-tile > .tile > .tile-content { will-change: transform; }
+</style>
 </head>
 <body>
 <div id="welcome-splash" role="img" aria-label="arabic scrabble by axegav">
@@ -3601,6 +3610,10 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             }
 
             const formerPlayer = currentPlayer;
+            // the passing player's tile selection / swap choice ends with the turn (otherwise the raised tile stays up while its rack flips face-down)
+            selectedRackTileId = null; isSwappingMode = false; tilesToSwapIndices = [];
+            document.querySelectorAll('.tile.ring-4, .tile-selected-swap, .tile-selected-border')
+                .forEach(t => t.classList.remove('ring-4', 'ring-offset-2', 'ring-purple-400', 'ring-opacity-75', 'tile-selected-swap', 'tile-selected-border'));
             currentPlayer = formerPlayer === 1 ? 2 : 1;
             consecutiveScorelessTurns++;
             
@@ -6436,11 +6449,15 @@ html body.girly-mode .sq-star {
       window.syncRackVisibility = () => {
         try {
           const cur = currentPlayer, ended = gameEnded, first = lastCurrent === null;
+          const turnChanged = !first && cur !== lastCurrent;
+          if (turnChanged) { try { selectedRackTileId = null; } catch (_) {} }          // a selection never travels to the next player
           [1, 2].forEach(n => {
             const rack = document.getElementById('rack-' + n);
             if (!rack) return;
             const want = hiddenFor(n, cur, ended, gamePaused);
             const prev = first ? want : hiddenFor(n, lastCurrent, lastEnded, lastPaused);
+            if (want || turnChanged) rack.querySelectorAll('.tile.tile-selected-border, .tile.tile-selected-swap, .tile.ring-4').forEach(t =>   // a tile that turns face-down is put back flat first: it must not flip while raised
+              t.classList.remove('ring-4', 'ring-offset-2', 'ring-purple-400', 'ring-opacity-75', 'tile-selected-swap', 'tile-selected-border'));
             [...rack.querySelectorAll('.tile')].forEach((tile, i) => {
               const wasNew = !tile.dataset.rv; tile.dataset.rv = '1';
               tile._want = want;
