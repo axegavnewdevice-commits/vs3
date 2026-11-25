@@ -1486,8 +1486,9 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
   animation: t3Select 1s ease-in-out infinite;
 }
 @keyframes t3Select {
-  0%, 100% { box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 2.4cqw 3.4cqw rgba(0,0,0,.38), 0 0 1cqw .2cqw rgba(12,90,0,.0); }
-  50%      { box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 2.4cqw 3.4cqw rgba(0,0,0,.38), 0 0 4.4cqw 1.2cqw rgba(12,110,0,.85); }
+  /* a bright lime ring that never disappears + a glow that breathes, so the selected tile is obvious on any rack colour */
+  0%, 100% { box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 0 0 .9cqw rgba(150,236,104,.95), 0 0 3.2cqw .8cqw rgba(150,236,104,.45), 0 2.4cqw 3.4cqw rgba(0,0,0,.38); }
+  50%      { box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 0 0 .9cqw rgba(190,255,140,1),  0 0 7cqw 2.6cqw rgba(150,236,104,.95), 0 2.4cqw 3.4cqw rgba(0,0,0,.38); }
 }
 @media (hover: hover) {
   html body .rack-slot .tile:hover > .tile-content { transform: translateY(-1.4cqw); transition: transform .12s ease !important; }
