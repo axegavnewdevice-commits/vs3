@@ -45,7 +45,9 @@
 
     var SP = getSprites();
     var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1;
-    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    // Light graphics (menu setting, or chosen automatically on weak phones): a thinner fire that costs far less to draw
+    var lite = !!(document.body.classList && document.body.classList.contains('gfx-lite'));
+    var dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1);
     var M = 46;                       // room around the board for the flames
     var INFL = 4;                     // the fire runs just outside the frame
     var W = 0, S = 0, P = 0, K = 1;
@@ -72,7 +74,7 @@
 
     var heads = lvl === 3 ? [{ d: 1, f: .5 }, { d: -1, f: .5 }] : [{ d: 1, f: 1 }];
     var LAP = lvl === 3 ? 1.5 : lvl === 2 ? 2.1 : 2.2;
-    var rate = [150, 200, 170][lvl - 1], big = [1, 1.2, 1.35][lvl - 1], sparkRate = [22, 38, 34][lvl - 1];
+    var rate = [150, 200, 170][lvl - 1] * (lite ? .38 : 1), big = [1, 1.2, 1.35][lvl - 1] * (lite ? 1.25 : 1), sparkRate = [22, 38, 34][lvl - 1] * (lite ? .4 : 1);
     var FADE_AT = LAP * .88, FADE_LEN = .85;   // everything dissolves together, then the canvas is removed
     var parts = [], acc = [0, 0], sacc = [0, 0];
     var last = performance.now(), t0 = last;
@@ -114,7 +116,8 @@
           vx: (p2.nx * Math.cos(a) - p2.ny * Math.sin(a)) * v, vy: (p2.ny * Math.cos(a) + p2.nx * Math.sin(a)) * v - 40 * K,
           tx: 0, ty: 0, life: .7 + Math.random() * .7, age: 0, sz: (5 + Math.random() * 4) * K, sd: 0 });
       }
-      if (parts.length > 900) parts.splice(0, parts.length - 900);
+      var cap = lite ? 300 : 900;
+      if (parts.length > cap) parts.splice(0, parts.length - cap);
     }
 
     function heat(h, s, al) {
@@ -125,9 +128,16 @@
       else { ctx.lineTo(W, W); ctx.lineTo(0, W); ctx.lineTo(0, 0); }
       ctx.lineTo(W, 0);
       ctx.setLineDash([Math.max(.01, s), P * 4]);
-      ctx.shadowColor = 'rgba(255,60,15,.9)'; ctx.shadowBlur = 18 * K;
-      ctx.strokeStyle = 'rgba(215,35,12,.55)'; ctx.lineWidth = 5 * K; ctx.stroke();
-      ctx.shadowBlur = 6 * K; ctx.strokeStyle = 'rgba(255,185,105,.9)'; ctx.lineWidth = 1.6 * K; ctx.stroke();
+      if (lite) {
+        // no blur (the expensive part): a wide soft stroke under a thin bright one gives a similar glow
+        ctx.strokeStyle = 'rgba(255,70,20,.26)'; ctx.lineWidth = 11 * K; ctx.stroke();
+        ctx.strokeStyle = 'rgba(215,35,12,.6)'; ctx.lineWidth = 4.5 * K; ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,185,105,.9)'; ctx.lineWidth = 1.6 * K; ctx.stroke();
+      } else {
+        ctx.shadowColor = 'rgba(255,60,15,.9)'; ctx.shadowBlur = 18 * K;
+        ctx.strokeStyle = 'rgba(215,35,12,.55)'; ctx.lineWidth = 5 * K; ctx.stroke();
+        ctx.shadowBlur = 6 * K; ctx.strokeStyle = 'rgba(255,185,105,.9)'; ctx.lineWidth = 1.6 * K; ctx.stroke();
+      }
       ctx.restore();
     }
 
@@ -189,7 +199,7 @@
         ctx.globalCompositeOperation = 'lighter';
         parts.forEach(function (p) {
           var a = p.age / p.life;
-          if (p.k === 0 && a < .4) { var sz = p.sz * .5; ctx.globalAlpha = master * (1 - a / .4) * .55; ctx.drawImage(SP[0], p.x - sz / 2, p.y - sz / 2, sz, sz); }
+          if (!lite && p.k === 0 && a < .4) { var sz = p.sz * .5; ctx.globalAlpha = master * (1 - a / .4) * .55; ctx.drawImage(SP[0], p.x - sz / 2, p.y - sz / 2, sz, sz); }
           if (p.k === 2) { var s2 = p.sz * (1 - a * .6); ctx.globalAlpha = master * (1 - a) * .95; ctx.drawImage(SP[0], p.x - s2 / 2, p.y - s2 / 2, s2, s2); }
         });
         ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;

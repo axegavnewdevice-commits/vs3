@@ -1647,6 +1647,7 @@ html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academi
             </button>
             <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="word log" title="word log" style="display:none">سجل الكلمات</button>
             <button id="copyright-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="copyright" title="copyright">copyright</button>
+            <button id="gfx-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="graphics: auto" title="graphics: auto">graphics</button>
             <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="menu" title="menu" aria-haspopup="true" aria-expanded="false">
                 <svg class="fab-g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
                 <svg class="fab-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -5655,6 +5656,64 @@ html body.girly-mode .sq-star {
     })();
     </script>
 
+    <style id="gfx-style">
+    /* The real "graphics" button stays in the page (the ring circle presses it) but is hidden like the other menu buttons. */
+    html body #game-controls button#gfx-toggle-button {
+      visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
+      width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
+      padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
+    }
+    /* Light graphics: stops the purely decorative, always-running effects (the splash sparkles, the pulsing turn dot, soft text shadows). */
+    body.gfx-lite #welcome-splash.ws-go .ws-sp { animation: none !important; }
+    body.gfx-lite .player-turn .turn-dot { animation: none !important; }
+    body.gfx-lite .tile .tile-letter { text-shadow: none !important; }
+    </style>
+
+    <script id="graphics-setting">
+    /* Graphics setting: auto (default), light or full. Light keeps the game exactly the same but draws the heavy decorations more simply
+       (thinner fire, simpler shuffle glide, no decorative loops), so budget phones stay smooth in the late game. Auto picks light on weak
+       touch devices (4 GB of memory or less, or 4 cores or fewer). The choice is remembered on this device. Visual only: rules, scoring and online play are untouched. */
+    (() => {
+      const KEY = 'arabicScrabble.graphics.v1';
+      const MODES = ['auto', 'light', 'full'];
+      let mode = 'auto';
+      try { const v = localStorage.getItem(KEY); if (MODES.indexOf(v) >= 0) mode = v; } catch (_) {}
+      const weak = () => {
+        try {
+          const coarse = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+          const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+          return coarse && ((mem && mem <= 4) || (cores && cores <= 4));
+        } catch (_) { return false; }
+      };
+      const lite = () => mode === 'light' || (mode === 'auto' && weak());
+      window.gfxMode = () => mode;
+      window.gfxLite = lite;
+      const paint = () => {
+        try { document.body.classList.toggle('gfx-lite', lite()); } catch (_) {}
+        const b = document.getElementById('gfx-toggle-button');
+        if (b) { const t = 'graphics: ' + mode + (mode === 'auto' ? (lite() ? ' (light)' : ' (full)') : ''); b.setAttribute('aria-label', t); b.title = t; }
+      };
+      const toast = (msg) => {
+        const old = document.getElementById('qm-toast'); if (old) old.remove();
+        const t = document.createElement('div'); t.id = 'qm-toast'; t.textContent = msg; document.body.appendChild(t);
+        setTimeout(() => { if (t.parentNode) t.remove(); }, 2600);
+      };
+      const start = () => {
+        paint();
+        const b = document.getElementById('gfx-toggle-button'); if (!b) return;
+        b.addEventListener('click', () => {
+          mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+          try { localStorage.setItem(KEY, mode); } catch (_) {}
+          paint();
+          toast(mode === 'auto' ? 'graphics: auto (' + (lite() ? 'light on this phone' : 'full on this phone') + ')'
+              : mode === 'light' ? 'graphics: light (fewer effects, smoother on weak phones)' : 'graphics: full (all effects)');
+        });
+      };
+      if (document.body) paint();
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
+    })();
+    </script>
+
     <style id="copyright-style">
     /* Copyright circle in the round menu: its real button is hidden like the other menu buttons; the card below takes the same colours as the ring in every theme. */
     html body #game-controls button#copyright-button {
@@ -5721,7 +5780,7 @@ html body.girly-mode .sq-star {
     (() => {
       const $ = (id) => document.getElementById(id);
       const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'], ['quran-toggle-button', 'quran'],
-                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart'], ['copyright-button', 'copy'], ['word-log-button', 'book']];
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['gfx-toggle-button', 'gfx'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'heart'], ['copyright-button', 'copy'], ['word-log-button', 'book']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
@@ -5743,7 +5802,9 @@ html body.girly-mode .sq-star {
         heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
         book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
         copy: '<circle cx="12" cy="12" r="10"/><path d="M15 9.5a4 4 0 1 0 0 5"/>',
-        quran: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'
+        quran: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+        gfx: '<path d="M10 3l1.9 5.1L17 10l-5.1 1.9L10 17l-1.9-5.1L3 10l5.1-1.9z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/>',
+        gfxl: '<path d="M10 3l1.9 5.1L17 10l-5.1 1.9L10 17l-1.9-5.1L3 10l5.1-1.9z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/><line x1="3" y1="21" x2="21" y2="3"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
       const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5785,6 +5846,7 @@ html body.girly-mode .sq-star {
         if (o.id === 'validation-toggle-button') return (window.validationOn && !window.validationOn()) ? 'word check: off' : 'word check: on';
         if (o.id === 'quran-toggle-button') return 'quran mode: ' + ((window.quranOn && window.quranOn()) ? 'on' : 'off');
         if (o.id === 'layout-lock-button') return document.body.classList.contains('layout-locked') ? 'unlock layout' : 'lock layout';
+        if (o.id === 'gfx-toggle-button') return real.getAttribute('aria-label') || 'graphics';
         return NAME[o.id] || ((t.replace(/\s+/g, ' ').trim()) || real.getAttribute('aria-label') || real.title || '');
       };
       const iconOf = (o) => {
@@ -5794,6 +5856,7 @@ html body.girly-mode .sq-star {
         if (o.k === 'shield') return (window.validationOn && !window.validationOn()) ? 'shieldx' : 'shield';
         if (o.k === 'moon') return /الفاتح/.test(t) ? 'sun' : 'moon';
         if (o.k === 'lock') return document.body.classList.contains('layout-locked') ? 'lock' : 'unlock';
+        if (o.k === 'gfx') return document.body.classList.contains('gfx-lite') ? 'gfxl' : 'gfx';   // sparkles, crossed out while light graphics are on
         return o.k;
       };
       const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode')) || (o.k === 'shield' && !(window.validationOn && !window.validationOn())) || (o.k === 'lock' && document.body.classList.contains('layout-locked')) || (o.k === 'quran' && window.quranOn && window.quranOn());
@@ -6655,12 +6718,14 @@ html body.girly-mode .sq-star {
     const tiles = [...rackEl.querySelectorAll('.tile')];
     let n = 0;
     rackEl.classList.add('rs-animating');
+    const lite = document.body.classList.contains('gfx-lite');   // light graphics: a plain slide, no tilt, scale or shadow filter
     tiles.forEach((t, i) => {
       const o = before[t.dataset.tileId]; if (!o) return;
       const r = t.getBoundingClientRect();
       const dx = o.left - r.left, dy = o.top - r.top;
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
       t.style.zIndex = '6'; n++;
+      if (lite) { t.animate([{ translate: dx + 'px ' + dy + 'px' }, { translate: '0px 0px' }], { duration: 380, delay: i * 18, easing: 'cubic-bezier(.3,.7,.25,1)', fill: 'backwards' }); return; }
       t.animate([
         { translate: dx + 'px ' + dy + 'px', scale: 1, rotate: '0deg', transform: 'perspective(520px) rotateX(0deg)', filter: 'drop-shadow(0 0 0 rgba(0,0,0,0))', offset: 0 },
         { translate: (dx * .5) + 'px ' + (dy * .5 - 14) + 'px', scale: 1.14, rotate: (dx > 0 ? -5 : 5) + 'deg', transform: 'perspective(520px) rotateX(18deg)', filter: 'drop-shadow(0 12px 9px rgba(0,0,0,.42))', offset: .5 },
@@ -7531,6 +7596,6 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
   fit();
 })();
 </script>
-<script src="fire-border.js?v=f4"></script>
+<script src="fire-border.js?v=f5"></script>
 </body>
 </html>
