@@ -40,9 +40,16 @@ if(ios&&sa)document.documentElement.classList.add('ios-standalone','ios-splash')
     <link rel="icon" href="./favicon.ico?v=2" sizes="any">
     <link rel="apple-touch-icon" href="./apple-touch-icon-v2.png">
     <title>Arabic Scrabble</title>
+    <meta name="description" content="Arabic Scrabble: play the classic word game in Arabic against the computer, with a friend on one device, or online. Works offline and installs as an app.">
+    <!-- Start the connections early and load the fonts WITHOUT blocking the first paint (they used to be fetched through a CSS @import
+         only after Tailwind had finished, one request after the other). The fonts use display=swap, so text shows at once and upgrades when they arrive. -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&display=swap"></noscript>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
 
         :root {
             --primary-color: #3f4527; /* Dark olive */
@@ -6527,6 +6534,8 @@ html body.girly-mode .sq-star {
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { inkCache.clear(); later(); });
+      // the web fonts now load without blocking the page, so they can arrive after the first measuring: measure again when they do
+      if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { inkCache.clear(); later(); });
       window.addEventListener('load', () => { inkCache.clear(); later(); });
     })();
     </script>
