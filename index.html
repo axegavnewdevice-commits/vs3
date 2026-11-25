@@ -1468,7 +1468,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
 .rack-slot, .rack-slot > .tile { overflow: visible !important; }
 
 /* ---------- selected tiles: SPOTLIGHT (no coloured glow) ----------
-   the tile rises out of the rack, gets a fine light rim and casts its shadow on the slot; every other tile in that rack dims.
+   the tile (letter, points and all - one object) rises out of the rack, gets a fine light rim and casts its shadow on the slot; every other tile in that rack dims.
    A tile chosen for a swap looks the same (the two kinds of selection never happen at the same time). */
 html body .tile.tile-selected-border > .tile-content,
 html body .tile.tile-selected-swap > .tile-content {
@@ -1476,11 +1476,13 @@ html body .tile.tile-selected-swap > .tile-content {
   background-color: var(--tile-bg);
   color: var(--text-color);
   border: 0 solid var(--t3-edge); border-bottom-width: var(--th); border-right-width: .5cqw;
-  transform: translateY(-7cqw) scale(1.05);
+  transform: translateY(-8cqw);                 /* a pure move: the letter is part of the tile and never changes size or position inside it */
+  will-change: transform;                       /* the tile and its letter stay on one steady layer, so nothing is re-drawn when the move ends */
   box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 0 0 .5cqw rgba(255,244,214,.95), 0 9cqw 5cqw -3cqw rgba(0,0,0,.6);
 }
 #game-board > .square.has-tile:has(.tile-selected-border) { z-index: 3; }
 html body .rack:has(.tile-selected-border, .tile-selected-swap) .tile:not(.tile-selected-border):not(.tile-selected-swap) > .tile-content { filter: brightness(.6) saturate(.8); }
+html body .rack .tile > .tile-content { will-change: transform; }
 @media (prefers-reduced-motion: no-preference) {
   html body .rack .tile > .tile-content { transition: transform .14s ease, filter .14s ease !important; }
 }
