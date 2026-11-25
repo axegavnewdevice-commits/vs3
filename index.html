@@ -1469,7 +1469,7 @@ html body.horror-mode .player-timer.hb-low { color: #ff3b30 !important; text-sha
 
 /* ---------- selected tiles: SPOTLIGHT (no coloured glow) ----------
    the tile rises out of the rack, gets a fine light rim and casts its shadow on the slot; every other tile in that rack dims.
-   A tile chosen for a swap also wears a small gold swap badge, so the two kinds of selection can be told apart without colour. */
+   A tile chosen for a swap looks the same (the two kinds of selection never happen at the same time). */
 html body .tile.tile-selected-border > .tile-content,
 html body .tile.tile-selected-swap > .tile-content {
   animation: none;
@@ -1478,10 +1478,6 @@ html body .tile.tile-selected-swap > .tile-content {
   border: 0 solid var(--t3-edge); border-bottom-width: var(--th); border-right-width: .5cqw;
   transform: translateY(-7cqw) scale(1.05);
   box-shadow: inset .8cqw .8cqw .7cqw -.2cqw rgba(255,255,255,.92), inset -.4cqw 0 .6cqw -.2cqw rgba(110,78,22,.28), inset 0 -2.2cqw 2.4cqw -1.4cqw rgba(110,78,22,.36), 0 .6cqw 0 rgba(58,38,6,.42), 0 0 0 .5cqw rgba(255,244,214,.95), 0 9cqw 5cqw -3cqw rgba(0,0,0,.6);
-}
-html body .tile.tile-selected-swap > .tile-content::after {
-  content: ''; position: absolute; top: 3cqw; left: 3cqw; width: 25cqw; height: 25cqw; pointer-events: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25' r='75%25'%3E%3Cstop offset='0' stop-color='%23f6dd92'/%3E%3Cstop offset='1' stop-color='%23b2832a'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='47' fill='url(%23g)' stroke='%237a5a14' stroke-width='4'/%3E%3Cg fill='none' stroke='%233a2806' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 38h46M58 26l12 12-12 12'/%3E%3Cpath d='M76 62H30M42 50L30 62l12 12'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat; filter: drop-shadow(0 .8cqw .8cqw rgba(0,0,0,.45));
 }
 #game-board > .square.has-tile:has(.tile-selected-border) { z-index: 3; }
 html body .rack:has(.tile-selected-border, .tile-selected-swap) .tile:not(.tile-selected-border):not(.tile-selected-swap) > .tile-content { filter: brightness(.6) saturate(.8); }
