@@ -73,7 +73,7 @@
     var heads = lvl === 3 ? [{ d: 1, f: .5 }, { d: -1, f: .5 }] : [{ d: 1, f: 1 }];
     var LAP = lvl === 3 ? 1.5 : lvl === 2 ? 2.1 : 2.2;
     var rate = [150, 200, 170][lvl - 1], big = [1, 1.2, 1.35][lvl - 1], sparkRate = [22, 38, 34][lvl - 1];
-    var TAIL = 1.8;
+    var TAIL = 1.3;
     var parts = [], acc = [0, 0], sacc = [0, 0];
     var last = performance.now(), t0 = last;
 
@@ -87,10 +87,14 @@
         : n === 2 ? { x: t, y: W, nx: 0, ny: 1 }
         : { x: W, y: W - t, nx: 1, ny: 0 };
     }
-    function ease(u) { return .3 * u + .7 * (.5 - .5 * Math.cos(Math.PI * u)); }
+    // gentle start, almost no slow-down at the end (a long crawl made the embers pile up where the flames meet)
+    function ease(u) { return .75 * u + .25 * (.5 - .5 * Math.cos(Math.PI * u)); }
 
-    function emit(h, i, s0, s1, dt) {
-      acc[i] += rate * dt; sacc[i] += sparkRate * dt;
+    // emission follows the distance travelled (not the clock) and fades out over the last stretch of the lap,
+    // so the flames thin out smoothly instead of clumping at the point where they finish
+    function emit(h, i, s0, s1, tp) {
+      var ds = (s1 - s0) / (P * h.f);   // fraction of this head's path covered this frame
+      acc[i] += rate * LAP * ds * tp; sacc[i] += sparkRate * LAP * ds * tp;
       var guard = 0;
       while (acc[i] >= 1 && guard++ < 40) {
         acc[i]--;
@@ -154,8 +158,9 @@
         var u = Math.min(1, t / LAP), e = ease(u), ep = ease(Math.max(0, Math.min(1, (t - dt) / LAP)));
         heads.forEach(function (h, i) {
           var len = P * h.f, s = len * e;
-          if (u < 1) emit(h, i, len * ep, s, dt);
-          var al = t < LAP ? 1 : Math.max(0, 1 - (t - LAP) / 1.2);
+          var tp = u < .75 ? 1 : Math.pow(Math.max(0, 1 - (u - .75) / .25), 1.5);
+          if (u < 1 && tp > 0) emit(h, i, len * ep, s, tp);
+          var al = t < LAP * .92 ? 1 : Math.max(0, 1 - (t - LAP * .92) / .75);
           if (al > 0) heat(h, s, al);
         });
 
