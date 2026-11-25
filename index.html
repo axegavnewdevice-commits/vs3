@@ -6458,6 +6458,14 @@ html body.girly-mode .sq-star {
       const apply = (el) => {
         const text = (el.textContent || '').trim();
         if (!text || !el.isConnected) return;
+        /* A tile that is flying during a rack shuffle is scaled and tilted: measuring it now would give wrong offsets.
+           The shuffle centres the letters BEFORE the glide starts and checks again when it ends, so just wait. */
+        try {
+          if (el.closest('.rack.rs-animating')) {
+            const tl = el.closest('.tile');
+            if (tl && tl.getAnimations && tl.getAnimations().length) { retry = true; return; }
+          }
+        } catch (_) {}
         const cs = getComputedStyle(el), fontPx = parseFloat(cs.fontSize);
         if (!fontPx) return;
         const i = ink(cs, text);
@@ -6482,6 +6490,7 @@ html body.girly-mode .sq-star {
       let queued = false;
       const later = () => { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; sweep(document); }); };
       window.recenterTileLetters = later;
+      window.recenterTileLettersNow = (root) => { try { sweep(root || document); } catch (_) {} };   // immediate, for callers that are about to start an animation
       const start = () => {
         sweep(document);
         mo = new MutationObserver((muts) => {
@@ -6647,6 +6656,7 @@ html body.girly-mode .sq-star {
       rackEl.classList.remove('rs-animating');
       rackEl.querySelectorAll('.tile').forEach((t) => { t.style.zIndex = ''; });
       gliding = false;
+      try { window.recenterTileLetters && window.recenterTileLetters(); } catch (_) {}
     }, DURATION + tiles.length * STAGGER + 80);
   };
 
@@ -6670,6 +6680,7 @@ html body.girly-mode .sq-star {
     window.gameHaptic && window.gameHaptic();
     window.gameSound && window.gameSound('shuffle');
     redraw();
+    try { window.recenterTileLettersNow && window.recenterTileLettersNow(document.getElementById('rack-' + who)); } catch (_) {}   // letters centred before the tiles start to move
     if (!reducedMotion()) glide(document.getElementById('rack-' + who), before);
   };
 
