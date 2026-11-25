@@ -1582,7 +1582,7 @@ html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academi
 })();
 </script>
 
-    <div class="game-container">
+    <div class="game-container" role="main">
 <div id="game-board" class="board my-2">
             </div>
 
@@ -3870,7 +3870,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 handle.setAttribute('aria-label', `Resize ${element.id}`);
                 handle.setAttribute('aria-orientation', 'both');
                 handle.setAttribute('aria-valuemin', element.id === 'game-board' ? String(Math.min(MIN_BOARD_SIZE, Math.max(165, container.clientWidth - 8))) : '64');
-                handle.setAttribute('aria-valuenow', String(Math.round(rectWidth(element))));
+                syncHandleAria(handle, element);
                 container.appendChild(handle);
                 resizeHandles.set(element.id, handle);
             });
@@ -3966,8 +3966,16 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                     const y = (parseFloat(element.style.top) || 0) + rectHeight(element) - 18;
                     handle.style.left = px(clamp(x, 0, Math.max(0, container.clientWidth - 18)));
                     handle.style.top = px(Math.max(0, y));
-                    handle.setAttribute('aria-valuenow', String(Math.round(rectWidth(element))));
+                    syncHandleAria(handle, element);
                 });
+            }
+            // A slider needs min <= now <= max (without a max the default is 100, which made every handle "invalid"): keep all three consistent.
+            function syncHandleAria(handle, element) {
+                const w = Math.round(rectWidth(element));
+                const mn = parseInt(handle.getAttribute('aria-valuemin'), 10) || 0;
+                const mx = Math.max(mn, w, Math.round(container.clientWidth || 0));
+                handle.setAttribute('aria-valuemax', String(mx));
+                handle.setAttribute('aria-valuenow', String(Math.min(mx, Math.max(mn, w))));
             }
             function setPosition(element, x, y) {
                 const width = rectWidth(element);
