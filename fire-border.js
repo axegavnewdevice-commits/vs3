@@ -10,13 +10,19 @@
 
   var THRESHOLD = 25;
   var B = null, reduce = false, lite = false, cv = null, raf = 0, token = 0, cache = {};
-  // the 15 x 15 squares themselves (not the board's outer border), so every rain column sits exactly over a board column
+  // the 15 x 15 squares themselves (not the board's outer border), so every rain column sits exactly over a board column.
+  // The board also holds other layers (the last-word outline is added after every move), so the corners are found by their
+  // row/column, never by "first child / last child". If the board is being rebuilt, the last good measurement is kept.
+  var lastBox = null;
   function gridBox() {
-    var f = B && B.firstElementChild, l = B && B.lastElementChild; if (!f || !l) return null;
-    var a = f.getBoundingClientRect(), z = l.getBoundingClientRect();
+    if (!B) return lastBox;
+    var a = B.querySelector(':scope > .square[data-r="0"][data-c="0"]'), z = B.querySelector(':scope > .square[data-r="14"][data-c="14"]');
+    if (!a || !z) return lastBox;
+    var p = a.getBoundingClientRect(), q = z.getBoundingClientRect();
     // the page can be right-to-left (first square at the top RIGHT), so take the outer edges of both squares, whichever way round they are
-    var left = Math.min(a.left, z.left), top = Math.min(a.top, z.top), w = Math.max(a.right, z.right) - left;
-    return w > 0 ? { left: left, top: top, width: w } : null;
+    var left = Math.min(p.left, q.left), top = Math.min(p.top, q.top), w = Math.max(p.right, q.right) - left, h = Math.max(p.bottom, q.bottom) - top;
+    if (!(w > 0) || !(h > 0)) return lastBox;
+    return (lastBox = { left: left, top: top, width: w, height: h });
   }
   function themeKey() {
     var c = document.body.classList;
@@ -52,48 +58,49 @@
   function play(points) {
     stop(); var my = token;
     B = document.getElementById('game-board'); if (!B || !document.body) return;
+    lastBox = null;
     reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
     lite = !!(document.body.classList && document.body.classList.contains('gfx-lite'));   // light graphics: every other column, no glow
     if (!gridBox()) return;
     var TK = themeKey(), T = THEMES[TK], AT = getAtlas(TK).a, GL = getAtlas(TK).g;
-    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), W = 0, C = 20;
+    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), W = 0, H = 0, C = 20, R = 20;
     cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
     cv.style.cssText = 'position:fixed;z-index:99980;pointer-events:none;margin:0;padding:0;'; document.body.appendChild(cv);
     var ctx = cv.getContext('2d'); if (!ctx) { stop(); return; }
-    function layout() { var r = gridBox() || { left: 0, top: 0, width: W }, w = Math.round(r.width);
-      if (w !== W) { W = w; C = W / 15; cv.style.width = cv.style.height = W + 'px'; cv.width = cv.height = Math.round(W * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
+    function layout() { var r = gridBox() || { left: 0, top: 0, width: W, height: H }, w = Math.round(r.width), h = Math.round(r.height);
+      if (w !== W || h !== H) { W = w; H = h; C = W / 15; R = H / 15; cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
       cv.style.left = Math.round(r.left) + 'px'; cv.style.top = Math.round(r.top) + 'px'; }
     layout();
 
     // one falling stream per board column (more of them at higher scores); the columns start in a sweep: right to left, or from the middle outwards at 60+
     var NS = [1, 2, 3][lvl - 1], SW = lvl === 3 ? 1.1 : 1.4, streams = [], end = 0;
     for (var col = 0; col < 15; col++) { if (lite && col % 2) continue;
-      for (var j = 0; j < NS; j++) { var n = 6 + Math.floor(Math.random() * 5), vy = C * (8 + Math.random() * 4), g = [];
+      for (var j = 0; j < NS; j++) { var n = 6 + Math.floor(Math.random() * 5), vy = R * (8 + Math.random() * 4), g = [];
         for (var i = 0; i < n; i++) g.push(Math.floor(Math.random() * CH.length));
         var base = (lvl === 3 ? Math.abs(col - 7) / 7 : (14 - col) / 14) * SW, st = base + j * .65 + Math.random() * .35;
-        streams.push({ col: col, start: st, vy: vy, n: n, g: g, fl: 0 }); end = Math.max(end, st + (W + n * C + C) / vy); } }
+        streams.push({ col: col, start: st, vy: vy, n: n, g: g, fl: 0 }); end = Math.max(end, st + (H + n * R + R) / vy); } }
     var last = performance.now(), t0 = last;
 
     function frame(now) {
       if (my !== token) return;
       try {
         var dt = Math.min(.033, (now - last) / 1000); last = now; var t = (now - t0) / 1000;
-        layout(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, W);
+        layout(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
         if (reduce) {   // calm alternative: the board takes a faint green wash and releases it, nothing moves
           var tt = t / 1.8, al = tt < .25 ? tt / .25 : Math.max(0, 1 - (tt - .25) / .75);
-          if (al > 0) { ctx.globalAlpha = al * .22; ctx.fillStyle = rgba(T.bright, 1); ctx.fillRect(0, 0, W, W); ctx.globalAlpha = 1; }
+          if (al > 0) { ctx.globalAlpha = al * .22; ctx.fillStyle = rgba(T.bright, 1); ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
           if (t < 1.9) raf = requestAnimationFrame(frame); else stop(); return; }
         var live = 0;
         streams.forEach(function (s) {
           if (t < s.start) { live++; return; }
-          var y = (t - s.start) * s.vy - C * .5; if (y - s.n * C > W) return; live++;
+          var y = (t - s.start) * s.vy - R * .5; if (y - s.n * R > H) return; live++;
           s.fl -= dt; if (s.fl <= 0) { s.fl = .07; s.g[Math.floor(Math.random() * s.n)] = Math.floor(Math.random() * CH.length); }   // letters keep changing
           var x = s.col * C, fin = Math.min(1, (t - s.start) / .1);
-          for (var i = 0; i < s.n; i++) { var gy = y - i * C; if (gy < -C || gy > W + C) continue;
+          for (var i = 0; i < s.n; i++) { var gy = y - i * R; if (gy < -R || gy > H + R) continue;
             var a = fin * (i === 0 ? 1 : Math.pow(1 - i / s.n, 1.2));
-            ctx.globalAlpha = a * .5; ctx.fillStyle = 'rgb(' + T.dk + ')'; ctx.fillRect(x, gy - C / 2, C, C);                  // a dark cell behind each letter keeps it readable on tiles and squares alike
-            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 3 ? 1 : 2], s.g[i] * 32, 0, 32, 32, x + C * .04, gy - C * .46, C * .92, C * .92); }
-          if (!lite && y > 0 && y < W) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .6 * fin; ctx.drawImage(GL, x - C * .6, y - C * 1.1, C * 2.2, C * 2.2); ctx.restore(); }   // the bright head of each stream
+            ctx.globalAlpha = a * .5; ctx.fillStyle = 'rgb(' + T.dk + ')'; ctx.fillRect(x, gy - R / 2, C, R);                  // a dark cell behind each letter keeps it readable on tiles and squares alike
+            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 3 ? 1 : 2], s.g[i] * 32, 0, 32, 32, x + C * .04, gy - R * .46, C * .92, R * .92); }
+          if (!lite && y > 0 && y < H) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .6 * fin; ctx.drawImage(GL, x - C * .6, y - R * 1.1, C * 2.2, R * 2.2); ctx.restore(); }   // the bright head of each stream
         });
         ctx.globalAlpha = 1;
         if (live) raf = requestAnimationFrame(frame); else stop();
