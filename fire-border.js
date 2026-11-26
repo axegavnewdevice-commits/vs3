@@ -13,8 +13,10 @@
   // the 15 x 15 squares themselves (not the board's outer border), so every rain column sits exactly over a board column
   function gridBox() {
     var f = B && B.firstElementChild, l = B && B.lastElementChild; if (!f || !l) return null;
-    var a = f.getBoundingClientRect(), z = l.getBoundingClientRect(), w = z.right - a.left;
-    return w > 0 ? { left: a.left, top: a.top, width: w } : null;
+    var a = f.getBoundingClientRect(), z = l.getBoundingClientRect();
+    // the page can be right-to-left (first square at the top RIGHT), so take the outer edges of both squares, whichever way round they are
+    var left = Math.min(a.left, z.left), top = Math.min(a.top, z.top), w = Math.max(a.right, z.right) - left;
+    return w > 0 ? { left: left, top: top, width: w } : null;
   }
   function themeKey() {
     var c = document.body.classList;
