@@ -1,5 +1,5 @@
 /* Arabic Scrabble service worker — bump CACHE_VERSION on every deploy. */
-const CACHE_VERSION = 'v179';
+const CACHE_VERSION = 'v180';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 const SCOPE = self.registration.scope; // works at the domain root or in a sub-folder
@@ -8,7 +8,7 @@ const SHELL_FILES = [
   './', 'manifest.webmanifest', 'favicon.ico', 'favicon.ico?v=2',
   'icon.svg', 'icon.svg?v=2', 'icon-v2-192.png', 'icon-v2-512.png',
   'icon-v2-maskable-192.png', 'icon-v2-maskable-512.png', 'apple-touch-icon-v2.png',
-  'multiplayer.js', 'multiplayer.css', 'fire-border.js?v=f5',
+  'multiplayer.js', 'multiplayer.css', 'fire-border.js?v=w1',
   'wordcheck.js?v=q11', 'words.bin'   // word list: every move is checked against it (also offline)
 ].map((p) => new URL(p, SCOPE).href);
 
