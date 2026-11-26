@@ -32,6 +32,15 @@
     function clear() { try { if (ctx) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); } } catch (_) {} }
     function stop(silent) { token++; if (raf) cq(raf); raf = 0; clear(); if (!silent) post({ t: 'done', id: curId }); }
 
+    // draw every picture once, invisibly, on the real canvas size: the canvas surface and the picture textures are created now (when the page is idle),
+    // not at the moment of the move
+    function warm(m) {
+      var atl = atlases[m.key]; if (!cv || !ctx || !atl || raf) return;
+      size(m.w, m.h, m.dpr); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = .02;
+      for (var i = 0; i < 3; i++) ctx.drawImage(atl.a[i], 0, 0, 32, 32, 0, 0, 8, 8);
+      ctx.drawImage(atl.g, 0, 0, 8, 8); ctx.globalAlpha = 1; ctx.clearRect(0, 0, cv.width, cv.height);
+    }
+
     function play(m) {
       stop(true); var my = token; curId = m.id;
       var atl = atlases[m.key]; if (!cv || !ctx || !atl) { post({ t: 'done', id: curId }); return; }
@@ -49,13 +58,13 @@
         st = Math.abs(col - 7) / 7 * .12 + j * .3 + Math.random() * .07;
         streams.push({ x: lite ? col * C + C / 4 : col * C + h * cw, j: j, start: st, vy: vy, n: n, g: g, fl: 0, hy: 0, hf: 0 });
       }
-      var SN = streams.length, t0 = 0, last = 0, slow = 0, nf = 0, degraded = false;
+      var SN = streams.length, t0 = 0, last = 0, slow = 0, nf = 0, degraded = false, told = false;
 
       function frame(now) {
         if (my !== token) return;
         try {
           if (!t0) { t0 = last = now; }
-          var rawdt = (now - last) / 1000, dt = Math.min(.033, rawdt); last = now; var t = (now - t0) / 1000;
+          var rawdt = (now - last) / 1000, dt = Math.min(.033, rawdt); last = now; var t = (now - t0) / 1000 + .05;   // 50 ms head start: the very first picture already shows the rain entering at the top
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
           if (reduce) {   // calm alternative: the board takes a faint wash of the theme colour and releases it, nothing moves
             var tt = t / 1.8, al = tt < .25 ? tt / .25 : Math.max(0, 1 - (tt - .25) / .75);
@@ -82,6 +91,7 @@
             ctx.globalCompositeOperation = 'source-over';
           }
           ctx.globalAlpha = 1;
+          if (!told) { told = true; post({ t: 'first', id: curId, at: Date.now() }); }
           if (live) raf = rq(frame); else stop();
         } catch (_) { stop(); }
       }
@@ -94,6 +104,7 @@
         else if (m.t === 'atlas') { atlases[m.key] = { a: m.a, g: m.g, n: m.n }; }
         else if (m.t === 'size') { size(m.w, m.h, m.dpr); }
         else if (m.t === 'play') { play(m); }
+        else if (m.t === 'warm') { warm(m); }
         else if (m.t === 'stop') { stop(true); }
         else if (m.t === 'ping') { post({ t: 'pong' }); }
       } catch (_) { post({ t: 'done', id: curId }); }
@@ -158,7 +169,7 @@
       var el = makeCanvas(); document.body.appendChild(el);
       var off = el.transferControlToOffscreen();
       wk = { w: w, el: el, W: 0, H: 0, D: 0, atlas: {} };
-      w.onmessage = function (e) { var d = e.data || {}; if (d.t === 'pong') wkState = 2; else if (d.t === 'done' && d.id === playId) hide(wk && wk.el); };
+      w.onmessage = function (e) { var d = e.data || {}; if (d.t === 'pong') wkState = 2; else if (d.t === 'done' && d.id === playId) hide(wk && wk.el); else if (d.t === 'first') trace(d); };
       w.onerror = w.onmessageerror = function () { var el2 = wk && wk.el; killWorker(); if (el2 && el2.parentNode) el2.parentNode.removeChild(el2); };
       w.postMessage({ t: 'canvas', canvas: off }, [off]);
       w.postMessage({ t: 'ping' });
@@ -171,7 +182,7 @@
       Promise.all(at.a.concat([at.g]).map(function (c) { return createImageBitmap(c); })).then(function (b) {
         if (wk !== me) return; var g = b.pop();
         me.w.postMessage({ t: 'atlas', key: key, a: b, g: g, n: CH.length }, b.concat([g]));
-        me.atlas[key] = at;
+        me.atlas[key] = at; warmNow(key, at);
       }, function () { at.sent = false; });
     } catch (_) { at.sent = false; }
   }
@@ -189,8 +200,8 @@
     try {
       startWorker();
       var key = themeKey(); var at = cache[key];
-      if (at && at.ok) { sendAtlas(key, at); return; }
-      var go = function () { try { var cur = cache[key]; if (!cur || !cur.ok) { delete cache[key]; cur = getAtlas(key); } sendAtlas(key, cur); } catch (_) {} };
+      if (at && at.ok) { sendAtlas(key, at); warmNow(key, at); return; }
+      var go = function () { try { var cur = cache[key]; if (!cur || !cur.ok) { delete cache[key]; cur = getAtlas(key); } sendAtlas(key, cur); warmNow(key, cur); } catch (_) {} };
       if (document.fonts && document.fonts.load) {
         var done = false, fin = function () { if (!done) { done = true; go(); } };
         document.fonts.load('700 23px Amiri', CH.join('')).then(fin, fin); setTimeout(fin, 2500);
@@ -198,6 +209,29 @@
     } catch (_) {}
   }
   function later(fn) { try { if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 1500 }); else setTimeout(fn, 250); } catch (_) { setTimeout(fn, 250); } }
+
+  // canvas size for the board as it is now (the same numbers play() uses)
+  function dimsNow() {
+    try {
+      var bd = document.getElementById('game-board'); if (!bd) return null; B = bd;
+      var bx = gridBox(); if (!bx) return null;
+      var lt = !!(document.body.classList && document.body.classList.contains('gfx-lite')), md = lt ? 1 : Math.min(2, window.devicePixelRatio || 1), w = Math.round(bx.width), h = Math.round(bx.height);
+      return { w: w, h: h, dpr: Math.max(1, Math.min(md, 1100 / Math.max(w, h))) };
+    } catch (_) { return null; }
+  }
+  function warmNow(key, at) {
+    try {
+      var d = dimsNow(); if (!d) return; var m = { t: 'warm', key: key, w: d.w, h: d.h, dpr: d.dpr };
+      if (wk && wkState >= 1 && wk.atlas[key] === at) wk.w.postMessage(m);
+      else if (wkState === -1) {   // no worker on this device: warm the page canvas instead
+        if (!pageEl || !pageEl.parentNode) { pageEl = makeCanvas(); document.body.appendChild(pageEl); pageEngine = null; }
+        if (!pageEngine) { pageEngine = rainEngine(pageReply); pageEngine({ t: 'canvas', canvas: pageEl }); }
+        pageEngine({ t: 'atlas', key: key, a: at.a, g: at.g, n: CH.length }); pageEngine(m);
+      }
+    } catch (_) {}
+  }
+  function pageReply(m) { if (m.t === 'done' && m.id === playId) hide(pageEl); else if (m.t === 'first') trace(m); }
+  function trace(m) { try { if (typeof window.__rainTrace === 'function') window.__rainTrace(m); } catch (_) {} }
 
   var lastUse = null;
   function stop() {
@@ -225,7 +259,7 @@
     if (useWorker) { el = wk.el; }
     else {
       if (!pageEl || !pageEl.parentNode) { pageEl = makeCanvas(); document.body.appendChild(pageEl); pageEngine = null; }
-      if (!pageEngine) { pageEngine = rainEngine(function (m) { if (m.t === 'done' && m.id === playId) hide(pageEl); }); pageEngine({ t: 'canvas', canvas: pageEl }); }
+      if (!pageEngine) { pageEngine = rainEngine(pageReply); pageEngine({ t: 'canvas', canvas: pageEl }); }
       pageEngine({ t: 'atlas', key: key, a: at.a, g: at.g, n: CH.length });
       el = pageEl;
     }
