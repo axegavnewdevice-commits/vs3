@@ -5820,7 +5820,8 @@ html body.girly-mode .sq-star {
         copy: '<circle cx="12" cy="12" r="10"/><path d="M15 9.5a4 4 0 1 0 0 5"/>',
         quran: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
         gfx: '<path d="M10 3l1.9 5.1L17 10l-5.1 1.9L10 17l-1.9-5.1L3 10l5.1-1.9z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/>',
-        gfxl: '<path d="M10 3l1.9 5.1L17 10l-5.1 1.9L10 17l-1.9-5.1L3 10l5.1-1.9z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/><line x1="3" y1="21" x2="21" y2="3"/>'
+        feather: '<path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><path d="M16 8 2 22"/><path d="M17.5 15H9"/>',
+        gauge: '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>'
       };
       const svg = (k) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICON[k] + '</svg>';
       const reduced = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5872,7 +5873,7 @@ html body.girly-mode .sq-star {
         if (o.k === 'shield') return (window.validationOn && !window.validationOn()) ? 'shieldx' : 'shield';
         if (o.k === 'moon') { const c = document.body.classList; return c.contains('academic-mode') ? 'heart' : c.contains('girly-mode') ? 'sun' : c.contains('horror-mode') ? 'cap' : 'skull'; }   // the theme circle shows the NEXT theme: academic > girly (heart), girly > olive (sun), olive > horror (skull), horror > academic (cap)
         if (o.k === 'lock') return document.body.classList.contains('layout-locked') ? 'lock' : 'unlock';
-        if (o.k === 'gfx') return document.body.classList.contains('gfx-lite') ? 'gfxl' : 'gfx';   // sparkles, crossed out while light graphics are on
+        if (o.k === 'gfx') { const m = window.gfxMode ? window.gfxMode() : 'auto'; return m === 'full' ? 'gfx' : m === 'light' ? 'feather' : 'gauge'; }   // three settings, three icons: auto = gauge, light = feather, full = sparkles
         return o.k;
       };
       const isOn = (o) => (o.k === 'wifi' && document.body.classList.contains('mp-online')) || (o.k === 'cpu' && document.body.classList.contains('cpu-mode')) || (o.k === 'shield' && !(window.validationOn && !window.validationOn())) || (o.k === 'lock' && document.body.classList.contains('layout-locked')) || (o.k === 'quran' && window.quranOn && window.quranOn());
