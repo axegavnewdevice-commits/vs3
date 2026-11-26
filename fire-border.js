@@ -2,6 +2,10 @@
    thin streams side by side (small letters, half a square wide). The rain always starts at the top middle of the board and spreads
    outwards to both sides. 25+ one stream per half column, 40+ two, 60+ three.
    The colour follows the theme (the same hues as the score popup) and the letters use the welcome page's Arabic font (Amiri).
+   Smooth by design: the letter pictures (dark cell included) are prepared in advance, when the page is idle, and again after a theme change;
+   the animation clock starts on its own first frame, so the heavy work the game does right after a move (redrawing the board, the word blink)
+   can never make the rain jump or look late; the board is measured a few times a second, not on every frame; and each letter is one
+   image copy. Same code for every graphics setting (light only draws fewer streams, no glow, and a smaller canvas).
    Self-contained overlay (fixed canvas exactly over the squares, no pointer events). It only wraps window.showScorePopup, which the game
    already calls for every scored move (offline, vs computer and online). Any failure is swallowed: the game is never affected. */
 (function () {
@@ -38,21 +42,35 @@
     academic: { head: '240,247,255', bright: '124,180,242', dim: '62,112,192',  dk: '6,14,36' },    // scholar blue
     dark:     { head: '255,247,218', bright: '236,208,124', dim: '166,132,52',  dk: '12,11,4' }     // gold
   };
-  var FONT = '700 25px "Amiri","Scheherazade New","Noto Naskh Arabic","Traditional Arabic",serif';   // the welcome page's Arabic font
+  var FONT = '700 23px "Amiri","Scheherazade New","Noto Naskh Arabic","Traditional Arabic",serif';   // the welcome page's Arabic font
   var CH = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');                                                   // Arabic letters only, no digits
   function rgba(c, a) { return 'rgba(' + c + ',' + a + ')'; }
+  function fontReady() { try { return !document.fonts || document.fonts.check('700 23px Amiri'); } catch (_) { return true; } }
 
-  function getAtlas(key) {   // every letter pre-drawn once per tint: drawing a letter later is a cheap image copy
-    if (cache[key]) return cache[key]; var T = THEMES[key];
+  // every letter pre-drawn once per tint, with its dark cell already behind it: drawing a letter later is ONE cheap image copy
+  function buildAtlas(key) {
+    var T = THEMES[key];
     var a = [T.head, T.bright, T.dim].map(function (col) { var c = document.createElement('canvas'); c.width = CH.length * 32; c.height = 32; var g = c.getContext('2d');
-      g.font = FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = rgba(col, 1);
-      CH.forEach(function (ch, i) { g.fillText(ch, i * 32 + 16, 17); }); return c; });
+      g.font = FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+      CH.forEach(function (ch, i) { g.fillStyle = rgba(T.dk, .5); g.fillRect(i * 32, 0, 32, 32); g.fillStyle = rgba(col, 1); g.fillText(ch, i * 32 + 16, 17); }); return c; });
     var gl = document.createElement('canvas'); gl.width = gl.height = 64; var g2 = gl.getContext('2d'), rg = g2.createRadialGradient(32,32,0,32,32,32);
     rg.addColorStop(0, rgba(T.head, .95)); rg.addColorStop(.3, rgba(T.bright, .5)); rg.addColorStop(1, rgba(T.dim, 0)); g2.fillStyle = rg; g2.fillRect(0,0,64,64);
-    var r = { a: a, g: gl };
-    try { if (!document.fonts || document.fonts.check('700 25px Amiri')) cache[key] = r; } catch (_) { cache[key] = r; }   // if the font was not ready yet, draw again next time
-    return r;
+    return { a: a, g: gl, ok: fontReady() };
   }
+  function getAtlas(key) { return cache[key] || (cache[key] = buildAtlas(key)); }   // an atlas drawn before the font arrived is replaced by prewarm() once it has
+
+  // prepare the pictures for the current theme while the page is idle (and again after a theme change), so the first rain never builds them
+  function prewarm() {
+    try {
+      var key = themeKey(); if (cache[key] && cache[key].ok) return;
+      var go = function () { try { if (!cache[key] || !cache[key].ok) { delete cache[key]; getAtlas(key); } } catch (_) {} };
+      if (document.fonts && document.fonts.load) {
+        var done = false, fin = function () { if (!done) { done = true; go(); } };
+        document.fonts.load('700 23px Amiri', CH.join('')).then(fin, fin); setTimeout(fin, 2500);
+      } else go();
+    } catch (_) {}
+  }
+  function later(fn) { try { if (window.requestIdleCallback) requestIdleCallback(fn, { timeout: 1500 }); else setTimeout(fn, 250); } catch (_) { setTimeout(fn, 250); } }
 
   function stop() { token++; if (raf) cancelAnimationFrame(raf); raf = 0; if (cv && cv.parentNode) cv.parentNode.removeChild(cv); cv = null; }
 
@@ -63,47 +81,58 @@
     reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
     lite = !!(document.body.classList && document.body.classList.contains('gfx-lite'));   // light graphics: every other column, no glow
     if (!gridBox()) return;
-    var TK = themeKey(), T = THEMES[TK], AT = getAtlas(TK).a, GL = getAtlas(TK).g;
-    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), W = 0, H = 0, C = 20, R = 20, cw = 10, ch = 10;
+    var TK = themeKey(), T = THEMES[TK], atl = getAtlas(TK), AT = atl.a, GL = atl.g;
+    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, maxDpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), dpr = maxDpr, W = 0, H = 0, C = 20, R = 20, cw = 10, ch = 10;
     cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
-    cv.style.cssText = 'position:fixed;z-index:99980;pointer-events:none;margin:0;padding:0;'; document.body.appendChild(cv);
-    var ctx = cv.getContext('2d'); if (!ctx) { stop(); return; }
+    cv.style.cssText = 'position:fixed;z-index:99980;pointer-events:none;margin:0;padding:0;will-change:transform;contain:strict;'; document.body.appendChild(cv);
+    var ctx = cv.getContext("2d"); if (!ctx) { stop(); return; }
     function layout() { var r = gridBox() || { left: 0, top: 0, width: W, height: H }, w = Math.round(r.width), h = Math.round(r.height);
-      if (w !== W || h !== H) { W = w; H = h; C = W / 15; R = H / 15; cw = C / 2; ch = R / 2; cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
+      if (w !== W || h !== H) { W = w; H = h; C = W / 15; R = H / 15; cw = C / 2; ch = R / 2;
+        dpr = Math.max(1, Math.min(maxDpr, 1100 / Math.max(W, H)));   // never an oversized canvas on a big screen
+        cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
       cv.style.left = Math.round(r.left) + 'px'; cv.style.top = Math.round(r.top) + 'px'; }
     layout();
 
     // two thin streams per board column (30 in all, more of them at higher scores). All of them start at the top; the first ones fall in the
-    // middle of the board and the rest follow outwards to the left and right, in every score level
-    var NS = [1, 2, 3][lvl - 1], SW = lvl === 3 ? 1.1 : 1.4, streams = [], end = 0;
+    // middle of the board and the rest follow outwards to the left and right, in every score level. The whole board is raining within half a second.
+    var NS = [1, 2, 3][lvl - 1], SW = .5, streams = [];
     for (var sc = 0; sc < 30; sc++) { if (lite && Math.floor(sc / 2) % 2) continue;
       for (var j = 0; j < NS; j++) { var n = 10 + Math.floor(Math.random() * 9), vy = R * (8 + Math.random() * 4), g = [];
         for (var i = 0; i < n; i++) g.push(Math.floor(Math.random() * CH.length));
-        var base = Math.abs((sc + .5) / 2 - 7.5) / 7.5 * SW, st = base + j * .65 + Math.random() * .35;
-        streams.push({ sc: sc, start: st, vy: vy, n: n, g: g, fl: 0 }); end = Math.max(end, st + (H + n * ch + ch) / vy); } }
-    var last = performance.now(), t0 = last;
+        var base = Math.abs((sc + .5) / 2 - 7.5) / 7.5 * SW, st = base + j * .4 + Math.random() * .2;
+        streams.push({ x: sc * cw, start: st, vy: vy, n: n, g: g, fl: 0, hy: 0, hf: 0 }); } }
+    var t0 = 0, last = 0, lm = 0, SN = streams.length;
 
+    // the clock starts on the FIRST FRAME, not when play() was called: the game is still busy redrawing the board right after a move,
+    // and time spent there must not eat into the animation (that made the first moments jump)
     function frame(now) {
       if (my !== token) return;
       try {
+        if (!t0) { t0 = last = lm = now; }
         var dt = Math.min(.033, (now - last) / 1000); last = now; var t = (now - t0) / 1000;
-        layout(); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-        if (reduce) {   // calm alternative: the board takes a faint green wash and releases it, nothing moves
+        if (now - lm > 250) { lm = now; layout(); }   // the board is measured a few times a second, not on every frame
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+        if (reduce) {   // calm alternative: the board takes a faint wash of the theme colour and releases it, nothing moves
           var tt = t / 1.8, al = tt < .25 ? tt / .25 : Math.max(0, 1 - (tt - .25) / .75);
           if (al > 0) { ctx.globalAlpha = al * .22; ctx.fillStyle = rgba(T.bright, 1); ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
           if (t < 1.9) raf = requestAnimationFrame(frame); else stop(); return; }
-        var live = 0;
-        streams.forEach(function (s) {
-          if (t < s.start) { live++; return; }
-          var y = (t - s.start) * s.vy - ch * .5; if (y - s.n * ch > H) return; live++;
-          s.fl -= dt; if (s.fl <= 0) { s.fl = .07; s.g[Math.floor(Math.random() * s.n)] = Math.floor(Math.random() * CH.length); }   // letters keep changing
-          var x = s.sc * cw, fin = Math.min(1, (t - s.start) / .1);
-          for (var i = 0; i < s.n; i++) { var gy = y - i * ch; if (gy < -ch || gy > H + ch) continue;
-            var a = fin * (i === 0 ? 1 : Math.pow(1 - i / s.n, 1.2));
-            ctx.globalAlpha = a * .5; ctx.fillStyle = 'rgb(' + T.dk + ')'; ctx.fillRect(x, gy - ch / 2, cw, ch);                  // a dark cell behind each letter keeps it readable on tiles and squares alike
-            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 5 ? 1 : 2], s.g[i] * 32, 0, 32, 32, x + cw * .04, gy - ch * .46, cw * .92, ch * .92); }
-          if (!lite && y > 0 && y < H) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .6 * fin; ctx.drawImage(GL, x - cw * .6, y - ch * 1.1, cw * 2.2, ch * 2.2); ctx.restore(); }   // the bright head of each stream
-        });
+        var live = 0, heads = 0, s, y, fin, i, gy, a, k, hh = ch * 1.1;
+        for (k = 0; k < SN; k++) {
+          s = streams[k];
+          if (t < s.start) { live++; continue; }
+          y = (t - s.start) * s.vy - ch * .5; if (y - s.n * ch > H) continue; live++;
+          s.fl -= dt; if (s.fl <= 0) { s.fl = .07; s.g[(Math.random() * s.n) | 0] = (Math.random() * CH.length) | 0; }   // letters keep changing
+          fin = Math.min(1, (t - s.start) / .1);
+          for (i = 0; i < s.n; i++) { gy = y - i * ch; if (gy < -ch || gy > H + ch) continue;
+            a = fin * (i === 0 ? 1 : Math.pow(1 - i / s.n, 1.2)); if (a < .03) continue;
+            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 5 ? 1 : 2], s.g[i] * 32, 0, 32, 32, s.x, gy - ch / 2, cw, ch); }   // one image copy per letter (dark cell included)
+          if (y > 0 && y < H) { s.hy = y; s.hf = fin; heads++; } else s.hf = 0;
+        }
+        if (!lite && heads) {   // the bright heads, all in one pass (switching the blend mode once, not once per stream)
+          ctx.globalCompositeOperation = 'lighter';
+          for (k = 0; k < SN; k++) { s = streams[k]; if (s.hf > 0) { ctx.globalAlpha = .6 * s.hf; ctx.drawImage(GL, s.x - cw * .6, s.hy - hh, cw * 2.2, ch * 2.2); } }
+          ctx.globalCompositeOperation = 'source-over';
+        }
         ctx.globalAlpha = 1;
         if (live) raf = requestAnimationFrame(frame); else stop();
       } catch (_) { stop(); }
@@ -133,4 +162,9 @@
     window.addEventListener('load', function () { hook(); });
   }
   window.addEventListener('pagehide', stop);
+
+  // pictures ready before the first rain: once the page has loaded, and again whenever the theme changes
+  var warm = function () { later(prewarm); };
+  if (document.readyState === 'complete') warm(); else window.addEventListener('load', warm);
+  try { if (window.MutationObserver && document.body) new MutationObserver(warm).observe(document.body, { attributes: true, attributeFilter: ['class'] }); } catch (_) {}
 })();
