@@ -1,5 +1,6 @@
-/* Digital rain: when a human move scores 25 or more, letters rain down INSIDE the board, one stream per board column,
-   starting in a sweep from right to left (from the middle outwards at 60+). 25+ one stream per column, 40+ two, 60+ three.
+/* Digital rain: when a human move scores 25 or more, Arabic letters (no digits) rain down INSIDE the board. Every board column holds two
+   thin streams side by side (small letters, half a square wide). The rain always starts at the top middle of the board and spreads
+   outwards to both sides. 25+ one stream per half column, 40+ two, 60+ three.
    The colour follows the theme (the same hues as the score popup) and the letters use the welcome page's Arabic font (Amiri).
    Self-contained overlay (fixed canvas exactly over the squares, no pointer events). It only wraps window.showScorePopup, which the game
    already calls for every scored move (offline, vs computer and online). Any failure is swallowed: the game is never affected. */
@@ -38,7 +39,7 @@
     dark:     { head: '255,247,218', bright: '236,208,124', dim: '166,132,52',  dk: '12,11,4' }     // gold
   };
   var FONT = '700 25px "Amiri","Scheherazade New","Noto Naskh Arabic","Traditional Arabic",serif';   // the welcome page's Arabic font
-  var CH = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي٠١٢٣٤٥٦٧٨٩'.split('');                                           // Arabic letters and Arabic-Indic digits
+  var CH = 'ابتثجحخدذرزسشصضطظعغفقكلمنهوي'.split('');                                                   // Arabic letters only, no digits
   function rgba(c, a) { return 'rgba(' + c + ',' + a + ')'; }
 
   function getAtlas(key) {   // every letter pre-drawn once per tint: drawing a letter later is a cheap image copy
@@ -63,22 +64,23 @@
     lite = !!(document.body.classList && document.body.classList.contains('gfx-lite'));   // light graphics: every other column, no glow
     if (!gridBox()) return;
     var TK = themeKey(), T = THEMES[TK], AT = getAtlas(TK).a, GL = getAtlas(TK).g;
-    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), W = 0, H = 0, C = 20, R = 20;
+    var lvl = points >= 60 ? 3 : points >= 40 ? 2 : 1, dpr = lite ? 1 : Math.min(2, window.devicePixelRatio || 1), W = 0, H = 0, C = 20, R = 20, cw = 10, ch = 10;
     cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
     cv.style.cssText = 'position:fixed;z-index:99980;pointer-events:none;margin:0;padding:0;'; document.body.appendChild(cv);
     var ctx = cv.getContext('2d'); if (!ctx) { stop(); return; }
     function layout() { var r = gridBox() || { left: 0, top: 0, width: W, height: H }, w = Math.round(r.width), h = Math.round(r.height);
-      if (w !== W || h !== H) { W = w; H = h; C = W / 15; R = H / 15; cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
+      if (w !== W || h !== H) { W = w; H = h; C = W / 15; R = H / 15; cw = C / 2; ch = R / 2; cv.style.width = W + 'px'; cv.style.height = H + 'px'; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }   // the canvas is exactly the board: nothing is drawn outside it
       cv.style.left = Math.round(r.left) + 'px'; cv.style.top = Math.round(r.top) + 'px'; }
     layout();
 
-    // one falling stream per board column (more of them at higher scores); the columns start in a sweep: right to left, or from the middle outwards at 60+
+    // two thin streams per board column (30 in all, more of them at higher scores). All of them start at the top; the first ones fall in the
+    // middle of the board and the rest follow outwards to the left and right, in every score level
     var NS = [1, 2, 3][lvl - 1], SW = lvl === 3 ? 1.1 : 1.4, streams = [], end = 0;
-    for (var col = 0; col < 15; col++) { if (lite && col % 2) continue;
-      for (var j = 0; j < NS; j++) { var n = 6 + Math.floor(Math.random() * 5), vy = R * (8 + Math.random() * 4), g = [];
+    for (var sc = 0; sc < 30; sc++) { if (lite && Math.floor(sc / 2) % 2) continue;
+      for (var j = 0; j < NS; j++) { var n = 10 + Math.floor(Math.random() * 9), vy = R * (8 + Math.random() * 4), g = [];
         for (var i = 0; i < n; i++) g.push(Math.floor(Math.random() * CH.length));
-        var base = (lvl === 3 ? Math.abs(col - 7) / 7 : (14 - col) / 14) * SW, st = base + j * .65 + Math.random() * .35;
-        streams.push({ col: col, start: st, vy: vy, n: n, g: g, fl: 0 }); end = Math.max(end, st + (H + n * R + R) / vy); } }
+        var base = Math.abs((sc + .5) / 2 - 7.5) / 7.5 * SW, st = base + j * .65 + Math.random() * .35;
+        streams.push({ sc: sc, start: st, vy: vy, n: n, g: g, fl: 0 }); end = Math.max(end, st + (H + n * ch + ch) / vy); } }
     var last = performance.now(), t0 = last;
 
     function frame(now) {
@@ -93,14 +95,14 @@
         var live = 0;
         streams.forEach(function (s) {
           if (t < s.start) { live++; return; }
-          var y = (t - s.start) * s.vy - R * .5; if (y - s.n * R > H) return; live++;
+          var y = (t - s.start) * s.vy - ch * .5; if (y - s.n * ch > H) return; live++;
           s.fl -= dt; if (s.fl <= 0) { s.fl = .07; s.g[Math.floor(Math.random() * s.n)] = Math.floor(Math.random() * CH.length); }   // letters keep changing
-          var x = s.col * C, fin = Math.min(1, (t - s.start) / .1);
-          for (var i = 0; i < s.n; i++) { var gy = y - i * R; if (gy < -R || gy > H + R) continue;
+          var x = s.sc * cw, fin = Math.min(1, (t - s.start) / .1);
+          for (var i = 0; i < s.n; i++) { var gy = y - i * ch; if (gy < -ch || gy > H + ch) continue;
             var a = fin * (i === 0 ? 1 : Math.pow(1 - i / s.n, 1.2));
-            ctx.globalAlpha = a * .5; ctx.fillStyle = 'rgb(' + T.dk + ')'; ctx.fillRect(x, gy - R / 2, C, R);                  // a dark cell behind each letter keeps it readable on tiles and squares alike
-            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 3 ? 1 : 2], s.g[i] * 32, 0, 32, 32, x + C * .04, gy - R * .46, C * .92, R * .92); }
-          if (!lite && y > 0 && y < H) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .6 * fin; ctx.drawImage(GL, x - C * .6, y - R * 1.1, C * 2.2, R * 2.2); ctx.restore(); }   // the bright head of each stream
+            ctx.globalAlpha = a * .5; ctx.fillStyle = 'rgb(' + T.dk + ')'; ctx.fillRect(x, gy - ch / 2, cw, ch);                  // a dark cell behind each letter keeps it readable on tiles and squares alike
+            ctx.globalAlpha = a; ctx.drawImage(AT[i === 0 ? 0 : i < 5 ? 1 : 2], s.g[i] * 32, 0, 32, 32, x + cw * .04, gy - ch * .46, cw * .92, ch * .92); }
+          if (!lite && y > 0 && y < H) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .6 * fin; ctx.drawImage(GL, x - cw * .6, y - ch * 1.1, cw * 2.2, ch * 2.2); ctx.restore(); }   // the bright head of each stream
         });
         ctx.globalAlpha = 1;
         if (live) raf = requestAnimationFrame(frame); else stop();
