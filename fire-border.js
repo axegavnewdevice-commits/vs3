@@ -287,7 +287,7 @@
       try {
         var p = Math.round(Number(points));
         // only human moves: the computer opponent drives the game with CPU.acting set
-        if (p >= THRESHOLD && !document.hidden && !(window.CPU && window.CPU.acting)) play(p);
+        if (p >= THRESHOLD && !document.hidden && !(window.CPU && window.CPU.acting) && !document.body.classList.contains('circle-mode')) play(p);   // the hidden circle theme has no 25+ effect
       } catch (_) {}
       return orig.apply(this, arguments);
     };

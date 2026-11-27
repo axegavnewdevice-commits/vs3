@@ -1654,7 +1654,6 @@ html body.academic-mode .rack .tile.tile-hidden .tile-content, html body.academi
             <button id="quran-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg shadow-md transition duration-300" aria-pressed="false" title="quran mode">
                 وضع القرآن: متوقف
             </button>
-            <button id="word-log-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="word log" title="word log" style="display:none">سجل الكلمات</button>
             <button id="copyright-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="copyright" title="copyright">copyright</button>
             <button id="gfx-toggle-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 bg-gray-700 text-white font-bold rounded-lg shadow-md" aria-label="graphics: auto" title="graphics: auto">graphics</button>
             <button id="menu-fab-button" type="button" class="flex-1 min-w-[45%] sm:min-w-0 px-6 py-3 text-white font-bold rounded-lg shadow-md" aria-label="menu" title="menu" aria-haspopup="true" aria-expanded="false">
@@ -3590,7 +3589,6 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             const texts = words.map(w => w.map(x => x.tile.letter).join(''));
             const dictUnknown = wl.invalidWords(texts);
             const unknown = quran ? wl.invalidQuranWords(texts) : dictUnknown;
-            try { if (window.WordLog) window.WordLog.local(texts, dictUnknown); } catch (_) {}   // owner-only word log (does nothing unless unlocked)
             if (unknown.length) return false;   // refused silently: no pop-up, the tiles just stay on the board
             return true;
         };
@@ -3797,7 +3795,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
                 btn.type = 'button';
                 btn.className = 'px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded shadow-sm';
                 // Show only the letter for blank selection (no points)
-                btn.textContent = t.letter;
+                if (document.body.classList.contains('circle-mode')) { const sp = document.createElement('span'); sp.className = 'tile-letter'; sp.textContent = t.letter; btn.appendChild(sp); } else { btn.textContent = t.letter; }
                 btn.dataset.letter = t.letter;
                 btn.onclick = () => {
                     // Assign chosen letter to the blank tile instance (value remains 0)
@@ -3828,6 +3826,7 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
             };
 
             modal.classList.remove('hidden');
+            if (window.recenterTileLettersNow && document.body.classList.contains('circle-mode')) { const inner = modal.querySelector('.shadow-2xl'); const tr = inner.style.transition; inner.style.transition = 'none'; inner.style.transform = 'none'; inner.style.scale = 'none'; window.recenterTileLettersNow(modal); inner.style.transform = ''; inner.style.scale = ''; inner.style.transition = tr; }   // circle theme: centre the coin letters BEFORE the box is first drawn (measured un-scaled), so nothing moves afterwards
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modal.querySelector('.shadow-2xl').classList.remove('scale-95');
@@ -4630,13 +4629,14 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
         'mp-online-button': 'Online multiplayer',
         'support-button': 'Support the developer'
       };
-      const THEMES = ['academic', 'girly', 'light', 'horror'];   // the order of the theme button; 'light' is the olive army theme (it has no body class). A missing or unknown saved theme falls back to academic
-      const THEME_COLORS = { light: '#4d5233', girly: '#e0578a', horror: '#120707', academic: '#12203a' };
+      const THEMES = ['academic', 'girly', 'light', 'horror', 'circle'];   // the order of the theme button; 'light' is the olive army theme (it has no body class). A missing or unknown saved theme falls back to academic
+      const THEME_COLORS = { light: '#4d5233', girly: '#e0578a', horror: '#120707', academic: '#12203a', circle: '#000000' };
       const setTheme = (name) => {
         if (!THEMES.includes(name)) name = 'academic';
         document.body.classList.toggle('girly-mode', name === 'girly');
         document.body.classList.toggle('horror-mode', name === 'horror');
         document.body.classList.toggle('academic-mode', name === 'academic');
+        document.body.classList.toggle('circle-mode', name === 'circle');
         const toggle = document.getElementById('theme-toggle');
         if (toggle) { toggle.setAttribute('aria-pressed', String(name !== 'academic')); toggle.dataset.theme = name; }
         const meta = document.querySelector('meta[name="theme-color"]');
@@ -4668,11 +4668,113 @@ let consecutiveScorelessTurns = 0;   // passes and swaps in a row; six in a row 
       document.addEventListener('click', (event) => {
         const toggle = event.target instanceof Element ? event.target.closest('#theme-toggle') : null;
         if (!toggle) return;
-        const cur = document.body.classList.contains('academic-mode') ? 'academic' : document.body.classList.contains('horror-mode') ? 'horror' : document.body.classList.contains('girly-mode') ? 'girly' : 'light';
-        const next = THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length];
+        const cur = document.body.classList.contains('circle-mode') ? 'circle' : document.body.classList.contains('academic-mode') ? 'academic' : document.body.classList.contains('horror-mode') ? 'horror' : document.body.classList.contains('girly-mode') ? 'girly' : 'light';
+        const next = cur === 'circle' ? backTheme() : CYCLE[(CYCLE.indexOf(cur) + 1) % CYCLE.length];   // the circle theme is hidden: the button only ever leaves it, never offers it
         setTheme(next);
         try { localStorage.setItem(themeKey, next); } catch (_) {}
       });
+
+      /* ===== hidden theme: 5 quick taps on the tile counter open a small box; the right word there switches the circle theme on or off ===== */
+      const CYCLE = THEMES.filter((t) => t !== 'circle');               // the theme button never offers the hidden theme
+      const prevKey = 'arabic-scrabble-theme-prev';
+      const lsGet = (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+      const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+      const curTheme = () => { const c = document.body.classList; return c.contains('circle-mode') ? 'circle' : c.contains('academic-mode') ? 'academic' : c.contains('horror-mode') ? 'horror' : c.contains('girly-mode') ? 'girly' : 'light'; };
+      const backTheme = () => { const p = lsGet(prevKey); return CYCLE.includes(p) ? p : 'academic'; };
+      const sha256 = (() => {
+        const K = [], H0 = [];
+        for (let c = 2, n = 0; n < 64; c++) {
+          let prime = true; for (let d = 2; d * d <= c; d++) if (c % d === 0) { prime = false; break; }
+          if (!prime) continue;
+          if (n < 8) H0[n] = (Math.pow(c, 1 / 2) % 1 * 4294967296) | 0;
+          K[n++] = (Math.pow(c, 1 / 3) % 1 * 4294967296) | 0;
+        }
+        return (msg) => {
+          const l = msg.length, nb = ((l + 9 + 63) >> 6) << 6, buf = new Uint8Array(nb);
+          buf.set(msg); buf[l] = 0x80;
+          const dv = new DataView(buf.buffer); dv.setUint32(nb - 4, (l * 8) >>> 0); dv.setUint32(nb - 8, Math.floor(l * 8 / 4294967296));
+          const h = H0.slice(), w = new Array(64);
+          for (let o = 0; o < nb; o += 64) {
+            for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+            for (let i = 16; i < 64; i++) {
+              const a = w[i - 15], b = w[i - 2];
+              w[i] = (w[i - 16] + (((a >>> 7) | (a << 25)) ^ ((a >>> 18) | (a << 14)) ^ (a >>> 3)) + w[i - 7] + (((b >>> 17) | (b << 15)) ^ ((b >>> 19) | (b << 13)) ^ (b >>> 10))) | 0;
+            }
+            let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+            for (let i = 0; i < 64; i++) {
+              const t1 = (hh + (((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7))) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+              const t2 = ((((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10))) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+              hh = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+            }
+            h[0] = (h[0] + a) | 0; h[1] = (h[1] + b) | 0; h[2] = (h[2] + c) | 0; h[3] = (h[3] + d) | 0; h[4] = (h[4] + e) | 0; h[5] = (h[5] + f) | 0; h[6] = (h[6] + g) | 0; h[7] = (h[7] + hh) | 0;
+          }
+          const out = new Uint8Array(32), ov = new DataView(out.buffer); h.forEach((x, i) => ov.setUint32(i * 4, x)); return out;
+        };
+      })();
+      const toBytes = (s) => { const u = unescape(encodeURIComponent(s)), o = new Uint8Array(u.length); for (let i = 0; i < u.length; i++) o[i] = u.charCodeAt(i); return o; };
+      const join = (a, b) => { const o = new Uint8Array(a.length + b.length); o.set(a); o.set(b, a.length); return o; };
+      const SALT = toBytes('cs-k7f3a91-v1'), WANT = '5874ef477d8ffc12276fc900376d4af1156d5302d31a3a694d984bfa85174db6', WLEN = 10;   // only a salted, 1000-times hashed fingerprint is kept here, never the word itself
+      const fingerprint = (pw) => { let h = sha256(join(SALT, toBytes(pw))); for (let i = 1; i < 1000; i++) h = sha256(join(h, SALT)); return Array.prototype.map.call(h, (x) => (x < 16 ? '0' : '') + x.toString(16)).join(''); };
+
+      let box = null, inp = null, openedAt = 0, fails = 0, lockedUntil = 0;
+      const buildBox = () => {
+        if (box) return;
+        const css = document.createElement('style');
+        css.textContent = '#cs-box{position:fixed;inset:0;z-index:100200;display:none;align-items:flex-start;justify-content:center;padding:calc(env(safe-area-inset-top,0px) + 9vh) 14px 14px;background:rgba(0,0,0,.5);direction:ltr}' +
+          '#cs-box.cs-open{display:flex}' +
+          '#cs-box .cs-card{width:min(100%,20rem);box-sizing:border-box;background:#1f2937;border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px;box-shadow:0 20px 50px rgba(0,0,0,.5)}' +
+          '#cs-box .cs-in{width:100%;box-sizing:border-box;font-size:20px;padding:10px 12px;border-radius:10px;border:2px solid #facc15;background:#0f172a;color:#fff;text-align:center;outline:none;-webkit-appearance:none;appearance:none;text-transform:none;-webkit-user-select:text;user-select:text;-webkit-text-security:disc}';
+        document.head.appendChild(css);
+        box = document.createElement('div'); box.id = 'cs-box'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'name');
+        const card = document.createElement('div'); card.className = 'cs-card';
+        inp = document.createElement('input'); inp.type = 'text'; inp.className = 'cs-in'; inp.maxLength = 40;
+        [['autocomplete', 'off'], ['autocorrect', 'off'], ['autocapitalize', 'off'], ['spellcheck', 'false'], ['enterkeyhint', 'done'], ['inputmode', 'text'], ['dir', 'ltr'], ['name', 'cs-' + Math.random().toString(36).slice(2, 8)], ['aria-label', 'name'], ['data-lpignore', 'true'], ['data-1p-ignore', 'true'], ['data-form-type', 'other']]
+          .forEach(([a, v]) => inp.setAttribute(a, v));
+        try { if (!(window.CSS && CSS.supports && CSS.supports('-webkit-text-security', 'disc'))) { inp.type = 'password'; inp.setAttribute('autocomplete', 'new-password'); } } catch (_) {}   // browsers that cannot mask a text field use a password field
+        card.appendChild(inp); box.appendChild(card); document.body.appendChild(box);
+        box.addEventListener('click', (e) => { if (e.target === box && performance.now() - openedAt > 500) closeBox(); });
+        inp.addEventListener('keydown', (e) => {
+          e.stopPropagation();                                           // the game's own key handlers never see what is typed here
+          if (e.key === 'Enter') { e.preventDefault(); submit(true); }
+          else if (e.key === 'Escape') { e.preventDefault(); closeBox(); }
+        });
+        inp.addEventListener('input', () => submit(false));
+      };
+      const closeBox = () => { if (!box) return; box.classList.remove('cs-open'); try { inp.blur(); } catch (_) {} inp.value = ''; };
+      const openBox = () => {
+        if (Date.now() < lockedUntil) return;
+        buildBox();
+        inp.value = ''; openedAt = performance.now();
+        box.classList.add('cs-open');
+        try { inp.focus({ preventScroll: true }); } catch (_) {}         // still inside the 5th tap, which is what lets iPhone and iPad raise the keyboard
+        setTimeout(() => { if (box.classList.contains('cs-open') && document.activeElement !== inp) { try { inp.focus({ preventScroll: true }); } catch (_) {} } }, 60);
+      };
+      const toggleHidden = () => {
+        const cur = curTheme();
+        let next;
+        if (cur === 'circle') next = backTheme();
+        else { lsSet(prevKey, cur); next = 'circle'; }
+        setTheme(next); lsSet(themeKey, next);
+      };
+      const submit = (enter) => {
+        const v = inp.value.trim().toLowerCase();
+        if (v.length === WLEN || (enter && v)) {
+          if (v.length === WLEN && fingerprint(v) === WANT) { fails = 0; closeBox(); toggleHidden(); return; }
+          if (v.length === WLEN || enter) { if (++fails >= 5) { fails = 0; lockedUntil = Date.now() + 30000; closeBox(); } }
+        }
+      };
+      let taps = 0, lastTap = 0;
+      const onTap = () => {
+        const now = Date.now();
+        taps = (now - lastTap > 800) ? 1 : taps + 1; lastTap = now;
+        if (taps < 5) return;
+        taps = 0; openBox();
+      };
+      const startHidden = () => {
+        const bag = document.getElementById('bag-count-button'); if (bag) bag.addEventListener('click', onTap);
+        ['arabicScrabble.wordlog.on.v1', 'arabicScrabble.wordlog.v1', 'arabicScrabble.wordlog.seen.v1'].forEach((k) => { try { localStorage.removeItem(k); } catch (_) {} });   // the old word log is gone: its saved data goes too
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startHidden, { once: true }); else startHidden();
     })();
     </script>
 
@@ -5253,6 +5355,7 @@ html body.girly-mode .sq-star {
         if (b.contains('girly-mode'))    return { c: '#fff4f6', o: '#a82255', g: 'rgba(240,120,170,.55)' };
         if (b.contains('horror-mode'))   return { c: '#ff6a4a', o: '#120807', g: 'rgba(200,30,30,.55)' };
         if (b.contains('academic-mode')) return { c: '#f7efd9', o: '#12264a', g: 'rgba(90,150,220,.5)' };
+        if (b.contains('circle-mode'))   return { c: '#1cc0d3', o: '#021f24', g: 'rgba(28,192,211,.6)' };
         if (b.contains('dark-mode'))     return { c: '#e8cf7e', o: '#0e100a', g: 'rgba(232,207,126,.4)' };
         return { c: '#f4dc8c', o: '#2b3118', g: 'rgba(244,220,140,.45)' };           // army light
       };
@@ -5486,189 +5589,6 @@ html body.girly-mode .sq-star {
       background: var(--fab-bg2); color: var(--fab-ic); border: 1px solid var(--fab-bd); transform: translate(-50%, -50%); }
     @media (prefers-reduced-motion: reduce) { #fab-layer .fab-item, #fab-layer .fab-item.fab-enter { transition: none; } }
     </style>
-    <style id="word-log-style">
-    /* Owner-only word log: its real button stays hidden like the other menu buttons, and is only "displayed" (so the round menu lists it) after the 7-tap unlock. */
-    html body #game-controls button#word-log-button {
-      visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;
-      width: 1px !important; height: 1px !important; min-width: 0 !important; min-height: 0 !important; max-width: 1px !important;
-      padding: 0 !important; border: 0 !important; overflow: hidden !important; z-index: -1 !important;
-    }
-    #wl-overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0, 0, 0, .55); }
-    #wl-panel { width: 100%; max-width: 460px; max-height: 92vh; display: flex; flex-direction: column; direction: ltr; text-transform: lowercase; border-radius: 16px; background: #1d2315; color: #f5e6b8;
-      border: 1px solid rgba(245, 230, 185, .55); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); overflow: hidden; }
-    #wl-panel header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(245, 230, 185, .25); font-weight: 700; font-size: 17px; }
-    #wl-panel .wl-body { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
-    #wl-panel h3 { margin: 0; padding: 12px 14px 4px; font-size: 13px; font-weight: 600; opacity: .8; }
-    #wl-panel .wl-row { display: flex; align-items: center; gap: 8px; padding: 6px 14px; }
-    #wl-panel .wl-word { flex: 1; font-size: 20px; font-weight: 700; }
-    #wl-panel .wl-src { font-size: 11px; opacity: .65; }
-    #wl-panel .wl-empty { padding: 6px 14px 10px; font-size: 13px; opacity: .6; }
-    #wl-panel button { font: inherit; color: inherit; cursor: pointer; border: 1px solid rgba(245, 230, 185, .55); background: rgba(245, 230, 185, .08); border-radius: 10px; padding: 6px 12px; min-height: 34px; }
-    #wl-panel button.wl-on-ok { background: rgba(80, 160, 90, .45); border-color: #8fd19a; }
-    #wl-panel button.wl-on-no { background: rgba(190, 70, 70, .5); border-color: #f0a0a0; }
-    #wl-panel button.wl-x { padding: 4px 9px; min-height: 30px; opacity: .8; }
-    #wl-panel footer { padding: 10px 14px 12px; border-top: 1px solid rgba(245, 230, 185, .25); background: rgba(0, 0, 0, .18); }
-    #wl-out { margin: 0 0 8px; min-height: 44px; white-space: pre-wrap; direction: rtl; font: inherit; font-size: 16px; line-height: 1.9; user-select: text; -webkit-user-select: text; }
-    #wl-panel .wl-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-    #wl-panel .wl-actions button { flex: 1 1 auto; }
-    #wl-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 100001; direction: rtl; padding: 8px 16px; border-radius: 999px; font-size: 14px;
-      background: rgba(29, 35, 21, .96); color: #f5e6b8; border: 1px solid rgba(245, 230, 185, .6); max-width: 92vw; text-align: center; }
-    </style>
-
-    <script id="word-log">
-    /* Owner-only word log. Unlock: 7 quick taps (no long press) on the tile-bag counter; the choice is remembered on this device only.
-       Once unlocked, every word formed in a move is saved on this device (offline, against the computer, online): words the game refused and words it accepted.
-       The round menu then shows one extra circle (the real button #word-log-button is hidden until unlocked). Nothing here changes any game rule or is sent anywhere. */
-    (() => {
-      const K_ON = 'arabicScrabble.wordlog.on.v1', K_DATA = 'arabicScrabble.wordlog.v1', K_SEEN = 'arabicScrabble.wordlog.seen.v1';
-      const $ = (id) => document.getElementById(id);
-      const ls = {
-        get: (k) => { try { return localStorage.getItem(k); } catch (_) { return null; } },
-        set: (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} },
-        del: (k) => { try { localStorage.removeItem(k); } catch (_) {} }
-      };
-      const parse = (k, d) => { try { const v = JSON.parse(ls.get(k) || ''); return v == null ? d : v; } catch (_) { return d; } };
-      let on = ls.get(K_ON) === '1';
-      let data = parse(K_DATA, {});
-      let seen = parse(K_SEEN, []);
-      if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
-      if (!Array.isArray(seen)) seen = [];
-      const MAX = 1500;
-      const SRC = { offline: 'offline', cpu: 'vs computer', online: 'online' };
-      const cpu = () => !!(window.CPU && window.CPU.active);
-
-      const save = () => {
-        const ks = Object.keys(data);
-        if (ks.length > MAX) ks.sort((a, b) => ((data[a].m ? 1 : 0) - (data[b].m ? 1 : 0)) || (data[a].t - data[b].t)).slice(0, ks.length - MAX).forEach((k) => { delete data[k]; });
-        ls.set(K_DATA, JSON.stringify(data));
-      };
-      function paint() {
-        const b = $('word-log-button'); if (!b) return;
-        b.style.setProperty('display', on ? 'inline-flex' : 'none', 'important');
-        const n = Object.keys(data).filter((w) => data[w].k === 'no' && !data[w].m).length;
-        b.textContent = 'word log' + (n ? ' (' + n + ')' : '');
-      }
-      function toast(msg) {
-        const old = $('wl-toast'); if (old) old.remove();
-        const t = document.createElement('div'); t.id = 'wl-toast'; t.textContent = msg; document.body.appendChild(t);
-        setTimeout(() => { if (t.parentNode) t.remove(); }, 2600);
-      }
-
-      /* kind: 'ok' = the game accepted the word, 'no' = the game refused it */
-      function record(words, kind, src) {
-        if (!on || !Array.isArray(words)) return;
-        const now = Date.now(); let changed = false;
-        words.forEach((w) => {
-          if (typeof w !== 'string' || w.length < 2) return;
-          const cur = data[w];
-          if (!cur) data[w] = { k: kind, s: src, m: 0, t: now };
-          else { if (cur.k !== kind) { cur.k = kind; cur.m = 0; } cur.s = src; cur.t = now; }
-          changed = true;
-        });
-        if (changed) { save(); paint(); if (overlay) render(); }
-      }
-      function local(texts, unknown) {
-        if (!on) return;
-        const bad = new Set(unknown || []), src = cpu() ? 'cpu' : 'offline';
-        record(texts.filter((t) => !bad.has(t)), 'ok', src);
-        record(texts.filter((t) => bad.has(t)), 'no', src);
-      }
-      function fromHistory(v) {
-        if (!on || !v || !Array.isArray(v.history)) return;
-        let fresh = false;
-        v.history.forEach((h) => {
-          if (!h || h.type !== 'move' || !Array.isArray(h.words)) return;
-          const key = (v.game || '') + ':' + h.n;
-          if (seen.indexOf(key) >= 0) return;
-          seen.push(key); fresh = true;
-          record(h.words, 'ok', 'online');
-        });
-        if (fresh) { if (seen.length > 400) seen = seen.slice(-400); ls.set(K_SEEN, JSON.stringify(seen)); }
-      }
-
-      function outText() {
-        const v = [], i = [];
-        Object.keys(data).forEach((w) => { if (data[w].m === 1) v.push(w); else if (data[w].m === -1) i.push(w); });
-        const parts = [];
-        if (v.length) parts.push('valid: ' + v.join(' ، '));
-        if (i.length) parts.push('invalid: ' + i.join(' ، '));
-        return parts.join('\n');
-      }
-
-      let overlay = null;
-      function row(w, d, kind) {
-        const r = document.createElement('div'); r.className = 'wl-row';
-        const word = document.createElement('span'); word.className = 'wl-word'; word.textContent = w;
-        const src = document.createElement('span'); src.className = 'wl-src'; src.textContent = SRC[d.s] || '';
-        const want = kind === 'no' ? 1 : -1;
-        const mk = document.createElement('button'); mk.type = 'button'; mk.textContent = kind === 'no' ? 'valid' : 'invalid';
-        if (d.m === want) mk.className = kind === 'no' ? 'wl-on-ok' : 'wl-on-no';
-        mk.addEventListener('click', () => { d.m = d.m === want ? 0 : want; save(); paint(); render(); });
-        const x = document.createElement('button'); x.type = 'button'; x.className = 'wl-x'; x.textContent = '×'; x.setAttribute('aria-label', 'remove from log');
-        x.addEventListener('click', () => { delete data[w]; save(); paint(); render(); });
-        r.appendChild(word); r.appendChild(src); r.appendChild(mk); r.appendChild(x);
-        return r;
-      }
-      function render() {
-        if (!overlay) return;
-        const body = overlay.querySelector('.wl-body'), keep = body.scrollTop;
-        body.textContent = '';
-        const keys = Object.keys(data).sort((a, b) => data[b].t - data[a].t);
-        [['no', 'rejected by the game – is it valid?'], ['ok', 'accepted by the game – is it invalid?']].forEach(([kind, title]) => {
-          const list = keys.filter((w) => data[w].k === kind);
-          const h = document.createElement('h3'); h.textContent = title + ' (' + list.length + ')'; body.appendChild(h);
-          if (!list.length) { const e = document.createElement('div'); e.className = 'wl-empty'; e.textContent = 'no words yet.'; body.appendChild(e); }
-          list.forEach((w) => body.appendChild(row(w, data[w], kind)));
-        });
-        body.scrollTop = keep;
-        overlay.querySelector('#wl-out').textContent = outText() || 'tap valid or invalid on any word.';
-      }
-      function close() { if (overlay) { overlay.remove(); overlay = null; } }
-      function open() {
-        if (!on) return;
-        if (overlay) { render(); return; }
-        overlay = document.createElement('div'); overlay.id = 'wl-overlay';
-        overlay.innerHTML = '<div id="wl-panel" role="dialog" aria-modal="true" aria-label="word log"><header><span>word log</span><button type="button" id="wl-close" aria-label="close">×</button></header>'
-          + '<div class="wl-body"></div><footer><pre id="wl-out"></pre><div class="wl-actions"><button type="button" id="wl-copy">copy list</button>'
-          + '<button type="button" id="wl-clear-marked">delete marked</button><button type="button" id="wl-clear-all">clear all</button><button type="button" id="wl-lock">lock log</button></div></footer></div>';
-        document.body.appendChild(overlay);
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-        $('wl-close').addEventListener('click', close);
-        $('wl-copy').addEventListener('click', async () => {
-          const t = outText(); if (!t) { toast('no marked words yet'); return; }
-          let ok = false;
-          try { await navigator.clipboard.writeText(t); ok = true; } catch (_) {}
-          if (!ok) { try { const ta = document.createElement('textarea'); ta.value = t; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); ta.remove(); } catch (_) {} }
-          toast(ok ? 'list copied' : 'copy failed, copy the text by hand');
-        });
-        $('wl-clear-marked').addEventListener('click', () => { Object.keys(data).forEach((w) => { if (data[w].m) delete data[w]; }); save(); paint(); render(); });
-        $('wl-clear-all').addEventListener('click', () => { if (confirm('clear all words from the log?')) { data = {}; save(); paint(); render(); } });
-        $('wl-lock').addEventListener('click', () => { if (confirm('lock the log and hide its button from the menu?')) { on = false; ls.del(K_ON); close(); paint(); toast('log locked'); } });
-        render();
-      }
-
-      /* the unlock: 7 quick taps (each within 0.8 s of the one before) on the tile-bag counter. Unlocked already: the same 7 taps open the log. */
-      let taps = 0, lastTap = 0;
-      function onTap() {
-        const now = Date.now();
-        taps = (now - lastTap > 800) ? 1 : taps + 1; lastTap = now;
-        if (taps < 7) return;
-        taps = 0;
-        if (!on) { on = true; ls.set(K_ON, '1'); paint(); toast('word log unlocked, find it in the round menu'); }
-        else open();
-      }
-
-      window.WordLog = { record, local, fromHistory, _out: outText };
-      const start = () => {
-        const bag = $('bag-count-button'); if (bag) bag.addEventListener('click', onTap);
-        const real = $('word-log-button'); if (real) real.addEventListener('click', open);
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay) close(); });
-        paint();
-      };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
-    })();
-    </script>
-
     <style id="gfx-style">
     /* The real "graphics" button stays in the page (the ring circle presses it) but is hidden like the other menu buttons. */
     html body #game-controls button#gfx-toggle-button {
@@ -5793,7 +5713,7 @@ html body.girly-mode .sq-star {
     (() => {
       const $ = (id) => document.getElementById(id);
       const SRC = [['undo-last-move', 'undo'], ['pause-game', 'pause'], ['surrender-game', 'flag'], ['new-game', 'refresh'], ['mp-online-button', 'wifi'], ['vs-computer-button', 'cpu'], ['validation-toggle-button', 'shield'], ['quran-toggle-button', 'quran'],
-                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['gfx-toggle-button', 'gfx'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'dollar'], ['copyright-button', 'copy'], ['word-log-button', 'book']];
+                   ['sound-toggle-button', 'vol'], ['theme-toggle', 'moon'], ['gfx-toggle-button', 'gfx'], ['fullscreen-app-button', 'max'], ['layout-lock-button', 'lock'], ['install-app-button', 'download'], ['support-button', 'dollar'], ['copyright-button', 'copy']];
       const ICON = {
         undo: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
         pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
@@ -5805,6 +5725,7 @@ html body.girly-mode .sq-star {
         vol: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
         volx: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
         moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+        circle: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/>',
         skull: '<path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/>',
         cap: '<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
         sun: '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>',
@@ -5857,7 +5778,7 @@ html body.girly-mode .sq-star {
         const real = o.real, t = (real.textContent || '');
         const NAME = { 'undo-last-move': 'undo last move', 'surrender-game': 'surrender', 'new-game': 'new game', 'mp-online-button': 'play online', 'vs-computer-button': 'play vs computer',
           'quran-toggle-button': 'quran mode', 'theme-toggle': 'change theme', 'fullscreen-app-button': 'full screen', 'install-app-button': 'install app',
-          'support-button': 'support the developer', 'copyright-button': 'copyright', 'word-log-button': 'word log' };
+          'support-button': 'support the developer', 'copyright-button': 'copyright' };
         if (o.id === 'pause-game') return /استئناف|متابعة/.test(t) ? 'resume game' : 'pause game';
         if (o.id === 'sound-toggle-button') return real.classList.contains('sound-off') ? 'sound: off' : 'sound: on';
         if (o.id === 'validation-toggle-button') return (window.validationOn && !window.validationOn()) ? 'word check: off' : 'word check: on';
@@ -5871,7 +5792,7 @@ html body.girly-mode .sq-star {
         if (o.k === 'pause') return /استئناف|متابعة/.test(t) ? 'play' : 'pause';
         if (o.k === 'vol') return o.real.classList.contains('sound-off') ? 'volx' : 'vol';
         if (o.k === 'shield') return (window.validationOn && !window.validationOn()) ? 'shieldx' : 'shield';
-        if (o.k === 'moon') { const c = document.body.classList; return c.contains('academic-mode') ? 'heart' : c.contains('girly-mode') ? 'sun' : c.contains('horror-mode') ? 'cap' : 'skull'; }   // the theme circle shows the NEXT theme: academic > girly (heart), girly > olive (sun), olive > horror (skull), horror > academic (cap)
+        if (o.k === 'moon') { const c = document.body.classList; return c.contains('circle-mode') ? 'cap' : c.contains('academic-mode') ? 'heart' : c.contains('girly-mode') ? 'sun' : c.contains('horror-mode') ? 'circle' : 'skull'; }   // the theme circle shows the NEXT theme: academic > girly (heart), girly > olive (sun), olive > horror (skull), horror > academic (cap)
         if (o.k === 'lock') return document.body.classList.contains('layout-locked') ? 'lock' : 'unlock';
         if (o.k === 'gfx') { const m = window.gfxMode ? window.gfxMode() : 'auto'; return m === 'full' ? 'gfx' : m === 'light' ? 'feather' : 'gauge'; }   // three settings, three icons: auto = gauge, light = feather, full = sparkles
         return o.k;
@@ -6531,13 +6452,15 @@ html body.girly-mode .sq-star {
           ctx.fillText(text, PADX, BASE);
           const m = ctx.measureText(text);
           const d = ctx.getImageData(0, 0, cv.width, cv.height).data, W = cv.width, H = cv.height;
-          let x0 = W, x1 = -1, y0 = H, y1 = -1;
+          let x0 = W, x1 = -1, y0 = H, y1 = -1, sx = 0, sy = 0, sa = 0;
           for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-            if (d[(y * W + x) * 4 + 3] > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+            { const a = d[(y * W + x) * 4 + 3]; if (a) { sx += x * a; sy += y * a; sa += a; } if (a > 40) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
           }
           if (x1 >= 0) r = {
             cx: ((x0 + x1 + 1) / 2 - PADX) / SIZE,         // ink centre, em from the start of the text
             mid: (BASE - (y0 + y1 + 1) / 2) / SIZE,        // ink centre, em above the baseline
+            mcx: sa ? ((sx / sa + 0.5) - PADX) / SIZE : null,   // ink centre of mass (used by the circle theme)
+            mmid: sa ? (BASE - (sy / sa + 0.5)) / SIZE : null,
             w: m.width / SIZE
           };
         } catch (_) {}
@@ -6579,8 +6502,9 @@ html body.girly-mode .sq-star {
            A line box taller than 1em (fallback fonts on iPhone) is fine: the real box is used below. */
         const ow = el.offsetWidth, oh = el.offsetHeight;
         if (ow && oh && (Math.abs(box.width - ow) > 1.5 || Math.abs(box.height - oh) > 1.5)) { retry = true; return; }
-        const inkCentreY = base - i.mid * fontPx;                   // px from top of the letter box
-        const inkCentreX = i.cx * fontPx;                           // px from the start of the letter box
+        const opt = (i.mcx != null && document.body.classList.contains('circle-mode')) ? 0.5 : 0;   // circle theme: half way between the ink box and the visual weight
+        const inkCentreY = base - (i.mid + (opt ? (i.mmid - i.mid) * opt : 0)) * fontPx;                   // px from top of the letter box
+        const inkCentreX = (i.cx + (opt ? (i.mcx - i.cx) * opt : 0)) * fontPx;                           // px from the start of the letter box
         el.style.setProperty('--lx', ((box.width / 2 - inkCentreX) / fontPx).toFixed(4));
         el.style.setProperty('--ly', ((box.height / 2 - inkCentreY) / fontPx).toFixed(4));
         if (mo) mo.takeRecords();                                   // ignore our own probe mutations
@@ -6592,6 +6516,7 @@ html body.girly-mode .sq-star {
       window.recenterTileLettersNow = (root) => { try { sweep(root || document); } catch (_) {} };   // immediate, for callers that are about to start an animation
       const start = () => {
         sweep(document);
+        new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // a theme change re-centres every letter
         mo = new MutationObserver((muts) => {
           let need = false;
           const fresh = new Set();                                  // letters that were just created or changed
@@ -7618,6 +7543,193 @@ html body.academic-mode #game-controls button#sound-toggle-button { background: 
   fit();
 })();
 </script>
-<script src="fire-border.js?v=m7"></script>
+<style id="circle-theme">
+/* ===== CIRCLE THEME: black board, grey dots, teal frame, round cream tiles with green letters. Class: body.circle-mode =====
+   Everything here is scoped to body.circle-mode, so the other four themes cannot change. Letters keep using the game's own dead-centre
+   script (tile-letter-centering); only the point value moves to the bottom centre of the round tile. Colours:
+   teal #048596 (frame, centre), grey #545454 (empty squares), cream #fbf3db (tile), green #008763 (letter and points). */
+html body.circle-mode {
+    --primary-color: #0b1a1d; --board-color: #000; --tile-bg: #fbf3db; --text-color: #008763; --accent-color: #048596;
+    background: #000 !important; background-image: none !important;
+    color: #e6f5f6 !important; color-scheme: dark;
+}
+html:has(> body.circle-mode) { background: #000; }
+
+/* ---------- the board: black, teal frame, one round dot per square ---------- */
+html body.circle-mode .board {
+    /* a black gap (the 6px border) keeps the circles and tiles off the teal frame line, which is drawn just outside it */
+    background-color: #000 !important; border: 6px solid #000 !important;
+    box-shadow: 0 0 0 5px #048596, 0 0 26px rgba(4,133,150,.35), 0 14px 34px rgba(0,0,0,.65) !important;
+}
+html body.circle-mode #game-board > .square {
+    --dot: #545454;
+    background-color: transparent !important;
+    background-image: radial-gradient(circle closest-side, var(--dot) 98.5%, transparent 100%) !important;
+    background-repeat: no-repeat !important; background-position: center !important; background-size: 100% 100% !important;
+    box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
+}
+/* bonus squares are drawn like plain squares (grey, no label); only the centre stays teal. Scoring is unchanged. */
+html body.circle-mode #game-board > .square.sq-tl { --dot: #545454; }      
+html body.circle-mode #game-board > .square.sq-dl { --dot: #545454; }      
+html body.circle-mode #game-board > .square.sq-tw { --dot: #545454; }      
+html body.circle-mode #game-board > .square.sq-dw { --dot: #545454; }      
+html body.circle-mode #game-board > .square.sq-star { --dot: #048596; }    /* centre */
+html body.circle-mode #game-board > .square .square-text { display: none !important; }   /* bonus squares look like plain squares; the scoring itself is unchanged */
+/* a tile covers its square, so no dot shows around it */
+html body.circle-mode #game-board > .square.has-tile { background-image: none !important; }
+
+/* ---------- round tiles: an aged coin. Matte patinated teal-bronze (no gold, no shine, plain edge) with an ivory letter pressed into it ---------- */
+html body.circle-mode .tile > .tile-content,
+html body.circle-mode #game-board > .square.has-tile > .tile > .tile-content,
+html body.circle-mode .rack-slot > .tile > .tile-content {
+    background-color: #0e5963 !important;
+    background-image: radial-gradient(circle at 74% 80%, rgba(0,0,0,.22) 0%, rgba(0,0,0,0) 46%),
+        radial-gradient(circle at 24% 26%, rgba(58,158,146,.20) 0%, rgba(58,158,146,0) 50%),
+        radial-gradient(circle at 50% 50%, #12646f 0%, #0e5963 62%, #0a444d 100%) !important;
+    background-repeat: no-repeat !important; background-size: 100% 100% !important; background-position: center !important;
+    border: 0 !important; border-radius: 50% !important;
+    box-shadow: 0 0 0 .3cqw #031d22 !important;
+    color: #efe6cf !important;
+}
+/* a tile fills its square completely, so it covers the dot exactly */
+html body.circle-mode #game-board > .square.has-tile > .tile { width: 100% !important; height: 100% !important; margin: 0 !important; flex: 0 0 100% !important; }
+/* the letter is struck into the coin: ivory, with a pressed shadow, no glow */
+html body.circle-mode .tile .tile-letter { color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important; }
+/* the board and rack letters are a little smaller so the ink always sits inside the disc with room for the points */
+html body.circle-mode #game-board .square .tile-letter { font-size: calc(var(--board-tile-letter-size, 56cqw) * 1) !important; }
+html body.circle-mode .rack-slot .tile-letter { font-size: clamp(7px, 58cqw, 400px) !important; }
+/* the point numbers are hidden in this theme: the letter alone sits dead centre (the score still counts) */
+html body.circle-mode .tile .tile-score { display: none !important; }
+/* (kept for reference, not shown) */
+html body.circle-mode .tile .tile-score {
+    left: 50% !important; right: auto !important; transform: translateX(-50%) !important;
+    color: #008763 !important; text-shadow: none !important; font-weight: 700 !important; text-align: center !important;
+}
+html body.circle-mode #game-board .square .tile-score { bottom: 4.5cqw !important; font-size: calc(var(--board-tile-score-size, 20cqw) * .85) !important; }
+html body.circle-mode .rack-slot .tile-score { bottom: 4.5cqw !important; font-size: clamp(5px, 19cqw, 200px) !important; }
+
+/* selected tile (rack or swap): the same lift, with a round teal halo */
+html body.circle-mode .tile.tile-selected-border > .tile-content,
+html body.circle-mode .tile.tile-selected-swap > .tile-content {
+    background-color: #146c77 !important; border: 0 !important; border-radius: 50% !important;
+    box-shadow: 0 0 0 .9cqw #1cc0d3, 0 0 3cqw 1.2cqw rgba(28,192,211,.55), 0 9cqw 5cqw -3cqw rgba(0,0,0,.6) !important;
+}
+
+/* face-down tile (hidden rack, paused board): the reverse of the coin, dark slate with a teal emblem */
+html body.circle-mode .rack .tile.tile-hidden .tile-content, html body.circle-mode.tiles-down #game-board > .square.has-tile > .tile > .tile-content {
+    background-color: #141b1e !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='21' fill='none' stroke='rgba%2828%2C192%2C211%2C.55%29' stroke-width='2.2'/%3E%3Ccircle cx='50' cy='50' r='7' fill='rgba%2828%2C192%2C211%2C.6%29'/%3E%3Ccircle cx='80.00' cy='50.00' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='71.21' cy='71.21' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='50.00' cy='80.00' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='28.79' cy='71.21' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='20.00' cy='50.00' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='28.79' cy='28.79' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='50.00' cy='20.00' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3Ccircle cx='71.21' cy='28.79' r='1.8' fill='rgba%2828%2C192%2C211%2C.5%29'/%3E%3C/svg%3E"), radial-gradient(circle at 50% 50%, #1a2326 0%, #141b1e 62%, #0d1315 100%) !important;
+    background-repeat: no-repeat !important; background-position: center !important; background-size: 100% 100% !important;
+    border: 0 !important; border-radius: 50% !important;
+    box-shadow: 0 0 0 .3cqw #031d22 !important;
+}
+
+/* ---------- the racks: dark tray, teal edge, one round grey socket per tile ---------- */
+html body.circle-mode .rack { background-color: #050909 !important; border: 2px solid #048596 !important; border-radius: 1rem !important; box-shadow: inset 0 3px 12px rgba(0,0,0,.85), 0 0 16px rgba(4,133,150,.22) !important; }
+html body.circle-mode .rack-slot { background-color: #545454 !important; border-radius: 50% !important; box-shadow: inset 0 .8cqw 2cqw rgba(0,0,0,.55) !important; }
+
+/* ---------- player cards ---------- */
+html body.circle-mode .player-area { background: linear-gradient(145deg, #0e1d20, #050a0b) !important; border: 2px solid #048596 !important; border-radius: 1rem !important;
+    box-shadow: 0 8px 22px rgba(0,0,0,.6), 0 0 16px rgba(4,133,150,.18) !important; }
+/* name, shuffle button, timer and score are all teal */
+html body.circle-mode .player-area .player-name-input, html body.circle-mode .player-area .player-id,
+html body.circle-mode .player-area .player-timer, html body.circle-mode .player-area .text-yellow-400,
+html body.circle-mode .player-area .player-score, html body.circle-mode .player-area .player-score span { color: #1cc0d3 !important; -webkit-text-fill-color: #1cc0d3 !important; }
+html body.circle-mode .player-area .shuffle-btn { color: #1cc0d3 !important; background: rgba(28,192,211,.12) !important; border-color: rgba(28,192,211,.6) !important; box-shadow: 0 1px 4px rgba(0,0,0,.5) !important; }
+html body.circle-mode .player-area .shuffle-btn:hover:not(:disabled) { background: rgba(28,192,211,.26) !important; }
+html body.circle-mode .turn-dot { background: #545454 !important; }
+html body.circle-mode .player-turn .turn-dot { background: #19c9dc !important; box-shadow: 0 0 10px 2px rgba(25,201,220,.7) !important; }
+html body.circle-mode .float-resize-handle::before { border-color: #fbf3db !important; background-color: #048596 !important; }
+
+/* ---------- toolbar ---------- */
+html body.circle-mode #game-controls button#reset-move, html body.circle-mode #game-controls button#swap-tiles, html body.circle-mode #game-controls button#pass-turn,
+html body.circle-mode #game-controls button#undo-last-move, html body.circle-mode #game-controls button#pause-game, html body.circle-mode #game-controls button#theme-toggle,
+html body.circle-mode #game-controls button#bag-count-button {
+    background: linear-gradient(145deg, #fdf7e4, #e3d8b2) !important; color: #006b3c !important;
+    border: 1px solid rgba(0,107,60,.55) !important; box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.7) !important; }
+html body.circle-mode #game-controls button#submit-move { background: linear-gradient(145deg, #05a97c, #006b3c) !important; color: #f4fff8 !important;
+    border: 1px solid rgba(0,40,24,.7) !important; box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3) !important; }
+html body.circle-mode #game-controls button#new-game { background: linear-gradient(145deg, #c8323f, #7a1620) !important; color: #ffeceb !important;
+    border: 1px solid rgba(40,4,8,.7) !important; box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22) !important; }
+html body.circle-mode #game-controls button#surrender-game { background: linear-gradient(145deg, #6e6e6e, #3b3b3b) !important; color: #f3f3f3 !important;
+    border: 1px solid rgba(0,0,0,.7) !important; box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.22) !important; }
+html body.circle-mode #game-controls button#fullscreen-app-button { background: linear-gradient(145deg, #0aa6ba, #046271) !important; color: #effcfd !important;
+    box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3) !important; }
+html body.circle-mode #game-controls button#install-app-button { background: linear-gradient(145deg, #f2c55e, #b07a16) !important; color: #2a1c04 !important;
+    box-shadow: 0 3px 9px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4) !important; }
+html body.circle-mode #game-controls button#mp-online-button { background: linear-gradient(145deg, #0a8fa1, #04535f) !important; color: #eafcff !important; }
+html body.circle-mode.mp-online #game-controls button#mp-online-button { background: linear-gradient(145deg, #5fe0a8, #1f9a6a) !important; color: #03251a !important; }
+html body.circle-mode #game-controls button#support-button { background: linear-gradient(145deg, #e0453a, #a02019) !important; color: #fff !important; }
+html body.circle-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #9ad7df, #4a97a3) !important; color: #04262c !important; }
+html body.circle-mode.cpu-mode #game-controls button#vs-computer-button { background: linear-gradient(145deg, #5fe0a8, #1f9a6a) !important; color: #03251a !important; }
+html body.circle-mode #game-controls button#sound-toggle-button { background: linear-gradient(145deg, #6fd0dc, #2a8896) !important; color: #032a30 !important; }
+/* the theme button shows the NEXT theme: horror now leads to circle (a ring icon), circle leads back to academic (the cap) */
+html body.horror-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E") !important; }
+html body.circle-mode #game-controls button#theme-toggle::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") !important; mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/%3E%3Cpath d='M22 10v6'/%3E%3Cpath d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/%3E%3C/svg%3E") !important; }
+
+/* ---------- round menu and copyright card ---------- */
+html body.circle-mode #game-controls button#menu-fab-button { background: linear-gradient(145deg, rgba(10,166,186,.94), rgba(4,98,113,.94)) !important; color: #fbf3db !important; border-color: rgba(251,243,219,.75) !important; }
+html body.circle-mode #fab-layer { --fab-bg: rgba(4,133,150,.45); --fab-bg2: rgba(3,70,80,.94); --fab-bd: rgba(251,243,219,.75); --fab-ic: #fbf3db; }
+html body.circle-mode #cr-overlay { --cr-bg: rgba(4,133,150,.45); --cr-bg2: rgba(3,70,80,.94); --cr-bd: rgba(251,243,219,.75); --cr-ic: #fbf3db; }
+
+/* ---------- dialogs ---------- */
+html body.circle-mode .modal-overlay { background-color: rgba(0,0,0,.78) !important; }
+html body.circle-mode .modal-overlay > div { background: linear-gradient(145deg, #0f2326, #050a0b) !important; color: #e6f5f6 !important; border: 2px solid #048596 !important; }
+html body.circle-mode .modal-overlay .text-red-400 { color: #ff9c94 !important; }
+html body.circle-mode .modal-overlay .text-yellow-300, html body.circle-mode .modal-overlay .text-yellow-400 { color: #fbf3db !important; }
+html body.circle-mode .modal-overlay .text-gray-200, html body.circle-mode .modal-overlay .text-gray-400 { color: #dcecee !important; }
+html body.circle-mode .modal-overlay .bg-green-600 { background-color: #00805a !important; } html body.circle-mode .modal-overlay .bg-green-600:hover { background-color: #006b3c !important; }
+html body.circle-mode .modal-overlay .bg-gray-500, html body.circle-mode .modal-overlay .bg-gray-600, html body.circle-mode .modal-overlay .bg-gray-700 { background-color: #545454 !important; }
+html body.circle-mode .modal-overlay .bg-red-600 { background-color: #b02a37 !important; } html body.circle-mode .modal-overlay .bg-red-600:hover { background-color: #8e202b !important; }
+html body.circle-mode .modal-overlay .bg-yellow-600 { background-color: #b9831f !important; }
+html body.circle-mode .modal-overlay input, html body.circle-mode .modal-overlay select, html body.circle-mode .modal-overlay textarea { background: #fbf3db !important; color: #0a3a2c !important; border-color: #048596 !important; }
+html body.circle-mode #result-new-btn { background: #00805a !important; } html body.circle-mode #result-new-btn:hover { background: #006b3c !important; }
+html body.circle-mode #result-close-btn { background: #545454 !important; } html body.circle-mode #result-close-btn:hover { background: #444 !important; }
+html body.circle-mode #install-help-card { background: linear-gradient(145deg, #fbf3db, #eadfbd) !important; color: #0a3a2c !important; border-color: #048596 !important; }
+html body.circle-mode #install-help-close { background: #006b3c !important; color: #fbf3db !important; }
+/* online room window: cream paper */
+html body.circle-mode #mp-chip { background: rgba(5,12,13,.95) !important; color: #e6f5f6 !important; border-color: #048596 !important; }
+html body.circle-mode #mp-modal, html body.circle-mode #mp-undo-modal { background: rgba(0,0,0,.78) !important; }
+html body.circle-mode #mp-card { background: linear-gradient(145deg, #fbf3db, #eadfbd) !important; color: #0a3a2c !important; border-color: #048596 !important; }
+html body.circle-mode #mp-card button.mp-btn { background: #006b3c !important; color: #fbf3db !important; }
+html body.circle-mode #mp-card button.mp-btn.mp-alt { background: #048596 !important; }
+html body.circle-mode #mp-card button.mp-btn.mp-danger { background: #b02a37 !important; }
+html body.circle-mode #mp-card .mp-error { color: #9b1c1c !important; }
+html body.circle-mode #mp-card .mp-code-display { background: rgba(0,107,60,.1) !important; }
+html body.circle-mode #mp-toast { background: rgba(5,12,13,.96) !important; color: #e6f5f6 !important; border-color: #048596 !important; }
+
+/* ---------- last word mark: an oval (stadium) line that hugs the newest word, row or column ---------- */
+html body.circle-mode .last-word-outline { border-radius: 9999px !important; border: 2.5px solid #1fd1c1 !important;
+    box-shadow: 0 0 0 1px #000, inset 0 0 0 1px #000, 0 0 9px 1px rgba(31,209,193,.45) !important; }
+
+/* ---------- the "choose a letter for the blank tile" box: coin letters, 50% bigger, every letter dead centre like on the real tiles ---------- */
+html body.circle-mode #blank-options { max-height: min(22rem, 56vh) !important; }
+html body.circle-mode #blank-options > button {
+    position: relative; height: 48px !important; padding: 0 !important;
+    background-color: transparent !important;
+    background-image: radial-gradient(circle closest-side at 50% 50%, #12646f 0%, #0e5963 62%, #0a444d 94%, #031d22 96.5%, rgba(3,29,34,0) 100%) !important;
+    background-repeat: no-repeat !important; background-position: center !important;
+    color: #efe6cf !important; box-shadow: none !important; border: 0 !important;
+}
+html body.circle-mode #blank-options > button:hover, html body.circle-mode #blank-options > button:focus-visible {
+    background-image: radial-gradient(circle closest-side at 50% 50%, #1a7886 0%, #146c77 62%, #0e5560 94%, #1cc0d3 96.5%, rgba(28,192,211,0) 100%) !important; outline: none;
+}
+/* same letter rules as the tiles: font, weight, size 24px (was 16px), centred by the game's own centring script (--lx / --ly) */
+html body.circle-mode #blank-options .tile-letter {
+    position: absolute !important; left: 50% !important; top: 50% !important; margin: 0 !important; padding: 0 !important; display: block !important;
+    width: auto !important; max-width: none !important; line-height: 1 !important; white-space: nowrap !important; pointer-events: none;
+    font-family: 'Traditional Arabic', 'Amiri', serif !important; font-weight: 700 !important; font-style: normal !important; font-size: 24px !important;
+    color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important;
+    transform: translate(-50%, -50%) translate(calc(var(--lx, 0) * 1em), calc(var(--ly, 0) * 1em)) !important;
+}
+
+/* ---------- the blink when a word is submitted: a round, glowing teal light on each letter, the same teal as the oval last-word line ---------- */
+html body.circle-mode .wb {
+    border-radius: 50% !important;
+    background: rgba(31,209,193,.40) !important;
+    box-shadow: 0 0 0 2px rgba(31,209,193,.95), 0 0 16px 5px rgba(31,209,193,.8), 0 0 30px 8px rgba(31,209,193,.38) !important;
+}
+</style>
+<script src="fire-border.js?v=m8"></script>
 </body>
 </html>
