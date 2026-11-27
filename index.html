@@ -46,8 +46,8 @@ if(ios&&sa)document.documentElement.classList.add('ios-standalone','ios-splash')
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&display=swap"></noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&family=League+Spartan:wght@800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cormorant+Garamond:wght@500;600;700&family=League+Spartan:wght@800&display=swap"></noscript>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
 
@@ -7590,7 +7590,7 @@ html body.circle-mode #game-board > .square {
     background-repeat: no-repeat !important; background-position: center !important; background-size: 100% 100% !important;
     box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
 }
-/* bonus squares are drawn like plain squares (grey, no label); only the centre stays teal. Scoring is unchanged. */
+/* bonus circles are the same grey as plain squares (only the centre is teal); their TW/DW/TL/DL letters are drawn by the rules further down. Scoring is unchanged. */
 html body.circle-mode #game-board > .square.sq-tl { --dot: #545454; }      
 html body.circle-mode #game-board > .square.sq-dl { --dot: #545454; }      
 html body.circle-mode #game-board > .square.sq-tw { --dot: #545454; }      
@@ -7599,6 +7599,24 @@ html body.circle-mode #game-board > .square.sq-star { --dot: #048596; }    /* ce
 html body.circle-mode #game-board > .square .square-text { display: none !important; }   /* bonus squares look like plain squares; the scoring itself is unchanged */
 /* a tile covers its square, so no dot shows around it */
 html body.circle-mode #game-board > .square.has-tile { background-image: none !important; }
+
+/* ---------- bonus labels (circle theme only): TW / DW / TL / DL in League Spartan ExtraBold, coloured letters on the plain grey circle ----------
+   The circle colour is untouched. Size and exact centring come from the "circle-bonus-labels" script below (cap height = 17.7% of the square,
+   ink centred both ways); the fallbacks here apply until it has run. A tile covers its square, so the label is dropped when a tile sits on it. */
+html body.circle-mode #game-board > .square.sq-tw:not(.has-tile)::after,
+html body.circle-mode #game-board > .square.sq-dw:not(.has-tile)::after,
+html body.circle-mode #game-board > .square.sq-tl:not(.has-tile)::after,
+html body.circle-mode #game-board > .square.sq-dl:not(.has-tile)::after {
+    position: absolute; left: 50%; top: 50%; display: block; margin: 0; padding: 0;
+    font-family: 'League Spartan', 'Montserrat', 'Arial Black', sans-serif; font-weight: 800; font-style: normal;
+    font-size: var(--bonus-fs, 25cqw); line-height: 1; letter-spacing: 0; white-space: nowrap; text-align: center;
+    pointer-events: none; z-index: 1;
+    transform: translate(-50%, -50%) translate(var(--bx, 0em), var(--by, 0em));
+}
+html body.circle-mode #game-board > .square.sq-tw:not(.has-tile)::after { content: "TW"; color: #f2ecdc; --bx: var(--bx-tw, 0em); --by: var(--by-all, 0em); }  /* broken white */
+html body.circle-mode #game-board > .square.sq-dw:not(.has-tile)::after { content: "DW"; color: #ffaabe; --bx: var(--bx-dw, 0em); --by: var(--by-all, 0em); }  /* soft pink */
+html body.circle-mode #game-board > .square.sq-tl:not(.has-tile)::after { content: "TL"; color: #40b8ff; --bx: var(--bx-tl, 0em); --by: var(--by-all, 0em); }  /* blue */
+html body.circle-mode #game-board > .square.sq-dl:not(.has-tile)::after { content: "DL"; color: #a8e2ff; --bx: var(--bx-dl, 0em); --by: var(--by-all, 0em); }  /* ice blue */
 
 /* ---------- round tiles: an aged coin. Matte patinated teal-bronze (no gold, no shine, plain edge) with an ivory letter pressed into it ---------- */
 html body.circle-mode .tile > .tile-content,
@@ -7774,6 +7792,42 @@ html body.circle-mode .wb {
     box-shadow: 0 0 0 2px rgba(31,209,193,.95), 0 0 16px 5px rgba(31,209,193,.8), 0 0 30px 8px rgba(31,209,193,.38) !important;
 }
 </style>
+<script id="circle-bonus-labels">
+/* Circle theme bonus labels: sizes TW/DW/TL/DL by cap height and shifts each one so the visible ink is dead centre (horizontally and vertically),
+   whatever font actually loaded. Re-runs when the web font arrives. Only sets CSS variables; nothing else on the page is touched. */
+(function () {
+  var STACK = "'League Spartan', 'Montserrat', 'Arial Black', sans-serif";
+  var CAP_SHARE = 17.68;                                   // cap height as % of the square's width
+  function measure() {
+    try {
+      var cx = document.createElement('canvas').getContext('2d');
+      cx.font = '800 100px ' + STACK; cx.textAlign = 'left'; cx.textBaseline = 'alphabetic';
+      var h = cx.measureText('H'), cap = h.actualBoundingBoxAscent / 100;
+      if (!(cap > 0.2 && cap < 1.2)) return;
+      var root = document.documentElement.style;
+      root.setProperty('--bonus-fs', (CAP_SHARE / cap).toFixed(3) + 'cqw');
+      // vertical: line-height 1 puts the font's content area (ascent+descent) in the middle of the 1em line box
+      var A = h.fontBoundingBoxAscent / 100, D = h.fontBoundingBoxDescent / 100;
+      if (isFinite(A) && isFinite(D)) {                    // (older browsers without font metrics keep the 0 fallback)
+        var baseline = (1 - (A + D)) / 2 + A;              // baseline distance from the top of the line box, em
+        var inkMidY = baseline - cap / 2;                  // capitals are flat on the baseline, so ink runs baseline-cap .. baseline
+        root.setProperty('--by-all', (0.5 - inkMidY).toFixed(4) + 'em');
+      }
+      ['TW', 'DW', 'TL', 'DL'].forEach(function (t) {      // horizontal: advance-box centre vs ink centre
+        var m = cx.measureText(t), inkMidX = (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2, dx = (m.width / 2 - inkMidX) / 100;
+        if (isFinite(dx)) root.setProperty('--bx-' + t.toLowerCase(), dx.toFixed(4) + 'em');
+      });
+    } catch (_) {}
+  }
+  measure();
+  try {
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load('800 100px ' + STACK, 'TWDL').then(measure, function () {});
+      document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', measure);
+    }
+  } catch (_) {}
+})();
+</script>
 <script src="fire-border.js?v=m8"></script>
 </body>
 </html>
