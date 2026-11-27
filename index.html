@@ -6480,63 +6480,56 @@ html body.girly-mode .sq-star {
         }
         inkCache.set(key, r); return r;
       };
-      /* true while the tile around this letter (or its face) has a running or held transform animation, e.g. the flip */
-      const turning = (el) => {
+      /* The letter's own box and baseline are measured on a flat copy of the letter in a hidden, untransformed holder, never on the
+         tile itself. So the answer is the same whether the tile is flat, turning over (pause / resume / new game / turn change),
+         scaled, lifted or flying in a shuffle: a letter gets its final centre the moment it is drawn and never moves afterwards. */
+      let holder = null;
+      const COPY = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontStretch', 'fontVariant', 'fontFeatureSettings', 'fontKerning', 'fontVariationSettings',
+                    'lineHeight', 'letterSpacing', 'wordSpacing', 'direction', 'unicodeBidi', 'textTransform', 'textRendering', 'writingMode', 'textOrientation'];
+      const flat = (el, cs) => {
         try {
-          const tile = el.closest('.tile');
-          if (!tile) return false;
-          const parts = [tile, tile.querySelector(':scope > .tile-content')];
-          for (const p of parts) {
-            if (!p || !p.getAnimations) continue;
-            for (const a of p.getAnimations()) {
-              const kf = a.effect && a.effect.getKeyframes ? a.effect.getKeyframes() : [];
-              if (kf.some(k => k.transform !== undefined && k.transform !== 'none')) return true;
-            }
+          if (!holder || !holder.isConnected) {
+            holder = document.createElement('div');
+            holder.setAttribute('aria-hidden', 'true');
+            holder.style.cssText = 'position:fixed;left:-20000px;top:0;width:2000px;height:400px;visibility:hidden;pointer-events:none;contain:layout style;transform:none;';
+            document.body.appendChild(holder);
           }
-        } catch (_) {}
-        return false;
+          const sp = document.createElement('span');
+          sp.style.cssText = 'position:absolute;left:50%;top:50%;display:block;margin:0;padding:0;max-width:none;width:auto;white-space:nowrap;text-align:center;';
+          COPY.forEach(k => { try { sp.style[k] = cs[k]; } catch (_) {} });
+          sp.textContent = el.textContent;
+          const probe = document.createElement('i');
+          probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;';
+          sp.appendChild(probe);
+          holder.appendChild(sp);
+          const box = sp.getBoundingClientRect(), base = probe.getBoundingClientRect().bottom - box.top;
+          const out = { w: box.width, h: box.height, base };
+          holder.removeChild(sp);
+          return (out.w && out.h) ? out : null;
+        } catch (_) { return null; }
       };
       const apply = (el) => {
         const text = (el.textContent || '').trim();
         if (!text || !el.isConnected) return;
-        /* A tile that is flying during a rack shuffle is scaled and tilted: measuring it now would give wrong offsets.
-           The shuffle centres the letters BEFORE the glide starts and checks again when it ends, so just wait. */
-        try {
-          if (el.closest('.rack.rs-animating')) {
-            const tl = el.closest('.tile');
-            if (tl && tl.getAnimations && tl.getAnimations().length) { retry = true; return; }
-          }
-        } catch (_) {}
-        /* A tile that is turning over (pause / resume / turn change flip) is seen in perspective: any measuring now is a little
-           off, and the letter would then slide to its true centre when the turn ends. So never measure a turning tile: keep the
-           offsets it already has (they were measured flat) and come back once the turn is over. */
         const cs = getComputedStyle(el), fontPx = parseFloat(cs.fontSize);
         if (!fontPx) return;
-        const ck = cs.fontStyle + cs.fontWeight + cs.fontFamily + '|' + text + '|' + fontPx.toFixed(1) + (document.body.classList.contains('circle-mode') ? '|c' : '');
-        if (turning(el)) {
-          if (!el.style.getPropertyValue('--lx') && offCache.has(ck)) { const o = offCache.get(ck); el.style.setProperty('--lx', o[0]); el.style.setProperty('--ly', o[1]); }
-          retry = true; return;
+        const circle = document.body.classList.contains('circle-mode');
+        const ck = cs.fontStyle + cs.fontWeight + cs.fontFamily + '|' + cs.lineHeight + '|' + text + '|' + fontPx.toFixed(2) + (circle ? '|c' : '');
+        let o = offCache.get(ck);
+        if (!o) {
+          const i = ink(cs, text);
+          if (!i) return;
+          const f = flat(el, cs);
+          if (!f) return;
+          const opt = (i.mcx != null && circle) ? 0.5 : 0;   // circle theme: half way between the ink box and the visual weight
+          const inkCentreY = f.base - (i.mid + (opt ? (i.mmid - i.mid) * opt : 0)) * fontPx;      // px from top of the letter box
+          const inkCentreX = (i.cx + (opt ? (i.mcx - i.cx) * opt : 0)) * fontPx;                  // px from the start of the letter box
+          o = [((f.w / 2 - inkCentreX) / fontPx).toFixed(4), ((f.h / 2 - inkCentreY) / fontPx).toFixed(4)];
+          offCache.set(ck, o);
         }
-        const i = ink(cs, text);
-        if (!i) return;
-        const probe = document.createElement('i');
-        probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline;';
-        el.appendChild(probe);
-        const box = el.getBoundingClientRect(), base = probe.getBoundingClientRect().bottom - box.top;
-        el.removeChild(probe);
-        if (!box.height || !box.width) return;
-        /* Skip only while the tile is being flipped/scaled (drawn size differs from layout size).
-           A line box taller than 1em (fallback fonts on iPhone) is fine: the real box is used below. */
-        const ow = el.offsetWidth, oh = el.offsetHeight;
-        if (ow && oh && (Math.abs(box.width - ow) > 1.5 || Math.abs(box.height - oh) > 1.5)) { retry = true; return; }
-        const opt = (i.mcx != null && document.body.classList.contains('circle-mode')) ? 0.5 : 0;   // circle theme: half way between the ink box and the visual weight
-        const inkCentreY = base - (i.mid + (opt ? (i.mmid - i.mid) * opt : 0)) * fontPx;                   // px from top of the letter box
-        const inkCentreX = (i.cx + (opt ? (i.mcx - i.cx) * opt : 0)) * fontPx;                           // px from the start of the letter box
-        const lxv = ((box.width / 2 - inkCentreX) / fontPx).toFixed(4), lyv = ((box.height / 2 - inkCentreY) / fontPx).toFixed(4);
-        el.style.setProperty('--lx', lxv);
-        el.style.setProperty('--ly', lyv);
-        offCache.set(ck, [lxv, lyv]);
-        if (mo) mo.takeRecords();                                   // ignore our own probe mutations
+        if (el.style.getPropertyValue('--lx') !== o[0]) el.style.setProperty('--lx', o[0]);
+        if (el.style.getPropertyValue('--ly') !== o[1]) el.style.setProperty('--ly', o[1]);
+        if (mo) mo.takeRecords();                                   // ignore our own mutations
       };
       const sweep = (root) => { (root || document).querySelectorAll('.tile-letter').forEach(apply); if (mo) mo.takeRecords(); if (retry) { retry = false; setTimeout(later, 450); } };
       let queued = false;
@@ -6545,7 +6538,7 @@ html body.girly-mode .sq-star {
       window.recenterTileLettersNow = (root) => { try { sweep(root || document); } catch (_) {} };   // immediate, for callers that are about to start an animation
       const start = () => {
         sweep(document);
-        new MutationObserver(later).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // a theme change re-centres every letter
+        new MutationObserver(() => sweep(document)).observe(document.body, { attributes: true, attributeFilter: ['class'] });   // a theme change re-centres every letter, before the next paint (no frame with a letter off-centre)
         mo = new MutationObserver((muts) => {
           let need = false;
           const fresh = new Set();                                  // letters that were just created or changed
@@ -6572,7 +6565,7 @@ html body.girly-mode .sq-star {
         });
         mo.observe(document.body, { childList: true, subtree: true, characterData: true });
         if (window.ResizeObserver) {
-          const ro = new ResizeObserver(later);
+          const ro = new ResizeObserver(() => sweep(document));   // runs before the next paint, so a resized tile never shows its letter off-centre
           const watch = () => document.querySelectorAll('#game-board, .rack').forEach(e => ro.observe(e));
           watch(); setTimeout(watch, 1500);
         }
