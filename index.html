@@ -7619,7 +7619,7 @@ html body.circle-mode #game-board > .square.has-tile > .tile { width: 100% !impo
 html body.circle-mode .tile .tile-letter { color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important; }
 /* the board and rack letters are a little smaller so the ink always sits inside the disc with room for the points */
 html body.circle-mode #game-board .square .tile-letter { font-size: calc(var(--board-tile-letter-size, 56cqw) * 1) !important; }
-html body.circle-mode .rack-slot .tile-letter { font-size: clamp(7px, 58cqw, 400px) !important; }
+html body.circle-mode .rack-slot .tile-letter { font-size: clamp(7px, 56cqw, 400px) !important; }   /* 56% of the tile, the same share as the board and the blank-tile box, so ع is the same size everywhere */
 /* the point numbers are hidden in this theme: the letter alone sits dead centre (the score still counts) */
 html body.circle-mode .tile .tile-score { display: none !important; }
 /* (kept for reference, not shown) */
@@ -7727,7 +7727,7 @@ html body.circle-mode .last-word-outline { border-radius: 9999px !important; bor
 /* ---------- the "choose a letter for the blank tile" box: coin letters, 50% bigger, every letter dead centre like on the real tiles ---------- */
 html body.circle-mode #blank-options { max-height: min(22rem, 56vh) !important; }
 html body.circle-mode #blank-options > button {
-    position: relative; height: 48px !important; padding: 0 !important;
+    position: relative; height: auto !important; width: min(100%, 60px) !important; aspect-ratio: 1 / 1; justify-self: center; container-type: inline-size; padding: 0 !important;
     background-color: transparent !important;
     background-image: radial-gradient(circle closest-side at 50% 50%, #12646f 0%, #0e5963 62%, #0a444d 94%, #031d22 96.5%, rgba(3,29,34,0) 100%) !important;
     background-repeat: no-repeat !important; background-position: center !important;
@@ -7736,11 +7736,11 @@ html body.circle-mode #blank-options > button {
 html body.circle-mode #blank-options > button:hover, html body.circle-mode #blank-options > button:focus-visible {
     background-image: radial-gradient(circle closest-side at 50% 50%, #1a7886 0%, #146c77 62%, #0e5560 94%, #1cc0d3 96.5%, rgba(28,192,211,0) 100%) !important; outline: none;
 }
-/* same letter rules as the tiles: font, weight, size 24px (was 16px), centred by the game's own centring script (--lx / --ly) */
+/* same letter rules as the tiles: font, weight, size 56% of the coin like board and rack, centred by the game's own centring script (--lx / --ly) */
 html body.circle-mode #blank-options .tile-letter {
     position: absolute !important; left: 50% !important; top: 50% !important; margin: 0 !important; padding: 0 !important; display: block !important;
     width: auto !important; max-width: none !important; line-height: 1 !important; white-space: nowrap !important; pointer-events: none;
-    font-family: 'Traditional Arabic', 'Amiri', serif !important; font-weight: 700 !important; font-style: normal !important; font-size: 24px !important;
+    font-family: 'Traditional Arabic', 'Amiri', serif !important; font-weight: 700 !important; font-style: normal !important; font-size: 56cqw !important;
     color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important;
     transform: translate(-50%, -50%) translate(calc(var(--lx, 0) * 1em), calc(var(--ly, 0) * 1em)) !important;
 }
