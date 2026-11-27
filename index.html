@@ -7731,22 +7731,22 @@ html body.circle-mode #blank-select-modal { padding: max(8px, env(safe-area-inse
 html body.circle-mode #blank-select-modal > div {
     --bcols: 7; --brows: 5;
     box-sizing: border-box !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
-    width: min(100%, 440px) !important; max-width: none !important; height: min(100%, 600px) !important; max-height: none !important;
-    padding: clamp(10px, 3vmin, 20px) !important; gap: clamp(4px, 1.4vmin, 10px);
+    width: min(100%, max(440px, 72vmin)) !important; max-width: none !important; height: min(100%, max(600px, 98vmin)) !important; max-height: none !important;   /* grows on tablets, big TVs and 4K, never leaves the screen */
+    padding: clamp(10px, 3vmin, max(20px, 2.2vmin)) !important; gap: clamp(4px, 1.4vmin, max(10px, 1vmin));
 }
-html body.circle-mode #blank-select-modal > div > h2 { flex: 0 0 auto; margin: 0 !important; font-size: clamp(15px, 4.6vmin, 22px) !important; line-height: 1.2 !important; }
-html body.circle-mode #blank-select-modal > div > p { flex: 0 0 auto; margin: 0 !important; font-size: clamp(11px, 3.1vmin, 14px) !important; line-height: 1.3 !important; }
+html body.circle-mode #blank-select-modal > div > h2 { flex: 0 0 auto; margin: 0 !important; font-size: clamp(15px, 4.6vmin, max(22px, 2.6vmin)) !important; line-height: 1.2 !important; }
+html body.circle-mode #blank-select-modal > div > p { flex: 0 0 auto; margin: 0 !important; font-size: clamp(11px, 3.1vmin, max(14px, 1.7vmin)) !important; line-height: 1.3 !important; }
 html body.circle-mode #blank-options {
     flex: 1 1 0 !important; min-height: 0 !important; max-height: none !important; margin: 0 !important; overflow: hidden !important;
     container-type: size; display: grid !important; gap: 0 !important;
     grid-template-columns: repeat(var(--bcols), 1fr) !important; grid-template-rows: repeat(var(--brows), 1fr) !important; place-items: center;
 }
 html body.circle-mode #blank-select-modal > div > div:last-child { flex: 0 0 auto; margin: 0 !important; justify-content: center !important; }
-html body.circle-mode #cancel-blank-btn { padding: clamp(6px, 1.8vmin, 10px) clamp(18px, 6vmin, 32px) !important; font-size: clamp(13px, 3.6vmin, 16px) !important; }
+html body.circle-mode #cancel-blank-btn { padding: clamp(6px, 1.8vmin, max(10px, 1.2vmin)) clamp(18px, 6vmin, max(32px, 3.6vmin)) !important; font-size: clamp(13px, 3.6vmin, max(16px, 2vmin)) !important; }
 @media (orientation: landscape) {
-    html body.circle-mode #blank-select-modal > div { --bcols: 11; --brows: 3; width: min(100%, 780px) !important; height: min(100%, 460px) !important; }
+    html body.circle-mode #blank-select-modal > div { --bcols: 11; --brows: 3; width: min(100%, max(780px, 108vh)) !important; height: min(100%, max(460px, 64vh)) !important; }
     html body.circle-mode #blank-select-modal > div > p { display: none !important; }       /* no room for the second line in landscape: the title says it */
-    html body.circle-mode #blank-select-modal > div > h2 { font-size: clamp(14px, 4.4vh, 22px) !important; }
+    html body.circle-mode #blank-select-modal > div > h2 { font-size: clamp(14px, 4.4vh, max(22px, 2.6vh)) !important; }
 }
 html body.circle-mode #blank-options > button {
     position: relative; --bc: min(calc(100cqw / var(--bcols)), calc(100cqh / var(--brows))); width: calc(var(--bc) * .9) !important; height: calc(var(--bc) * .9) !important; min-width: 0 !important; flex: none; justify-self: center; align-self: center; container-type: inline-size; padding: 0 !important;
