@@ -6464,7 +6464,8 @@ html body.girly-mode .sq-star {
             mid: (BASE - (y0 + y1 + 1) / 2) / SIZE,        // ink centre, em above the baseline
             mcx: sa ? ((sx / sa + 0.5) - PADX) / SIZE : null,   // ink centre of mass (used by the circle theme)
             mmid: sa ? (BASE - (sy / sa + 0.5)) / SIZE : null,
-            w: m.width / SIZE
+            w: m.width / SIZE,
+            iw: (x1 - x0 + 1) / SIZE, ih: (y1 - y0 + 1) / SIZE   // ink box size, em (used by the circle theme to size letters against ع)
           };
         } catch (_) {}
         if (!r) {
@@ -6508,12 +6509,28 @@ html body.girly-mode .sq-star {
           return (out.w && out.h) ? out : null;
         } catch (_) { return null; }
       };
+      /* Circle theme: every letter is sized against ع. The measure is the diagonal of the letter's real ink box (so tall thin letters like ا
+         and wide ones like ص both end up inside the same imaginary circle as ع). Result: a font-size factor in --lk (ع = 1). It is worked out
+         from the real font in the real browser, so it is right on every device and the same for board, rack and the blank-tile box. */
+      const LK_MIN = 0.55, LK_MAX = 2.2;
+      const circleScale = (cs, text) => {
+        const a = ink(cs, 'ع'), b = ink(cs, text);
+        if (!a || !b || !a.iw || !b.iw) return 1;
+        const da = Math.hypot(a.iw, a.ih), db = Math.hypot(b.iw, b.ih);
+        if (!da || !db) return 1;
+        return Math.max(LK_MIN, Math.min(LK_MAX, da / db));
+      };
       const apply = (el) => {
         const text = (el.textContent || '').trim();
         if (!text || !el.isConnected) return;
-        const cs = getComputedStyle(el), fontPx = parseFloat(cs.fontSize);
-        if (!fontPx) return;
         const circle = document.body.classList.contains('circle-mode');
+        let cs = getComputedStyle(el);
+        if (circle) {
+          const lk = circleScale(cs, text).toFixed(4);
+          if (el.style.getPropertyValue('--lk') !== lk) el.style.setProperty('--lk', lk);
+        } else if (el.style.getPropertyValue('--lk')) el.style.removeProperty('--lk');
+        const fontPx = parseFloat(cs.fontSize);          // read AFTER --lk is set: it is the size the letter is really drawn at
+        if (!fontPx) return;
         const ck = cs.fontStyle + cs.fontWeight + cs.fontFamily + '|' + cs.lineHeight + '|' + text + '|' + fontPx.toFixed(2) + (circle ? '|c' : '');
         let o = offCache.get(ck);
         if (!o) {
@@ -7618,8 +7635,8 @@ html body.circle-mode #game-board > .square.has-tile > .tile { width: 100% !impo
 /* the letter is struck into the coin: ivory, with a pressed shadow, no glow */
 html body.circle-mode .tile .tile-letter { color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important; }
 /* the board and rack letters are a little smaller so the ink always sits inside the disc with room for the points */
-html body.circle-mode #game-board .square .tile-letter { font-size: calc(var(--board-tile-letter-size, 56cqw) * 1) !important; }
-html body.circle-mode .rack-slot .tile-letter { font-size: clamp(7px, 58cqw, 400px) !important; }
+html body.circle-mode #game-board .square .tile-letter { font-size: calc(var(--board-tile-letter-size, 56cqw) * var(--lk, 1)) !important; }
+html body.circle-mode .rack-slot .tile-letter { font-size: calc(clamp(7px, 58cqw, 400px) * var(--lk, 1)) !important; }
 /* the point numbers are hidden in this theme: the letter alone sits dead centre (the score still counts) */
 html body.circle-mode .tile .tile-score { display: none !important; }
 /* (kept for reference, not shown) */
@@ -7740,7 +7757,7 @@ html body.circle-mode #blank-options > button:hover, html body.circle-mode #blan
 html body.circle-mode #blank-options .tile-letter {
     position: absolute !important; left: 50% !important; top: 50% !important; margin: 0 !important; padding: 0 !important; display: block !important;
     width: auto !important; max-width: none !important; line-height: 1 !important; white-space: nowrap !important; pointer-events: none;
-    font-family: 'Traditional Arabic', 'Amiri', serif !important; font-weight: 700 !important; font-style: normal !important; font-size: 24px !important;
+    font-family: 'Traditional Arabic', 'Amiri', serif !important; font-weight: 700 !important; font-style: normal !important; font-size: calc(24px * var(--lk, 1)) !important;
     color: #efe6cf !important; text-shadow: 0 .035em .008em rgba(0,0,0,.6), 0 -.012em 0 rgba(255,255,255,.12) !important;
     transform: translate(-50%, -50%) translate(calc(var(--lx, 0) * 1em), calc(var(--ly, 0) * 1em)) !important;
 }
