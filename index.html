@@ -6418,6 +6418,7 @@ html body.girly-mode .sq-star {
           const back = [...document.querySelectorAll(BSEL)].map(t => t.animate([R(-90, { filter: 'brightness(.8)' }), R(0, { filter: 'brightness(1)' })], { duration: HALF, easing: 'ease-out' }));
           const free = () => out.forEach(a => { try { a.cancel(); } catch (_) {} });   // the edge-on pose is held until the second half has started: no flash of a flat tile
           Promise.all(back.map(a => a.ready)).then(free, free);
+          Promise.all(back.map(a => a.finished)).then(() => { window.recenterTileLetters && window.recenterTileLetters(); }, () => {});   // the turn is over: check every board letter once more, now that the tiles are flat
         };
         Promise.all(out.map(a => a.finished)).then(swap, swap);
         setTimeout(swap, HALF + 150);
@@ -6435,6 +6436,8 @@ html body.girly-mode .sq-star {
       cv.width = 560; cv.height = 560;
       const ctx = cv.getContext('2d', { willReadFrequently: true }) || cv.getContext('2d');
       const inkCache = new Map();
+      const offCache = new Map();                         // last flat measuring per glyph, size and theme: gives a freshly drawn letter on a turning tile its right place at once
+      const clearInk = () => { inkCache.clear(); offCache.clear(); };
       let mo = null, retry = false;
       const PADX = 140, BASE = 330;                       // glyph is drawn at (PADX, BASE): room for wide letters and deep descenders
       /* The glyph's REAL ink box, found by scanning the pixels the browser draws (same font, same shaping as the tile).
@@ -6477,6 +6480,22 @@ html body.girly-mode .sq-star {
         }
         inkCache.set(key, r); return r;
       };
+      /* true while the tile around this letter (or its face) has a running or held transform animation, e.g. the flip */
+      const turning = (el) => {
+        try {
+          const tile = el.closest('.tile');
+          if (!tile) return false;
+          const parts = [tile, tile.querySelector(':scope > .tile-content')];
+          for (const p of parts) {
+            if (!p || !p.getAnimations) continue;
+            for (const a of p.getAnimations()) {
+              const kf = a.effect && a.effect.getKeyframes ? a.effect.getKeyframes() : [];
+              if (kf.some(k => k.transform !== undefined && k.transform !== 'none')) return true;
+            }
+          }
+        } catch (_) {}
+        return false;
+      };
       const apply = (el) => {
         const text = (el.textContent || '').trim();
         if (!text || !el.isConnected) return;
@@ -6488,8 +6507,16 @@ html body.girly-mode .sq-star {
             if (tl && tl.getAnimations && tl.getAnimations().length) { retry = true; return; }
           }
         } catch (_) {}
+        /* A tile that is turning over (pause / resume / turn change flip) is seen in perspective: any measuring now is a little
+           off, and the letter would then slide to its true centre when the turn ends. So never measure a turning tile: keep the
+           offsets it already has (they were measured flat) and come back once the turn is over. */
         const cs = getComputedStyle(el), fontPx = parseFloat(cs.fontSize);
         if (!fontPx) return;
+        const ck = cs.fontStyle + cs.fontWeight + cs.fontFamily + '|' + text + '|' + fontPx.toFixed(1) + (document.body.classList.contains('circle-mode') ? '|c' : '');
+        if (turning(el)) {
+          if (!el.style.getPropertyValue('--lx') && offCache.has(ck)) { const o = offCache.get(ck); el.style.setProperty('--lx', o[0]); el.style.setProperty('--ly', o[1]); }
+          retry = true; return;
+        }
         const i = ink(cs, text);
         if (!i) return;
         const probe = document.createElement('i');
@@ -6505,8 +6532,10 @@ html body.girly-mode .sq-star {
         const opt = (i.mcx != null && document.body.classList.contains('circle-mode')) ? 0.5 : 0;   // circle theme: half way between the ink box and the visual weight
         const inkCentreY = base - (i.mid + (opt ? (i.mmid - i.mid) * opt : 0)) * fontPx;                   // px from top of the letter box
         const inkCentreX = (i.cx + (opt ? (i.mcx - i.cx) * opt : 0)) * fontPx;                           // px from the start of the letter box
-        el.style.setProperty('--lx', ((box.width / 2 - inkCentreX) / fontPx).toFixed(4));
-        el.style.setProperty('--ly', ((box.height / 2 - inkCentreY) / fontPx).toFixed(4));
+        const lxv = ((box.width / 2 - inkCentreX) / fontPx).toFixed(4), lyv = ((box.height / 2 - inkCentreY) / fontPx).toFixed(4);
+        el.style.setProperty('--lx', lxv);
+        el.style.setProperty('--ly', lyv);
+        offCache.set(ck, [lxv, lyv]);
         if (mo) mo.takeRecords();                                   // ignore our own probe mutations
       };
       const sweep = (root) => { (root || document).querySelectorAll('.tile-letter').forEach(apply); if (mo) mo.takeRecords(); if (retry) { retry = false; setTimeout(later, 450); } };
@@ -6550,10 +6579,10 @@ html body.girly-mode .sq-star {
         window.addEventListener('resize', later);
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();
-      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { inkCache.clear(); later(); });
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { clearInk(); later(); });
       // the web fonts now load without blocking the page, so they can arrive after the first measuring: measure again when they do
-      if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { inkCache.clear(); later(); });
-      window.addEventListener('load', () => { inkCache.clear(); later(); });
+      if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { clearInk(); later(); });
+      window.addEventListener('load', () => { clearInk(); later(); });
     })();
     </script>
 
